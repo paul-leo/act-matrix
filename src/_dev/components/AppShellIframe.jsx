@@ -16,13 +16,8 @@ import {
 import { refreshOutline, warning, checkmarkCircle } from 'ionicons/icons';
 import styles from '../styles/AppShellIframe.module.css';
 import appFiles from '../app-files.json';
-
-// App Shell 配置
-const APP_SHELL_CONFIG = {
-    baseUrl: 'https://app-shell.focusbe.com',
-    devBaseUrl: 'https://app-shell.dev.baibian.app',
-    defaultAppId: 'simple-template',
-};
+import { APP_SHELL_CONFIG } from '../config/appShellConfig.js';
+console.log('appFiles', appFiles);
 
 /**
  * AppShell Iframe 加载器组件
@@ -54,7 +49,7 @@ export default function AppShellIframe({
             ? APP_SHELL_CONFIG.devBaseUrl
             : APP_SHELL_CONFIG.baseUrl;
         const timestamp = lastUpdateTime; // 使用 lastUpdateTime 作为缓存key
-        return `${baseUrl}/app-runner/${appId}?t=${timestamp}&embed=true`;
+        return `${baseUrl}/app-runner/${appId}?t=${timestamp}`;
     }, [appId, isDev, lastUpdateTime]);
 
     // 重新加载 iframe
@@ -283,6 +278,3 @@ export default function AppShellIframe({
         </div>
     );
 }
-
-// 导出配置和工具函数
-export { APP_SHELL_CONFIG };

@@ -72,8 +72,8 @@ async function generateAppFilesJson() {
     const jsonContent = JSON.stringify(appFiles, null, 2);
     await fs.writeFile(APP_FILES_JSON, jsonContent, 'utf-8');
     
-    console.log(`✅ 已生成 app-files.json，包含 ${Object.keys(appFiles).length} 个文件`);
-    console.log('📂 文件列表:', Object.keys(appFiles));
+    console.log(`[morphixai]: 已生成 app-files.json`);
+    // console.log('📂 文件列表:', Object.keys(appFiles));
     
     return appFiles;
   } catch (error) {
