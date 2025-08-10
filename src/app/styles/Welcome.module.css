@@ -21,10 +21,11 @@
 }
 
 .logoImage {
-  width: 64px;
-  height: 64px;
+  width: 80px;
+  height: 80px;
   border-radius: 16px;
   transition: opacity 0.2s ease;
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
 }
 
 .logoImage:hover {
