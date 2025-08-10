@@ -16,10 +16,10 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': '/src',
-      '@components': '/src/components',
-      '@styles': '/src/styles',
-      '@utils': '/src/utils',
+      '@': '/src/_dev',
+      '@components': '/src/_dev/components',
+      '@styles': '/src/_dev/styles',
+      '@utils': '/src/_dev/utils',
     },
   },
   // 确保静态资源可以被访问
