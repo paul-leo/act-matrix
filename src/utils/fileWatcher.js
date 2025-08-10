@@ -18,7 +18,7 @@ class FileWatcher {
             // 要监听的文件扩展名
             extensions: ['.jsx', '.js', '.css', '.json'],
             // 要监听的目录
-            watchPaths: ['./apps/'],
+            watchPaths: ['./src/app/'],
             // 忽略的文件/目录
             ignore: ['node_modules', '.git', 'dist', 'build']
         };

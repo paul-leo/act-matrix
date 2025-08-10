@@ -7,7 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // 定义路径
-const APPS_DIR = path.join(__dirname, '../apps');
+const APPS_DIR = path.join(__dirname, '../src/app');
 const PUBLIC_DIR = path.join(__dirname, '../public');
 const APP_FILES_JSON = path.join(PUBLIC_DIR, 'app-files.json');
 

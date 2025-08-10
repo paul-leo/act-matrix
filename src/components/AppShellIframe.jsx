@@ -1,4 +1,10 @@
-import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
+import React, {
+    useRef,
+    useEffect,
+    useState,
+    useCallback,
+    useMemo,
+} from 'react';
 import {
     IonCard,
     IonCardContent,
@@ -221,26 +227,7 @@ export default function AppShellIframe({
             );
         }
 
-        // 如果 /app-files.json 请求失败，回退到单个文件获取
-        try {
-            const appFiles = {
-                'app.jsx': await fetchAppFile('/apps/app.jsx'),
-                'components/SimpleCounter.jsx': await fetchAppFile(
-                    '/apps/components/SimpleCounter.jsx'
-                ),
-                'styles/App.module.css': await fetchAppFile(
-                    '/apps/styles/App.module.css'
-                ),
-                'styles/SimpleCounter.module.css': await fetchAppFile(
-                    '/apps/styles/SimpleCounter.module.css'
-                ),
-            };
-
-            return appFiles;
-        } catch (error) {
-            console.error('直接读取应用文件失败:', error);
-            return {};
-        }
+        return {};
     }, []);
 
     // 获取单个文件内容

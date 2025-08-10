@@ -184,7 +184,7 @@ const APP_SHELL_CONFIG = {
 fileWatcher.updateConfig({
     interval: 1000,                    // 检查间隔
     extensions: ['.jsx', '.js', '.css'], // 监听文件类型
-    watchPaths: ['./apps/'],            // 监听路径
+    watchPaths: ['./src/app'],            // 监听路径
     ignore: ['node_modules', '.git']    // 忽略目录
 });
 ```
