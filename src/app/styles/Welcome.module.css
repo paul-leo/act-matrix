@@ -1,258 +1,184 @@
-/* Welcome 组件样式 - 仅用于演示 */
-
-/* 移除全局变量，使用具体值 */
+/* Welcome 组件样式 - 简约风格 */
 
 .welcomeContainer {
   background: #ffffff;
   min-height: 100vh;
-  color: #1a202c;
+  color: #333333;
   position: relative;
-  overflow-x: hidden;
   padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
-
-/* 背景装饰已移除 */
 
 /* 头部 */
 .header {
-  position: relative;
-  z-index: 1;
   text-align: center;
-  padding: 24px 24px 16px;
+  padding: 60px 24px 40px;
 }
 
 .logo {
-  position: relative;
   display: inline-block;
-  margin-bottom: 16px;
+  margin-bottom: 24px;
 }
 
 .logoImage {
-  width: 72px;
-  height: 72px;
-  border-radius: 20px;
-  transition: all 0.3s ease;
-  position: relative;
-  z-index: 2;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  transition: opacity 0.2s ease;
 }
 
 .logoImage:hover {
-  transform: scale(1.05);
-}
-
-/* logo光晕效果已移除 */
-
-@keyframes pulse {
-  0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) scale(1.2); }
-  50% { opacity: 0.5; transform: translate(-50%, -50%) scale(1.3); }
+  opacity: 0.8;
 }
 
 .title {
-  font-size: 2.8rem;
-  font-weight: 800;
-  margin: 16px 0 8px 0;
-  line-height: 1.1;
+  font-size: 2.5rem;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
 }
 
 .titleGradient {
-  color: #1a202c;
-  display: inline-block;
+  color: #1a1a1a;
 }
 
 .titleSubtext {
-  color: #4a5568;
-  font-weight: 600;
+  color: #666666;
+  font-weight: 400;
   margin-left: 8px;
 }
 
 .subtitle {
-  font-size: 1.25rem;
-  color: #4a5568;
+  font-size: 1.1rem;
+  color: #666666;
   margin: 0;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 /* 步骤 */
 .steps {
-  position: relative;
-  z-index: 1;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 16px 24px;
-  max-width: 800px;
+  gap: 20px;
+  padding: 20px 24px 40px;
+  max-width: 600px;
   margin: 0 auto;
 }
 
 .step {
-  display: block;
-  padding: 16px;
-  background: #f8fafc;
-  border-radius: 20px;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
+  padding: 28px 24px;
+  background: #f8f8f8;
+  border-radius: 12px;
+  border: 1px solid #e5e5e5;
   position: relative;
-  overflow: hidden;
-  width: 90%;
-  max-width: 750px;
-  margin: 0 auto;
   text-align: center;
+  transition: background-color 0.2s ease;
 }
 
-.step:nth-child(1),
-.step:nth-child(2),
-.step:nth-child(3) {
-  background: #f8fafc;
-  border-color: #e2e8f0;
-  color: #1a202c;
+.step:hover {
+  background: #f0f0f0;
 }
-
-/* 移除hover效果 */
-
-/* stepIcon已移除 */
 
 .stepContent {
-  margin-top: 8px;
+  margin-top: 0;
 }
 
 .stepContent h3 {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: inherit;
-  margin: 0 0 4px 0;
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: #1a1a1a;
+  margin: 0 0 8px 0;
 }
 
 .stepContent p {
-  color: inherit;
-  opacity: 0.8;
+  color: #666666;
   margin: 0;
-  font-size: 0.95rem;
-  line-height: 1.4;
+  font-size: 1rem;
+  line-height: 1.5;
 }
 
 .stepNumber {
   position: absolute;
-  top: 16px;
-  left: 16px;
-  background: #e5e7eb;
-  color: #374151;
-  width: 28px;
-  height: 28px;
+  top: 20px;
+  left: 20px;
+  background: #e5e5e5;
+  color: #666666;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 0.9rem;
-  z-index: 2;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-weight: 500;
+  font-size: 0.875rem;
 }
 
 /* 行动按钮 */
 .ctaSection {
-  position: relative;
-  z-index: 1;
   text-align: center;
-  padding: 24px 24px;
+  padding: 40px 24px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 16px;
   align-items: center;
 }
 
 .primaryBtn {
-  background: rgba(255, 255, 255, 0.95);
-  color: #1d1d1f;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 22px;
+  background: #1a1a1a;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
   padding: 14px 28px;
   font-weight: 500;
   font-size: 1rem;
-  transition: all 0.2s ease;
-  box-shadow: 
-    0 2px 8px rgba(0, 0, 0, 0.08),
-    0 1px 4px rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
   justify-content: center;
-  position: relative;
-  overflow: hidden;
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
+  transition: background-color 0.2s ease;
   width: 200px;
   max-width: 90%;
 }
 
-.primaryBtn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-  transition: left 0.5s;
-  pointer-events: none;
-}
-
-.primaryBtn:hover::before {
-  left: 100%;
-}
-
 .primaryBtn:hover {
-  background: rgba(255, 255, 255, 1);
-  transform: translateY(-1px);
-  box-shadow: 
-    0 4px 12px rgba(0, 0, 0, 0.12),
-    0 2px 6px rgba(0, 0, 0, 0.16),
-    inset 0 1px 0 rgba(255, 255, 255, 1);
-  border-color: rgba(0, 0, 0, 0.15);
+  background: #333333;
 }
 
 .primaryBtn:active {
-  transform: translateY(0);
-  background: rgba(240, 240, 240, 0.95);
-  box-shadow: 
-    0 1px 4px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  background: #000000;
 }
 
 .secondaryBtn {
   background: transparent;
-  color: #2563eb;
-  border: 2px solid #e5e7eb;
-  border-radius: 22px;
-  padding: 12px 26px;
-  font-weight: 600;
+  color: #666666;
+  border: 1px solid #d5d5d5;
+  border-radius: 8px;
+  padding: 14px 28px;
+  font-weight: 500;
   font-size: 1rem;
-  transition: all 0.3s ease;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
   justify-content: center;
+  transition: all 0.2s ease;
   width: 200px;
   max-width: 90%;
 }
 
 .secondaryBtn:hover {
-  background: #f8fafc;
-  border-color: #2563eb;
+  background: #fafafa;
+  border-color: #999999;
 }
 
 /* 底部 */
 .footer {
-  position: relative;
-  z-index: 1;
   text-align: center;
-  padding: 16px 24px 24px;
-  color: #6b7280;
-  font-size: 0.85rem;
+  padding: 20px 24px 40px;
+  color: #999999;
+  font-size: 0.9rem;
 }
 
 .footer p {
@@ -262,99 +188,55 @@
 /* 响应式设计 */
 @media (max-width: 768px) {
   .header {
-    padding: 32px 16px 24px;
+    padding: 40px 20px 30px;
   }
   
   .title {
-    font-size: 2.5rem;
+    font-size: 2.2rem;
   }
   
   .subtitle {
-    font-size: 1.1rem;
-  }
-  
-  .steps {
-    padding: 24px 16px;
-    gap: 16px;
-  }
-  
-  .step {
-    padding: 24px;
-    gap: 16px;
-  }
-  
-  .stepIcon {
-    width: 50px;
-    height: 50px;
-    font-size: 1.25rem;
-  }
-  
-  .stepContent h3 {
-    font-size: 1.25rem;
-  }
-  
-  .stepContent p {
     font-size: 1rem;
   }
   
+  .steps {
+    padding: 20px 20px 30px;
+  }
+  
+  .step {
+    padding: 24px 20px;
+  }
+  
   .ctaSection {
-    padding: 32px 16px;
-  }
-  
-  .circle1 {
-    width: 200px;
-    height: 200px;
-    top: -100px;
-    right: -100px;
-  }
-  
-  .circle2 {
-    width: 150px;
-    height: 150px;
-    left: -75px;
+    padding: 30px 20px;
   }
 }
 
 @media (max-width: 480px) {
   .header {
-    padding: 24px 16px;
+    padding: 30px 16px 24px;
   }
   
   .logoImage {
-    width: 72px;
-    height: 72px;
+    width: 56px;
+    height: 56px;
   }
   
   .title {
-    font-size: 2rem;
-  }
-  
-  .step {
-    flex-direction: column;
-    text-align: center;
-    padding: 24px;
-    gap: 16px;
-  }
-  
-  .stepNumber {
-    order: -1;
-  }
-  
-  .ctaSection {
-    gap: 24px;
+    font-size: 1.9rem;
   }
   
   .primaryBtn, .secondaryBtn {
     width: 100%;
-    max-width: 300px;
+    max-width: 280px;
   }
 }
 
-/* 出场动画 */
-@keyframes fadeInUp {
+/* 简化动画 */
+@keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -362,56 +244,40 @@
   }
 }
 
-@keyframes fadeInScale {
-  from {
-    opacity: 0;
-    transform: scale(0.8) translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-/* 设置初始状态为隐藏 */
+/* 基础进场动画 */
 .logo,
 .title,
 .subtitle,
 .step,
 .ctaSection {
   opacity: 0;
-  animation-fill-mode: forwards;
+  animation: fadeIn 0.5s ease-out forwards;
 }
 
-/* Logo 首先出现 */
 .logo {
-  animation: fadeInScale 0.4s ease-out 0s forwards;
+  animation-delay: 0s;
 }
 
-/* 标题第二个出现 */
 .title {
-  animation: fadeInUp 0.6s ease-out 0.05s forwards;
+  animation-delay: 0.1s;
 }
 
-/* 副标题第三个出现 */
 .subtitle {
-  animation: fadeInUp 0.6s ease-out 0.1s forwards;
+  animation-delay: 0.2s;
 }
 
-/* 步骤卡片依次出现 */
 .step:nth-child(1) { 
-  animation: fadeInUp 0.6s ease-out 0.15s forwards; 
+  animation-delay: 0.3s;
 }
 
 .step:nth-child(2) { 
-  animation: fadeInUp 0.6s ease-out 0.2s forwards; 
+  animation-delay: 0.4s;
 }
 
 .step:nth-child(3) { 
-  animation: fadeInUp 0.6s ease-out 0.25s forwards; 
+  animation-delay: 0.5s;
 }
 
-/* 按钮区域最后出现 */
 .ctaSection {
-  animation: fadeInUp 0.6s ease-out 0.3s forwards;
+  animation-delay: 0.6s;
 }
