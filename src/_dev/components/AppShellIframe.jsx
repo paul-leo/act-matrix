@@ -15,6 +15,7 @@ import {
 } from '@ionic/react';
 import { refreshOutline, warning, checkmarkCircle } from 'ionicons/icons';
 import styles from '../styles/AppShellIframe.module.css';
+import appFiles from '../app-files.json';
 
 // App Shell 配置
 const APP_SHELL_CONFIG = {
@@ -45,6 +46,7 @@ export default function AppShellIframe({
     const [lastUpdateTime, setLastUpdateTime] = useState(Date.now());
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
+
 
     // 构建 iframe URL - 使用 useMemo 避免每次渲染都重新计算
     const iframeUrl = useMemo(() => {
@@ -188,60 +190,51 @@ export default function AppShellIframe({
     // 读取应用文件的函数
     const readAppFiles = useCallback(async () => {
         try {
-            // 从 JSON 文件获取应用文件内容
-            const response = await fetch('/app-files.json');
-            if (response.ok) {
-                const appFiles = await response.json();
-                return appFiles;
-            } else {
-                console.warn('无法获取 app-files.json，使用备用方法');
-                // 备用方法：直接读取文件
-                return await readAppFilesDirectly();
-            }
+            console.log('成功从 app-files.json 获取应用文件');
+            return appFiles;
         } catch (error) {
             console.error('读取应用文件失败:', error);
-            // 备用方法：直接读取文件
-            return await readAppFilesDirectly();
+            // 如果文件不存在，返回空对象
+            return {};
         }
     }, []);
 
-    // 备用方法：直接读取文件
-    const readAppFilesDirectly = useCallback(async () => {
-        try {
-            // 首先尝试请求 /app-files.json
-            const response = await fetch('/app-files.json');
-            if (response.ok) {
-                const appFiles = await response.json();
-                console.log('成功从 /app-files.json 获取应用文件');
-                return appFiles;
-            } else {
-                console.warn(
-                    `/app-files.json 请求失败，状态码: ${response.status}，回退到单个文件获取`
-                );
-            }
-        } catch (jsonError) {
-            console.warn(
-                '请求 /app-files.json 出错:',
-                jsonError.message,
-                '，回退到单个文件获取'
-            );
+    // 发送文件更新消息到 iframe
+    const sendFileUpdateMessage = useCallback((targetAppId = '*') => {
+        if (iframeRef.current && iframeRef.current.contentWindow) {
+            const message = {
+                type: 'BAIBIAN_APP_FILE_UPDATE',
+                targetAppId: targetAppId,
+                timestamp: Date.now()
+            };
+            
+            const targetOrigin = isDev
+                ? APP_SHELL_CONFIG.devBaseUrl
+                : APP_SHELL_CONFIG.baseUrl;
+                
+            iframeRef.current.contentWindow.postMessage(message, targetOrigin);
+            console.log('🔄 发送文件更新消息到 iframe:', message);
+            
+            // 显示提示
+            setToastMessage('代码已更新，正在通知应用重新加载...');
+            setShowToast(true);
+        }
+    }, [isDev]);
+
+    // 监听 HMR 更新事件，当 app-files.json 变化时触发
+    useEffect(() => {
+        if (import.meta.hot) {
+            // 监听 app-files.json 的 HMR 更新
+            import.meta.hot.accept('../app-files.json', (newModule) => {
+                console.log('🔥 HMR: 检测到 app-files.json 变化，发送更新消息');
+                sendFileUpdateMessage(appId);
+            });
         }
 
-        return {};
-    }, []);
-
-    // 获取单个文件内容
-    const fetchAppFile = useCallback(async (filePath) => {
-        try {
-            const response = await fetch(filePath);
-            if (response.ok) {
-                return await response.text();
-            }
-            return '';
-        } catch (error) {
-            return '';
-        }
-    }, []);
+        return () => {
+            // HMR 清理会自动处理，无需手动清理
+        };
+    }, [appId, sendFileUpdateMessage]);
 
     // 设置消息监听器
     useEffect(() => {

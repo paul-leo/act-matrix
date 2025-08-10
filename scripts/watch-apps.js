@@ -8,8 +8,8 @@ const __dirname = path.dirname(__filename);
 
 // 定义路径
 const APPS_DIR = path.join(__dirname, '../src/app');
-const PUBLIC_DIR = path.join(__dirname, '../public');
-const APP_FILES_JSON = path.join(PUBLIC_DIR, 'app-files.json');
+const DEV_DIR = path.join(__dirname, '../src/_dev');
+const APP_FILES_JSON = path.join(DEV_DIR, 'app-files.json');
 
 // 防抖函数
 function debounce(func, wait) {
@@ -65,8 +65,8 @@ async function generateAppFilesJson() {
     // 读取所有文件
     const appFiles = await readDirectoryRecursive(APPS_DIR);
     
-    // 确保 public 目录存在
-    await fs.mkdir(PUBLIC_DIR, { recursive: true });
+    // 确保 _dev 目录存在
+    await fs.mkdir(DEV_DIR, { recursive: true });
     
     // 生成 JSON 文件
     const jsonContent = JSON.stringify(appFiles, null, 2);

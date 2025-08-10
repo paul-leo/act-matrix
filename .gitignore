@@ -69,3 +69,4 @@ jspm_packages/
 
 # Vite
 .vite/
+src/_dev/app-files.json
