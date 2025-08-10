@@ -1,50 +1,46 @@
 {
-  "name": "morphixai-code",
-  "version": "1.0.0",
-  "description": "A simple template for MorphixAI applications",
-  "type": "module",
-  "main": "app.jsx",
-  "scripts": {
-    "dev": "node scripts/dev-with-watch.js",
-    "dev:vite": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "watch-apps": "node scripts/watch-apps.js",
-    "restore-apps": "node scripts/restore-apps.js",
-    "info": "echo 'This is a MorphixAI app template. Copy files to your project and run in MorphixAI App Runner.'"
-  },
-  "keywords": [
-    "morphixai",
-    "react",
-    "ionic",
-    "mobile",
-    "template"
-  ],
-  "author": "MorphixAI",
-  "license": "MIT",
-  "peerDependencies": {
-    "react": "19.0.0",
-    "@ionic/react": "8.6.2",
-    "ionicons": "7.4.0"
-  },
-  "devDependencies": {
-    "vite": "^5.0.0",
-    "@vitejs/plugin-react": "^4.0.0",
-    "chokidar": "^3.5.3"
-  },
-  "dependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
-  },
-  "morphixai": {
+    "name": "morphixai-code",
     "version": "1.0.0",
-    "entry": "app.jsx",
-    "framework": "react-ionic",
-    "features": [
-      "css-modules",
-      "ionicons",
-      "morphixai-components"
+    "description": "A simple template for MorphixAI applications",
+    "type": "module",
+    "main": "app.jsx",
+    "scripts": {
+        "dev": "node scripts/dev-with-watch.js",
+        "dev:vite": "vite",
+        "restore-apps": "node scripts/restore-apps.js"
+    },
+    "keywords": [
+        "morphixai",
+        "react",
+        "ionic",
+        "mobile",
+        "template"
     ],
-    "minAppRunnerVersion": "1.0.0"
-  }
+    "author": "MorphixAI",
+    "license": "MIT",
+    "peerDependencies": {
+        "react": "19.0.0",
+        "@ionic/react": "8.6.2",
+        "ionicons": "7.4.0"
+    },
+    "devDependencies": {
+        "vite": "^5.0.0",
+        "@vitejs/plugin-react": "^4.0.0",
+        "chokidar": "^3.5.3"
+    },
+    "dependencies": {
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0"
+    },
+    "morphixai": {
+        "version": "1.0.0",
+        "entry": "app.jsx",
+        "framework": "react-ionic",
+        "features": [
+            "css-modules",
+            "ionicons",
+            "morphixai-components"
+        ],
+        "minAppRunnerVersion": "1.0.0"
+    }
 }
