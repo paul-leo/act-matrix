@@ -77,10 +77,6 @@
   transition: background-color 0.2s ease;
 }
 
-.step:hover {
-  background: #f0f0f0;
-}
-
 .stepContent {
   margin-top: 0;
 }
