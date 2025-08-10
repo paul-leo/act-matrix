@@ -137,7 +137,7 @@ function startWatching() {
 
 // 主函数
 async function main() {
-  console.log('🚀 启动 MorphicAI Simple Template Apps 监听器');
+  console.log('🚀 启动 morphixai Simple Template Apps 监听器');
   console.log('==================================');
   
   // 初始生成一次 JSON

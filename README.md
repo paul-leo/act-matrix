@@ -5,7 +5,7 @@
 ## 📁 文件结构
 
 ```
-morphicai-simple-template/
+morphixai-simple-template/
 ├── app.jsx                    # 主入口文件（必需）
 ├── styles/
 │   └── App.module.css        # CSS Modules 样式
@@ -15,7 +15,7 @@ morphicai-simple-template/
 ## 🚀 核心特性
 
 - ✅ **标准入口**：使用 `app.jsx` 作为应用入口文件
-- ✅ **内置组件**：使用 `@ionic/react` 和 `@morphicai/components`
+- ✅ **内置组件**：使用 `@ionic/react` 和 `@morphixai/components`
 - ✅ **图标系统**：集成 `ionicons` 图标库
 - ✅ **CSS Modules**：样式隔离和模块化
 - ✅ **响应式设计**：适配移动端和桌面端
@@ -29,7 +29,7 @@ morphicai-simple-template/
 
 ### MorphixAI 组件
 - **PageHeader** - 统一的页面头部组件
-- **@morphicai/components** - 内置组件库
+- **@morphixai/components** - 内置组件库
 
 ## 📝 代码说明
 
@@ -37,7 +37,7 @@ morphicai-simple-template/
 ```jsx
 import React, { useState } from 'react';
 import { IonPage, IonContent, IonButton, IonIcon, IonCard } from '@ionic/react';
-import { PageHeader } from '@morphicai/components';
+import { PageHeader } from '@morphixai/components';
 import { heart, heartOutline, star, starOutline } from 'ionicons/icons';
 import styles from './styles/App.module.css';
 
@@ -101,7 +101,7 @@ export const formatDate = (date) => {
 
 ### 使用原生能力
 ```jsx
-import AppSdk from '@morphicai/app-sdk';
+import AppSdk from '@morphixai/app-sdk';
 
 // 调用相机
 const result = await AppSdk.camera.takePicture();
@@ -129,6 +129,35 @@ const response = await AppSdk.AI.chat({
 - [App SDK API 文档](https://app-shell.focusbe.com/docs/app-sdk-api.md)
 - [图标使用规范](https://app-shell.focusbe.com/docs/icon-specification.md)
 
+## 🔧 开发工具
+
+### 文件监控与同步
+
+项目提供了便捷的文件监控和同步工具：
+
+#### 监控文件变化
+```bash
+npm run watch-apps
+```
+- 监控 `src/app/` 目录下的所有文件
+- 自动生成 `public/app-files.json`
+- 支持热重载和实时更新
+
+#### 还原文件
+```bash
+npm run restore-apps        # 从 app-files.json 还原文件
+npm run restore-apps help   # 显示帮助信息
+```
+- 从 `app-files.json` 还原文件到 `src/app/` 目录
+- 自动创建目录结构
+- 保持文件内容同步
+
+**工作流程：**
+1. 正向：`src/app/` → `app-files.json` (watch-apps)
+2. 逆向：`app-files.json` → `src/app/` (restore-apps)
+
+这对于文件备份、版本管理和团队协作非常有用。
+
 ## 💡 最佳实践
 
 1. **保持简洁**：模板应该尽可能简单，便于理解和扩展
@@ -136,6 +165,7 @@ const response = await AppSdk.AI.chat({
 3. **移动优先**：优先考虑移动端体验
 4. **错误处理**：在关键位置添加适当的错误处理
 5. **性能优化**：合理使用 React Hooks，避免不必要的重渲染
+6. **文件同步**：定期使用 `watch-apps` 和 `restore-apps` 保持文件同步
 
 ---
 

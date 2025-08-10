@@ -1,4 +1,4 @@
-# MorphicAI Simple Template - Apps 监听系统使用指南
+# morphixai Simple Template - Apps 监听系统使用指南
 
 ## 🚀 快速开始
 

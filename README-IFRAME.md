@@ -108,7 +108,7 @@ fileWatcher.startWatching();
 
 ### 1. 启动模板项目
 ```bash
-cd templates/morphicai-simple-template
+cd templates/morphixai-simple-template
 npm install
 npm run dev
 ```

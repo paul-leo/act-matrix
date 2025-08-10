@@ -5,7 +5,7 @@
 ## 📋 文件清单
 
 ```
-morphicai-simple-template/
+morphixai-simple-template/
 ├── app.jsx                      # 🎯 应用入口文件（必需）
 ├── components/                  # 📦 组件目录
 │   └── SimpleCounter.jsx       # 📱 示例计数器组件
@@ -33,7 +33,7 @@ morphicai-simple-template/
 
 #### `package.json` - 项目配置
 - **作用**：定义项目元数据和依赖关系
-- **特殊字段**：包含 `morphicai` 配置段，声明模板信息
+- **特殊字段**：包含 `morphixai` 配置段，声明模板信息
 
 ### 📦 组件文件
 

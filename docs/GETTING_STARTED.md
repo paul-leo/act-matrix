@@ -9,11 +9,11 @@
 
 ```bash
 # 创建新项目目录
-mkdir my-morphicai-app
-cd my-morphicai-app
+mkdir my-morphixai-app
+cd my-morphixai-app
 
 # 复制模板文件
-cp -r path/to/morphicai-simple-template/* .
+cp -r path/to/morphixai-simple-template/* .
 ```
 
 ### 2. 自定义应用
@@ -72,7 +72,7 @@ import MyFeature from './components/MyFeature';
 
 ### 使用原生功能
 ```jsx
-import AppSdk from '@morphicai/app-sdk';
+import AppSdk from '@morphixai/app-sdk';
 
 // 拍照
 const photo = await AppSdk.camera.takePicture();
@@ -106,7 +106,7 @@ function MyComponent() {
 
 ### 错误处理
 ```jsx
-import { reportError } from '@morphicai/lib';
+import { reportError } from '@morphixai/lib';
 
 try {
     await someOperation();

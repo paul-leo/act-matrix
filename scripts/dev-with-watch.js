@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-console.log('🚀 启动 MorphicAI 开发环境');
+console.log('🚀 启动 morphixai 开发环境');
 console.log('==================================');
 
 // 启动文件监听器

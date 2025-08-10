@@ -162,7 +162,7 @@ export default function AppShellIframe({
                 event: 'GET_APP_FILES_RESPONSE',
                 files: appFiles,
                 timestamp: Date.now(),
-                source: 'morphicai-template',
+                source: 'morphixai-template',
             };
 
             if (event.source && event.source.postMessage) {
@@ -176,7 +176,7 @@ export default function AppShellIframe({
                 files: {},
                 error: error.message,
                 timestamp: Date.now(),
-                source: 'morphicai-template',
+                source: 'morphixai-template',
             };
 
             if (event.source && event.source.postMessage) {

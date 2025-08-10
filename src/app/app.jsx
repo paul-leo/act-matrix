@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { IonPage, IonContent, IonButton, IonIcon, IonCard, IonCardHeader, IonCardTitle, IonCardContent } from '@ionic/react';
-import { PageHeader } from '@morphicai/components';
+import { PageHeader } from '@morphixai/components';
 import { heart, heartOutline, star, starOutline } from 'ionicons/icons';
 import SimpleCounter from './components/SimpleCounter';
 import styles from './styles/App.module.css';
@@ -45,7 +45,7 @@ export default function App() {
                             <ul>
                                 <li>✅ Uses <code>app.jsx</code> as entry point</li>
                                 <li>✅ Imports from <code>@ionic/react</code></li>
-                                <li>✅ Uses <code>@morphicai/components</code></li>
+                                <li>✅ Uses <code>@morphixai/components</code></li>
                                 <li>✅ Supports CSS Modules</li>
                                 <li>✅ Uses Ionicons for UI icons</li>
                             </ul>

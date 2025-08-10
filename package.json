@@ -1,5 +1,5 @@
 {
-  "name": "morphicai-simple-template",
+  "name": "morphixai-code",
   "version": "1.0.0",
   "description": "A simple template for MorphixAI applications",
   "type": "module",
@@ -10,10 +10,11 @@
     "build": "vite build",
     "preview": "vite preview",
     "watch-apps": "node scripts/watch-apps.js",
+    "restore-apps": "node scripts/restore-apps.js",
     "info": "echo 'This is a MorphixAI app template. Copy files to your project and run in MorphixAI App Runner.'"
   },
   "keywords": [
-    "morphicai",
+    "morphixai",
     "react",
     "ionic",
     "mobile",
@@ -35,14 +36,14 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
-  "morphicai": {
+  "morphixai": {
     "version": "1.0.0",
     "entry": "app.jsx",
     "framework": "react-ionic",
     "features": [
       "css-modules",
       "ionicons",
-      "morphicai-components"
+      "morphixai-components"
     ],
     "minAppRunnerVersion": "1.0.0"
   }
