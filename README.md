@@ -12,30 +12,7 @@
 - 📱 **原生体验** - 一次开发，跨平台运行，媲美原生应用性能
 - ⚡ **极速上手** - 3 分钟搭建开发环境，30 分钟完成第一个应用
 
-## 📁 项目结构
 
-```
-morphixai-code/
-├── .cursor/rules/              # 🤖 AI 智能开发规范
-│   ├── morphixai-app-development.md
-│   ├── file-protection.md
-│   ├── docs-context.md
-│   └── README.md
-├── docs/                      # 📚 项目文档（AI 上下文）
-│   ├── requirements/          # 需求文档
-│   ├── design/               # 设计文档
-│   ├── technical/            # 技术文档
-│   ├── context/              # 上下文文档
-│   └── notes/                # 开发笔记
-├── src/app/                    # 🎯 开发区域（唯一允许修改的目录）
-│   ├── app.jsx                # 应用入口文件
-│   ├── components/            # React 组件
-│   └── styles/               # CSS 模块样式
-├── src/_dev/                  # 🔒 开发辅助文件（受保护）
-├── scripts/                   # 🔒 构建脚本（受保护）
-├── package.json              # 🔒 项目配置（受保护）
-└── vite.config.js            # 🔒 构建配置（受保护）
-```
 
 ## 🚀 超简单上手指南
 
@@ -78,9 +55,7 @@ git clone https://github.com/morphixai/morphixai-code.git
    ```
    💡 小技巧：直接把文件夹拖到终端窗口，路径会自动填入
 
-#### 🐧 Linux 用户
-1. **在文件夹中右键**
-2. **选择"在终端中打开"**
+
 
 ### 第三步：安装必要工具
 
@@ -136,7 +111,7 @@ npm install
    ```
    
 3. **查看效果**
-   - 浏览器会自动打开 http://localhost:5173
+   - 浏览器会自动打开显示你的应用
    - 你会看到一个示例应用正在运行 🎉
 
 4. **开始 AI 编程**
@@ -158,31 +133,7 @@ AI：我来为你创建心情记录功能：
 代码已自动生成，可以直接使用！
 ```
 
-## 🎯 开发约束
 
-### ⚠️ 重要：开发限制
-**只能在 `src/app/` 目录下进行开发！**
-
-✅ **允许修改：**
-- `src/app/app.jsx` - 应用入口文件
-- `src/app/components/` - 所有组件文件
-- `src/app/styles/` - 所有样式文件
-- `src/app/` 下的任何新文件和目录
-
-❌ **严禁修改：**
-- `package.json` - 项目配置
-- `vite.config.js` - 构建配置
-- `src/_dev/` - 开发辅助文件
-- 任何根目录配置文件
-
-### 🤖 AI 智能开发优势
-
-框架内置的 AI 规则让你享受：
-
-1. **零学习成本** - 无需学习复杂的技术规范，用自然语言即可开发
-2. **智能代码生成** - AI 自动生成高质量、符合规范的完整代码
-3. **实时质量保证** - 自动避免常见错误，确保代码质量
-4. **最佳实践内置** - 自动应用行业最佳实践和性能优化
 
 ## 🎁 开箱即用功能
 
@@ -254,21 +205,7 @@ AI：我来优化卡片样式：
 - **学校作业管理** - 老师轻松创建作业发布和收集应用
 - **社区活动组织** - 快速搭建活动报名和管理系统
 
-## 📱 应用运行环境
 
-### MorphixAI App Runner
-你开发的应用将在 **MorphixAI App Runner** 中运行：
-
-- **即时部署** - 代码完成后立即可用，无需等待
-- **跨平台运行** - 同一个应用在手机、平板、电脑上都能运行
-- **无需上架** - 不用通过应用商店审核，直接分享给用户使用
-- **自动更新** - 修改代码后用户端自动获取最新版本
-
-### 适用场景
-- **企业内部应用** - 员工管理、数据录入、工作流程
-- **个人项目** - 生活助手、学习工具、兴趣爱好
-- **快速原型** - 产品验证、功能测试、用户反馈
-- **教育培训** - 教学工具、在线课程、知识分享
 
 ## 💡 最佳实践
 
@@ -284,72 +221,7 @@ AI：我来优化卡片样式：
 - 🛡️ **零错误风险** - AI 自动避免常见编程错误
 - 📱 **完美体验** - 自动优化移动端性能和交互
 
----
 
-## 🛠 手动开发指南（传统方式）
-
-如果你不使用 AI 编辑器，也可以手动开发：
-
-### 项目结构要求
-```
-src/app/
-├── app.jsx              # 应用入口文件（必需）
-├── components/          # 组件目录
-└── styles/             # CSS 模块样式
-```
-
-### 手动创建组件示例
-```jsx
-// src/app/components/UserCard.jsx
-import React from 'react';
-import { IonCard, IonCardContent, IonButton } from '@ionic/react';
-import styles from '../styles/UserCard.module.css';
-
-export default function UserCard({ user, onFollow }) {
-    return (
-        <IonCard className={styles.userCard}>
-            <IonCardContent>
-                <h3>{user.name}</h3>
-                <p>{user.bio}</p>
-                <IonButton onClick={() => onFollow(user.id)}>
-                    关注
-        </IonButton>
-            </IonCardContent>
-        </IonCard>
-    );
-}
-```
-
-### 手动创建样式文件
-```css
-/* src/app/styles/UserCard.module.css */
-.userCard {
-    margin: 16px 0;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.userCard h3 {
-    color: var(--ion-color-primary);
-    margin: 0 0 8px 0;
-}
-```
-
-### 手动开发命令
-```bash
-# 创建新组件
-mkdir src/app/components/FeatureName
-touch src/app/components/FeatureName/FeatureName.jsx
-
-# 创建样式文件
-touch src/app/styles/FeatureName.module.css
-
-# 创建工具函数
-mkdir src/app/utils
-touch src/app/utils/helpers.js
-```
-
-**注意**：手动开发需要一定的编程基础，建议使用 AI 智能开发获得更好的体验。
 
 ---
 
