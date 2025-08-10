@@ -1,6 +1,6 @@
 # Cursor Rules for MorphixAI App Development
 
-这个目录包含了 MorphixAI 应用开发的完整 Cursor 规则集，基于官方文档 [MorphixAI App Builder 开发文档](https://app-shell.dev.baibian.app/docs/index.md) 制定。
+这个目录包含了 MorphixAI 应用开发的 Cursor 规则集，基于官方文档制定，提供智能化的开发体验。
 
 ## 🚨 重要：严格开发限制
 
@@ -12,54 +12,29 @@
 - ❌ **严禁**：修改项目配置文件（package.json, vite.config.js 等）
 - ❌ **严禁**：修改 `src/_dev/` 目录内容
 
-这不是建议，而是**必须遵守的硬性规则**！
-
 ## 📋 规则文件说明
 
-### 🔒 文件保护
-- **[file-protection.md](./file-protection.md)** - 文件保护规则（最高优先级）
+### 🔒 文件保护（最高优先级）
+- **[file-protection.md](./file-protection.md)** - 文件保护规则
   - 严格开发限制说明
   - 受保护文件列表
   - 开发沙盒定义
   - 违规后果警告
 
-### 🎯 核心规范
-- **[morphixai-app-development.md](./morphixai-app-development.md)** - 主要开发规范
-  - 严格约束条件
-  - 项目结构规范
-  - 包依赖规范  
-  - 导入规范
-  - 组件开发规范
-  - 编码风格规范
+### 📋 开发规范
+- **[morphixai-app-development.md](./morphixai-app-development.md)** - 核心开发规范
+  - 项目结构要求
+  - 技术栈规范
+  - 编码规范
+  - API 使用指南
+  - 基于官方文档：[应用开发规范](https://app-shell.focusbe.com/docs/app-development-specification.md) 和 [App SDK API 文档](https://app-shell.focusbe.com/docs/app-sdk-api.md)
 
-### 🏗️ 项目结构
-- **[project-structure.md](./project-structure.md)** - 项目结构和文件命名规范
-  - 开发沙盒定义
-  - 标准目录结构
-  - 文件命名约定
-  - 入口文件规范
-  - 组件组织方式
-
-### 🧩 组件开发
-- **[ionic-react-components.md](./ionic-react-components.md)** - Ionic React 组件使用规范
-  - 核心布局组件
-  - 交互组件使用
-  - 展示组件规范
-  - 图标使用指南
-
-### 🎨 样式规范
-- **[css-modules-styling.md](./css-modules-styling.md)** - CSS Modules 样式规范
-  - CSS Modules 基础规范
-  - Ionic CSS 变量集成
-  - 响应式设计规范
-  - 性能优化建议
-
-### 🚀 API 集成
-- **[morphixai-api-sdk.md](./morphixai-api-sdk.md)** - MorphixAI API SDK 使用规范
-  - MorphixAI 组件导入
-  - 原生能力 API 使用
-  - 错误处理最佳实践
-  - 权限管理规范
+### 📚 文档上下文
+- **[docs-context.md](./docs-context.md)** - 文档上下文规则
+  - 利用 docs/ 目录中的文档作为 AI 开发上下文
+  - 需求文档、设计文档、技术文档的使用规范
+  - 为 AI 优化的文档编写指南
+  - 文档结构和维护最佳实践
 
 ## 🎯 快速开始
 

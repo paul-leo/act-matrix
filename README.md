@@ -1,119 +1,181 @@
-# MorphixAI 简单应用模板
+# MorphixAI Code - 开源开发框架
 
-这是一个极简的 MorphixAI 应用模板，展示了符合规范的最基本项目结构。
+> 🚀 **快速开发 MorphixAI 应用的完整开发框架**
 
-## 📁 文件结构
+这是一个开源的 MorphixAI 应用开发框架，提供完整的开发环境、规范和工具链，让开发者能够快速创建符合 MorphixAI 平台规范的应用。
+
+## 🎯 项目特点
+
+- 👶 **零门槛开发** - 前端小白也能快速开发专业级移动应用
+- 🚀 **无需上架** - 开发完成即可直接使用，无需应用商店审核
+- 🤖 **AI 智能助手** - 告诉 AI 你想要什么功能，自动生成完整代码
+- 📱 **原生体验** - 一次开发，跨平台运行，媲美原生应用性能
+- ⚡ **极速上手** - 3 分钟搭建开发环境，30 分钟完成第一个应用
+
+## 📁 项目结构
 
 ```
-morphixai-simple-template/
-├── app.jsx                    # 主入口文件（必需）
-├── styles/
-│   └── App.module.css        # CSS Modules 样式
-└── README.md                 # 说明文档
+morphixai-code/
+├── .cursor/rules/              # 🤖 AI 智能开发规范
+│   ├── morphixai-app-development.md
+│   ├── file-protection.md
+│   ├── docs-context.md
+│   └── README.md
+├── docs/                      # 📚 项目文档（AI 上下文）
+│   ├── requirements/          # 需求文档
+│   ├── design/               # 设计文档
+│   ├── technical/            # 技术文档
+│   ├── context/              # 上下文文档
+│   └── notes/                # 开发笔记
+├── src/app/                    # 🎯 开发区域（唯一允许修改的目录）
+│   ├── app.jsx                # 应用入口文件
+│   ├── components/            # React 组件
+│   └── styles/               # CSS 模块样式
+├── src/_dev/                  # 🔒 开发辅助文件（受保护）
+├── scripts/                   # 🔒 构建脚本（受保护）
+├── package.json              # 🔒 项目配置（受保护）
+└── vite.config.js            # 🔒 构建配置（受保护）
 ```
 
-## 🚀 核心特性
+## 🚀 快速开始
 
-- ✅ **标准入口**：使用 `app.jsx` 作为应用入口文件
-- ✅ **内置组件**：使用 `@ionic/react` 和 `@morphixai/components`
-- ✅ **图标系统**：集成 `ionicons` 图标库
-- ✅ **CSS Modules**：样式隔离和模块化
-- ✅ **响应式设计**：适配移动端和桌面端
-
-## 🛠 使用的技术
-
-### 核心库
-- **React 19.0.0** - 现代化的 React 版本
-- **Ionic React 8.6.2** - 移动端 UI 组件库
-- **Ionicons 7.4.0** - 图标库
-
-### MorphixAI 组件
-- **PageHeader** - 统一的页面头部组件
-- **@morphixai/components** - 内置组件库
-
-## 📝 代码说明
-
-### app.jsx
-```jsx
-import React, { useState } from 'react';
-import { IonPage, IonContent, IonButton, IonIcon, IonCard } from '@ionic/react';
-import { PageHeader } from '@morphixai/components';
-import { heart, heartOutline, star, starOutline } from 'ionicons/icons';
-import styles from './styles/App.module.css';
-
-export default function App() {
-    // 组件逻辑
-}
+### 1. 克隆项目
+```bash
+git clone https://github.com/morphixai/morphixai-code.git
+cd morphixai-code
 ```
 
-**关键要点：**
-1. 必须以 `app.jsx` 命名
-2. 导出默认函数组件
-3. 使用 `IonPage` 作为根容器
-4. 使用 `PageHeader` 组件设置标题
-5. 通过 CSS Modules 管理样式
-
-### 样式管理
-```css
-/* App.module.css */
-.content {
-    --padding: 16px;
-    --background: #f8f9fa;
-}
+### 2. 安装依赖
+```bash
+npm install
 ```
 
-使用 CSS Modules 的优势：
-- **样式隔离**：避免全局样式冲突
-- **模块化**：每个组件有独立的样式文件
-- **类型安全**：支持 IDE 智能提示
+### 3. 开始智能开发
 
-## 🎯 扩展指南
+#### 🤖 AI 驱动开发体验
+本项目内置智能开发规则，支持主流 AI 代码编辑器：
 
-### 添加新组件
-1. 在根目录创建 `components/` 文件夹
-2. 添加组件文件，如 `components/MyComponent.jsx`
-3. 创建对应样式文件 `styles/MyComponent.module.css`
+1. **使用支持的 AI 编辑器打开项目**
+   - 推荐使用支持 AI 对话的现代化编辑器
+   - 项目已预配置完整的 AI 开发规范
 
-```jsx
-// components/MyComponent.jsx
-import React from 'react';
-import { IonButton } from '@ionic/react';
-import styles from '../styles/MyComponent.module.css';
+2. **AI 智能开发特性**
+   - 🧠 **自然语言编程** - 用中文描述需求，AI 自动生成代码
+   - 🛡️ **智能保护** - 自动防止修改系统文件，确保项目稳定
+   - 📋 **规范遵循** - 自动应用 MorphixAI 开发规范和最佳实践
+   - 🚫 **错误预防** - 实时检测并预防常见开发错误
 
-export default function MyComponent() {
-    return (
-        <IonButton className={styles.myButton}>
-            Click me
-        </IonButton>
-    );
-}
+3. **智能开发流程**
+   - 在 `src/app/` 目录下与 AI 对话
+   - 描述你想要的功能："创建一个用户卡片组件"
+   - AI 自动生成完整的组件代码和样式
+   - 无需手动配置，开箱即用
+
+#### 💡 AI 开发示例
+```
+你：创建一个显示用户信息的卡片组件，包含头像、姓名和关注按钮
+
+AI：我来为你创建一个用户卡片组件...
+- 自动创建 src/app/components/UserCard.jsx
+- 自动创建 src/app/styles/UserCard.module.css  
+- 使用现代化 UI 组件和 MorphixAI 规范
+- 包含响应式设计和最佳实践
 ```
 
-### 添加工具函数
-创建 `utils/` 文件夹，添加工具函数：
-
-```javascript
-// utils/helpers.js
-export const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('zh-CN');
-};
+### 4. 启动开发服务器
+```bash
+npm run dev
 ```
 
-### 使用原生能力
-```jsx
-import AppSdk from '@morphixai/app-sdk';
+现在你可以在浏览器中查看应用，同时享受 AI 智能开发体验！
 
-// 调用相机
-const result = await AppSdk.camera.takePicture();
+## 🎯 开发约束
 
-// 获取位置
-const position = await AppSdk.location.getCurrentPosition();
+### ⚠️ 重要：开发限制
+**只能在 `src/app/` 目录下进行开发！**
 
-// AI 对话
-const response = await AppSdk.AI.chat({
-    messages: [{role: "user", content: "你好"}]
-});
+✅ **允许修改：**
+- `src/app/app.jsx` - 应用入口文件
+- `src/app/components/` - 所有组件文件
+- `src/app/styles/` - 所有样式文件
+- `src/app/` 下的任何新文件和目录
+
+❌ **严禁修改：**
+- `package.json` - 项目配置
+- `vite.config.js` - 构建配置
+- `src/_dev/` - 开发辅助文件
+- 任何根目录配置文件
+
+### 🤖 AI 智能开发优势
+
+框架内置的 AI 规则让你享受：
+
+1. **零学习成本** - 无需学习复杂的技术规范，用自然语言即可开发
+2. **智能代码生成** - AI 自动生成高质量、符合规范的完整代码
+3. **实时质量保证** - 自动避免常见错误，确保代码质量
+4. **最佳实践内置** - 自动应用行业最佳实践和性能优化
+
+## 🛠 核心技术栈
+
+### 核心技术
+- **React** - 世界上最流行的前端框架
+- **现代化 UI 组件** - 丰富的移动端界面组件
+- **快速构建工具** - 秒级热重载，极速开发体验
+- **跨平台支持** - 一套代码，多端运行
+
+### MorphixAI 生态
+- **官方组件库** - 开箱即用的精美组件
+- **原生能力 SDK** - 相机、位置、存储等原生功能
+- **智能开发工具** - AI 驱动的代码生成和优化
+
+## 🤖 AI 智能开发示例
+
+### 自然语言编程
+通过与 AI 对话，你可以用中文描述需求来开发应用：
+
+#### 示例对话 1：创建组件
 ```
+你：帮我创建一个用户资料卡片组件，包含头像、姓名、简介和关注按钮
+
+AI：我来为你创建一个用户资料卡片组件：
+
+1. 创建 src/app/components/UserProfile.jsx
+2. 创建 src/app/styles/UserProfile.module.css
+3. 使用现代化 UI 组件和 MorphixAI 规范
+4. 包含响应式设计和精美动画
+```
+
+#### 示例对话 2：添加功能
+```
+你：在用户卡片中添加点赞功能，并保存到本地存储
+
+AI：我来为用户卡片添加点赞功能：
+
+1. 使用 useState 管理点赞状态
+2. 集成 StorageAPI 进行本地存储
+3. 添加点赞动画效果
+4. 包含错误处理
+```
+
+#### 示例对话 3：样式调整
+```
+你：让卡片更加现代化，添加阴影效果和圆角
+
+AI：我来优化卡片样式：
+
+1. 更新 CSS Module 样式
+2. 添加现代化阴影效果
+3. 优化圆角和间距
+4. 确保移动端适配
+```
+
+### AI 自动生成的代码特点
+
+✅ **专业级代码** - 自动生成符合行业标准的高质量代码
+✅ **移动端优化** - 自动适配各种屏幕尺寸和设备
+✅ **智能错误处理** - 自动添加异常处理和用户提示
+✅ **性能优化** - 自动应用最佳实践，确保应用流畅运行
+✅ **安全可靠** - 自动添加数据验证和安全检查
 
 ## 📱 运行环境
 
@@ -160,13 +222,85 @@ npm run restore-apps help   # 显示帮助信息
 
 ## 💡 最佳实践
 
-1. **保持简洁**：模板应该尽可能简单，便于理解和扩展
-2. **遵循规范**：严格按照 MorphixAI 开发规范编写代码
-3. **移动优先**：优先考虑移动端体验
-4. **错误处理**：在关键位置添加适当的错误处理
-5. **性能优化**：合理使用 React Hooks，避免不必要的重渲染
-6. **文件同步**：定期使用 `watch-apps` 和 `restore-apps` 保持文件同步
+### AI 智能开发建议
+1. **使用自然语言** - 用清晰的中文描述你要实现的功能
+2. **逐步迭代** - 先创建基础功能，再逐步完善
+3. **信任 AI 智能** - AI 会自动应用行业最佳实践
+4. **及时预览** - 每次生成代码后及时在浏览器中查看效果
+
+### 开发效率提升
+- 🚀 **比传统开发快 3-5 倍** - AI 智能生成，告别重复劳动
+- 🎯 **零技术门槛** - 前端小白也能开发专业应用
+- 🛡️ **零错误风险** - AI 自动避免常见编程错误
+- 📱 **完美体验** - 自动优化移动端性能和交互
 
 ---
 
-**这个模板为开发者提供了一个最小化的起点，展示了 MorphixAI 应用的基本结构和核心概念。**
+## 🛠 手动开发指南（传统方式）
+
+如果你不使用 AI 编辑器，也可以手动开发：
+
+### 项目结构要求
+```
+src/app/
+├── app.jsx              # 应用入口文件（必需）
+├── components/          # 组件目录
+└── styles/             # CSS 模块样式
+```
+
+### 手动创建组件示例
+```jsx
+// src/app/components/UserCard.jsx
+import React from 'react';
+import { IonCard, IonCardContent, IonButton } from '@ionic/react';
+import styles from '../styles/UserCard.module.css';
+
+export default function UserCard({ user, onFollow }) {
+    return (
+        <IonCard className={styles.userCard}>
+            <IonCardContent>
+                <h3>{user.name}</h3>
+                <p>{user.bio}</p>
+                <IonButton onClick={() => onFollow(user.id)}>
+                    关注
+                </IonButton>
+            </IonCardContent>
+        </IonCard>
+    );
+}
+```
+
+### 手动创建样式文件
+```css
+/* src/app/styles/UserCard.module.css */
+.userCard {
+    margin: 16px 0;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.userCard h3 {
+    color: var(--ion-color-primary);
+    margin: 0 0 8px 0;
+}
+```
+
+### 手动开发命令
+```bash
+# 创建新组件
+mkdir src/app/components/FeatureName
+touch src/app/components/FeatureName/FeatureName.jsx
+
+# 创建样式文件
+touch src/app/styles/FeatureName.module.css
+
+# 创建工具函数
+mkdir src/app/utils
+touch src/app/utils/helpers.js
+```
+
+**注意**：手动开发需要严格遵循 [MorphixAI 开发规范](https://app-shell.focusbe.com/docs/app-development-specification.md)，建议使用 AI 智能开发获得更好的开发体验。
+
+---
+
+**推荐使用 AI 智能开发，让编程变得简单有趣！** 🚀
