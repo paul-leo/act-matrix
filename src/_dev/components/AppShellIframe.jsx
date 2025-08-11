@@ -34,7 +34,6 @@ const AppShellIframe = forwardRef(function AppShellIframe(
     const hostClientRef = useRef(null);
 
     // 基础状态
-    const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
     const [lastUpdateTime, setLastUpdateTime] = useState(Date.now());
     const [showToast, setShowToast] = useState(false);
@@ -54,16 +53,13 @@ const AppShellIframe = forwardRef(function AppShellIframe(
         if (!iframeRef.current || hostClientRef.current) return;
 
         try {
-            setIsLoading(true);
             const client = await createHostClientAsync(iframeRef.current);
             hostClientRef.current = client;
             setHostClientReady(true);
             onHostClientReady?.(client);
-            setIsLoading(false);
         } catch (error) {
             console.error('HostClient 初始化失败:', error);
             setError(error.message);
-            setIsLoading(false);
         }
     }, [onHostClientReady]);
 
@@ -130,13 +126,11 @@ const AppShellIframe = forwardRef(function AppShellIframe(
 
                 switch (eventName) {
                     case 'BAIBIAN_APP_READY':
-                        setIsLoading(false);
                         setError(null);
                         onAppLoad?.(data);
                         break;
                     case 'BAIBIAN_APP_ERROR':
                         setError(data.error || data.message || '应用加载失败');
-                        setIsLoading(false);
                         onAppError?.(data.error || data.message);
                         break;
                     case 'GET_APP_FILES_REQUEST':
@@ -164,7 +158,6 @@ const AppShellIframe = forwardRef(function AppShellIframe(
 
     // iframe 加载处理
     const handleIframeLoad = useCallback(() => {
-        setIsLoading(false);
         setError(null);
         // 简单延迟后初始化
         setTimeout(() => initializeHostClient(), 300);
@@ -172,7 +165,6 @@ const AppShellIframe = forwardRef(function AppShellIframe(
 
     const handleIframeError = useCallback(() => {
         setError('无法加载 App Shell');
-        setIsLoading(false);
     }, []);
 
     // HMR 支持 (简化版)
@@ -190,7 +182,7 @@ const AppShellIframe = forwardRef(function AppShellIframe(
             });
         }
         return () => dispose?.();
-    }, [handleReload]);
+    }, []);
 
     // 事件监听
     useEffect(() => {
@@ -236,16 +228,7 @@ const AppShellIframe = forwardRef(function AppShellIframe(
                     allow="camera; microphone; geolocation; clipboard-read; clipboard-write"
                 />
 
-                {/* 简化的加载状态 */}
-                {/* {isLoading && (
-                  <div className={styles.loadingOverlay}>
-                      <IonLoading
-                          isOpen={true}
-                          message="Loading..."
-                          spinner="crescent"
-                      />
-                  </div>
-              )} */}
+
 
                 {/* 简化的错误显示 */}
                 {error && (
