@@ -4,6 +4,8 @@ import React, {
     useState,
     useCallback,
     useMemo,
+    useImperativeHandle,
+    forwardRef,
 } from 'react';
 import {
     IonCard,
@@ -17,6 +19,7 @@ import { refreshOutline, warning, checkmarkCircle } from 'ionicons/icons';
 import styles from '../styles/AppShellIframe.module.css';
 import appFiles from '../app-files.json';
 import { APP_SHELL_CONFIG } from '../config/appShellConfig.js';
+import { createHostClientAsync } from '../lib/HostClient.ts';
 console.log('appFiles', appFiles);
 
 /**
@@ -26,21 +29,32 @@ console.log('appFiles', appFiles);
  * 2. 实现浏览器通信机制
  * 3. 支持热重载功能
  * 4. 处理错误状态
+ * 5. 集成 HostClient 用于快速访问 iframe 能力
  */
-export default function AppShellIframe({
+const AppShellIframe = forwardRef(function AppShellIframe({
     appId = APP_SHELL_CONFIG.defaultAppId,
     isDev = true,
     height = '600px',
     onAppLoad,
     onAppError,
     onAppUpdate,
-}) {
+    onHostClientReady,
+}, ref) {
     const iframeRef = useRef(null);
+    const hostClientRef = useRef(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
     const [lastUpdateTime, setLastUpdateTime] = useState(Date.now());
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
+    const [hostClientReady, setHostClientReady] = useState(false);
+    const [hostClientStatus, setHostClientStatus] = useState({
+        status: 'idle', // 'idle' | 'connecting' | 'connected' | 'error' | 'disconnected'
+        version: null,
+        capabilities: null,
+        error: null,
+        retryCount: 0
+    });
 
 
     // 构建 iframe URL - 使用 useMemo 避免每次渲染都重新计算
@@ -52,12 +66,125 @@ export default function AppShellIframe({
         return `${baseUrl}/app-runner/${appId}?t=${timestamp}`;
     }, [appId, isDev, lastUpdateTime]);
 
+    // 初始化 HostClient
+    const initializeHostClient = useCallback(async (maxRetries = 3) => {
+        if (!iframeRef.current) {
+            console.warn('⚠️ HostClient 初始化失败: iframe 引用不存在');
+            setHostClientStatus(prev => ({
+                ...prev,
+                status: 'error',
+                error: 'iframe 引用不存在'
+            }));
+            return;
+        }
+
+        // 如果已经有客户端实例，先销毁
+        if (hostClientRef.current) {
+            console.log('🧹 销毁现有 HostClient 实例');
+            hostClientRef.current.destroy();
+            hostClientRef.current = null;
+            setHostClientReady(false);
+        }
+
+        // 更新连接状态
+        setHostClientStatus(prev => ({
+            ...prev,
+            status: 'connecting',
+            error: null
+        }));
+
+        try {
+            console.log('🔄 正在初始化 HostClient...');
+            console.log('📍 iframe URL:', iframeRef.current.src);
+            
+            const client = await createHostClientAsync(iframeRef.current);
+            hostClientRef.current = client;
+            setHostClientReady(true);
+            
+            // 获取详细信息
+            const initStatus = await client.checkSDKInitialization();
+            const capabilities = client.getCapabilities();
+            
+            console.log('✅ HostClient 初始化成功');
+            console.log('📋 SDK 状态:', initStatus);
+            console.log('📋 可用能力:', capabilities);
+            
+            // 更新状态
+            setHostClientStatus({
+                status: 'connected',
+                version: initStatus.version,
+                capabilities,
+                error: null,
+                retryCount: 0
+            });
+            
+            // 调用回调函数
+            onHostClientReady?.(client);
+            
+        } catch (error) {
+            console.error('❌ HostClient 初始化失败:', error);
+            console.error('📍 错误详情:', {
+                message: error.message,
+                iframeSrc: iframeRef.current?.src,
+                iframeContentWindow: !!iframeRef.current?.contentWindow
+            });
+            
+            setHostClientReady(false);
+            
+            const currentRetryCount = hostClientStatus.retryCount + 1;
+            const shouldRetry = currentRetryCount < maxRetries;
+            
+            setHostClientStatus(prev => ({
+                ...prev,
+                status: 'error',
+                error: error.message,
+                retryCount: currentRetryCount
+            }));
+            
+            // 重试机制
+            if (shouldRetry) {
+                console.log(`🔄 第 ${currentRetryCount} 次重试 HostClient 初始化...`);
+                const retryDelay = Math.min(1000 * Math.pow(2, currentRetryCount - 1), 5000);
+                setTimeout(() => {
+                    initializeHostClient(maxRetries);
+                }, retryDelay);
+            } else {
+                console.error(`❌ HostClient 初始化失败，已达到最大重试次数 (${maxRetries})`);
+                
+                // 特殊错误处理
+                if (error.message.includes('timeout')) {
+                    console.log('⏰ 初始化超时，可能 iframe 应用尚未完全准备就绪');
+                    setToastMessage('连接超时，请检查网络或稍后重试');
+                    setShowToast(true);
+                }
+            }
+        }
+    }, [onHostClientReady, hostClientStatus.retryCount]);
+
+    // 销毁 HostClient
+    const destroyHostClient = useCallback(() => {
+        if (hostClientRef.current) {
+            console.log('🧹 销毁 HostClient');
+            hostClientRef.current.destroy();
+            hostClientRef.current = null;
+            setHostClientReady(false);
+            setHostClientStatus({
+                status: 'disconnected',
+                version: null,
+                capabilities: null,
+                error: null,
+                retryCount: 0
+            });
+        }
+    }, []);
+
     // 重新加载 iframe
     const handleReload = useCallback(() => {
         setIsLoading(true);
         setError(null);
+        destroyHostClient(); // 销毁旧的客户端
         setLastUpdateTime(Date.now());
-    }, []);
+    }, [destroyHostClient]);
 
     // 浏览器通信：向 iframe 发送消息
     const sendMessageToIframe = useCallback(
@@ -144,6 +271,21 @@ export default function AppShellIframe({
         [onAppLoad, onAppError, onAppUpdate]
     );
 
+    // iframe 加载完成处理
+    const handleIframeLoad = useCallback(() => {
+        console.log('🎯 iframe 加载完成，开始初始化 HostClient...');
+        setIsLoading(false);
+        setError(null);
+        
+        // iframe 加载完成后立即初始化 HostClient
+        // 使用 requestAnimationFrame 确保 DOM 更新完成
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                initializeHostClient();
+            }, 200); // 适度延迟确保 iframe 内容完全加载和脚本执行
+        });
+    }, [initializeHostClient]);
+
     // iframe 加载错误处理
     const handleIframeError = useCallback(() => {
         setError('无法加载 App Shell');
@@ -216,6 +358,95 @@ export default function AppShellIframe({
         }
     }, [isDev]);
 
+    // 暴露 HostClient API 给父组件
+    useImperativeHandle(ref, () => ({
+        // 获取 HostClient 实例
+        getHostClient: () => hostClientRef.current,
+        
+        // 检查 HostClient 是否就绪
+        isHostClientReady: () => hostClientReady,
+        
+        // 获取 HostClient 详细状态
+        getHostClientStatus: () => hostClientStatus,
+        
+        // 手动初始化 HostClient
+        initializeHostClient,
+        
+        // 销毁 HostClient
+        destroyHostClient,
+        
+        // 重新加载 iframe
+        reload: handleReload,
+        
+        // 发送消息到 iframe
+        sendMessage: sendMessageToIframe,
+        
+        // 获取 iframe 引用
+        getIframe: () => iframeRef.current,
+        
+        // 调用 iframe 中的方法（通过 HostClient）
+        call: async (module, method, ...params) => {
+            if (!hostClientRef.current) {
+                throw new Error('HostClient 未初始化或未连接');
+            }
+            if (hostClientStatus.status !== 'connected') {
+                throw new Error(`HostClient 状态异常: ${hostClientStatus.status}`);
+            }
+            return hostClientRef.current.call(module, method, ...params);
+        },
+        
+        // 模块化 API 调用
+        api: {
+            // 基础 API
+            base: {
+                getVersion: async () => {
+                    if (!hostClientRef.current) throw new Error('HostClient 未初始化');
+                    return hostClientRef.current.base.getVersion();
+                }
+            },
+            
+            // 认证 API
+            auth: {
+                getAuthStatus: async () => {
+                    if (!hostClientRef.current) throw new Error('HostClient 未初始化');
+                    return hostClientRef.current.auth.getAuthStatus();
+                },
+                getUserInfo: async () => {
+                    if (!hostClientRef.current) throw new Error('HostClient 未初始化');
+                    return hostClientRef.current.auth.getUserInfo();
+                },
+                triggerLogin: async () => {
+                    if (!hostClientRef.current) throw new Error('HostClient 未初始化');
+                    return hostClientRef.current.auth.triggerLogin();
+                },
+                logout: async () => {
+                    if (!hostClientRef.current) throw new Error('HostClient 未初始化');
+                    return hostClientRef.current.auth.logout();
+                },
+                getAppState: async () => {
+                    if (!hostClientRef.current) throw new Error('HostClient 未初始化');
+                    return hostClientRef.current.auth.getAppState();
+                }
+            }
+        },
+        
+        // 检查 SDK 初始化状态
+        checkSDKInitialization: async () => {
+            if (!hostClientRef.current) {
+                return { initialized: false, error: 'HostClient 未初始化' };
+            }
+            return hostClientRef.current.checkSDKInitialization();
+        },
+        
+        // 获取能力列表
+        getCapabilities: () => {
+            if (!hostClientRef.current) {
+                return {};
+            }
+            return hostClientRef.current.getCapabilities();
+        }
+    }), [hostClientReady, hostClientStatus, initializeHostClient, destroyHostClient, handleReload, sendMessageToIframe]);
+
     // 监听 HMR 更新事件，当 app-files.json 变化时触发
     useEffect(() => {
         if (import.meta.hot) {
@@ -239,6 +470,13 @@ export default function AppShellIframe({
         };
     }, [handleMessage]);
 
+    // 组件卸载时清理 HostClient
+    useEffect(() => {
+        return () => {
+            destroyHostClient();
+        };
+    }, [destroyHostClient]);
+
     return (
         <div className={styles.container}>
             {/* Iframe 容器 - 占满屏幕 */}
@@ -247,6 +485,7 @@ export default function AppShellIframe({
                     ref={iframeRef}
                     src={iframeUrl}
                     className={styles.iframe}
+                    onLoad={handleIframeLoad}
                     onError={handleIframeError}
                     title={`MorphixAI App: ${appId}`}
                     sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
@@ -275,6 +514,37 @@ export default function AppShellIframe({
                 position="top"
                 color="primary"
             />
+
+            {/* HostClient 状态指示器（开发环境） */}
+            {isDev && process.env.NODE_ENV === 'development' && (
+                <div 
+                    className={styles.hostClientStatus}
+                    title={`HostClient: ${hostClientStatus.status} ${hostClientStatus.version ? `(v${hostClientStatus.version})` : ''}`}
+                >
+                    <div 
+                        className={`${styles.statusDot} ${
+                            hostClientStatus.status === 'connected' ? styles.connected :
+                            hostClientStatus.status === 'connecting' ? styles.connecting :
+                            hostClientStatus.status === 'error' ? styles.error :
+                            styles.disconnected
+                        }`}
+                    />
+                    <span className={styles.statusText}>
+                        HostClient: {hostClientStatus.status}
+                        {hostClientStatus.version && ` (v${hostClientStatus.version})`}
+                        {hostClientStatus.status === 'error' && hostClientStatus.retryCount > 0 && 
+                            ` (重试 ${hostClientStatus.retryCount})`
+                        }
+                    </span>
+                    {hostClientStatus.error && (
+                        <span className={styles.errorText} title={hostClientStatus.error}>
+                            ⚠️
+                        </span>
+                    )}
+                </div>
+            )}
         </div>
     );
-}
+});
+
+export default AppShellIframe;
