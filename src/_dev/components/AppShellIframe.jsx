@@ -109,14 +109,6 @@ const AppShellIframe = forwardRef(function AppShellIframe(
     // 消息通信 (简化版)
     const handleMessage = useCallback(
         (event) => {
-            const allowedOrigins = [
-                'https://app-shell.focusbe.com',
-                'http://localhost:3002',
-                'http://localhost:3000',
-            ];
-
-            if (!allowedOrigins.includes(event.origin)) return;
-
             try {
                 const data =
                     typeof event.data === 'string'
