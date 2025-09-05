@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import { IonToast } from '@ionic/react';
 import { QRCodeCanvas } from 'qrcode.react';
 
@@ -19,6 +19,9 @@ export default function DevControlPanel({
     onClose,
 }) {
     const [toast, setToast] = useState({ open: false, message: '', color: 'primary' });
+    const [userInfo, setUserInfo] = useState(null);
+    const [appInfo, setAppInfo] = useState(null);
+    const [appVersion, setAppVersion] = useState('1.0.0');
 
     const previewUrl = useMemo(() => {
         try {
@@ -34,6 +37,75 @@ export default function DevControlPanel({
     }, []);
 
     const closeToast = useCallback(() => setToast(prev => ({ ...prev, open: false })), []);
+
+    // 获取用户信息和应用信息
+    useEffect(() => {
+        if (!hostClientReady || !hostClient) return;
+
+        const fetchUserInfo = async () => {
+            try {
+                const authStatus = await hostClient?.auth?.getAuthStatus?.();
+                const user = await hostClient?.auth?.getUserInfo?.();
+                setUserInfo({ authStatus, user });
+            } catch (error) {
+                console.log('获取用户信息失败:', error);
+                setUserInfo({ authStatus: { isAuthenticated: false, isLoading: false }, user: null });
+            }
+        };
+
+        const fetchAppInfo = async () => {
+            try {
+                const info = await hostClient?.app?.getAppInfo?.() || await hostClient.call?.('app', 'getInfo');
+                setAppInfo(info);
+            } catch (error) {
+                console.log('获取应用信息失败:', error);
+                // 设置默认应用信息
+                setAppInfo({
+                    title: 'MorphixAI 应用',
+                    description: '基于 MorphixAI 平台构建的应用',
+                    icon: null,
+                    themeColor: '#6366f1'
+                });
+            }
+        };
+
+        fetchUserInfo();
+        fetchAppInfo();
+    }, [hostClient, hostClientReady]);
+
+    // 复制项目ID
+    const handleCopyProjectId = useCallback(async () => {
+        try {
+            await navigator.clipboard.writeText(appId);
+            showToast('项目ID已复制到剪贴板', 'success');
+        } catch (e) {
+            showToast('复制失败，请手动复制', 'warning');
+        }
+    }, [appId, showToast]);
+
+    // 登录操作
+    const handleLogin = useCallback(async () => {
+        if (!hostClientReady || !hostClient) {
+            showToast('连接未就绪', 'warning');
+            return;
+        }
+
+        try {
+            const result = await hostClient?.auth?.triggerLogin?.();
+            if (result?.success) {
+                showToast('登录成功', 'success');
+                // 重新获取用户信息
+                const authStatus = await hostClient?.auth?.getAuthStatus?.();
+                const user = await hostClient?.auth?.getUserInfo?.();
+                setUserInfo({ authStatus, user });
+            } else {
+                showToast('登录失败', 'danger');
+            }
+        } catch (error) {
+            console.error('登录失败:', error);
+            showToast('登录过程中发生错误', 'danger');
+        }
+    }, [hostClient, hostClientReady, showToast]);
 
     // 尝试以多种方式调用上传能力，以适配不同的 HostSDK 实现
     const tryUpload = useCallback(async () => {
@@ -103,9 +175,13 @@ export default function DevControlPanel({
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
-                        <div className="text-xs text-white/90 font-mono bg-white/15 px-3 py-1.5 rounded-lg backdrop-blur-sm border border-white/20">
+                        <button
+                            onClick={handleCopyProjectId}
+                            className="text-xs text-white/90 font-mono bg-white/15 px-3 py-1.5 rounded-lg backdrop-blur-sm border border-white/20 hover:bg-white/25 transition-all cursor-pointer"
+                            title="点击复制项目ID"
+                        >
                             <span className="text-white/70">项目ID:</span> {appId}
-                        </div>
+                        </button>
                         {onClose && (
                             <button
                                 onClick={onClose}
@@ -124,6 +200,92 @@ export default function DevControlPanel({
             {/* Content with glassmorphism effect - flex-1 to fill remaining height */}
             <div className="flex-1 bg-white/95 backdrop-blur-xl rounded-b-2xl border border-white/20 overflow-hidden">
                 <div className="h-full p-6 space-y-6 overflow-y-auto">
+                    {/* App Info Section */}
+                    {appInfo && (
+                        <div className="group">
+                            <div className="flex items-center gap-2 mb-3">
+                                <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                <h3 className="text-sm font-semibold text-slate-800">应用信息</h3>
+                                <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">v{appVersion}</span>
+                            </div>
+                            <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-4 border border-slate-200">
+                                <div className="flex items-start gap-3">
+                                    {appInfo.icon ? (
+                                        <img src={appInfo.icon} alt="App Icon" className="w-12 h-12 rounded-lg shadow-sm" />
+                                    ) : (
+                                        <div 
+                                            className="w-12 h-12 rounded-lg shadow-sm flex items-center justify-center text-white font-bold text-lg"
+                                            style={{ backgroundColor: appInfo.themeColor || '#6366f1' }}
+                                        >
+                                            {appInfo.title?.charAt(0) || 'A'}
+                                        </div>
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="font-semibold text-slate-800 truncate">{appInfo.title || '未命名应用'}</h4>
+                                        <p className="text-xs text-slate-600 mt-1 line-clamp-2">{appInfo.description || '暂无描述'}</p>
+                                        {appInfo.themeColor && (
+                                            <div className="flex items-center gap-2 mt-2">
+                                                <span className="text-xs text-slate-500">主题色:</span>
+                                                <div 
+                                                    className="w-4 h-4 rounded-full border border-slate-200 shadow-sm"
+                                                    style={{ backgroundColor: appInfo.themeColor }}
+                                                ></div>
+                                                <span className="text-xs font-mono text-slate-600">{appInfo.themeColor}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* User Status Section */}
+                    <div className="group">
+                        <div className="flex items-center gap-2 mb-3">
+                            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                            <h3 className="text-sm font-semibold text-slate-800">用户状态</h3>
+                        </div>
+                        <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-4 border border-slate-200">
+                            {userInfo?.authStatus?.isAuthenticated ? (
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-green-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                                        {userInfo.user?.email?.charAt(0)?.toUpperCase() || 'U'}
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="text-sm font-medium text-slate-800">
+                                            {userInfo.user?.email || '已登录用户'}
+                                        </p>
+                                        <p className="text-xs text-green-600">✓ 已登录</p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 bg-slate-300 rounded-full flex items-center justify-center">
+                                            <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-slate-600">未登录</p>
+                                            <p className="text-xs text-slate-500">登录以获得完整功能</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={handleLogin}
+                                        disabled={!hostClientReady}
+                                        className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all ${hostClientReady ? 'bg-blue-500 text-white hover:bg-blue-600 cursor-pointer' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
+                                    >
+                                        登录
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                     {/* Upload Section */}
                     <div className="group">
                         <div className="flex items-center gap-2 mb-3">
