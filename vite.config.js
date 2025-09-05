@@ -1,7 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import fs from 'fs';
-import path from 'path';
+import tailwindcss from '@tailwindcss/vite'
 
 // 现在使用 JS 文件，Vite 的标准 HMR 应该可以正常工作
 // 如果需要，可以在这里添加额外的插件
@@ -9,7 +8,8 @@ import path from 'path';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    react()
+    react(),
+    tailwindcss()
   ],
 
   build: {
@@ -33,7 +33,7 @@ export default defineConfig({
   publicDir: 'public',
   // 配置开发服务器
   server: {
-    port: 3000,
+    port: 8812,
     open: true,
     // 允许访问 public 目录下的文件
     // 监听 src/_dev 目录下的 app-files.js 文件变化
