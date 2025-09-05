@@ -11,7 +11,7 @@ import { IonLoading, IonToast } from '@ionic/react';
 import styles from '../styles/AppShellIframe.module.css';
 import initialAppFiles from '../app-files.js';
 import { APP_SHELL_CONFIG } from '../config/appShellConfig.js';
-import { createHostClientAsync } from '../lib/HostClient.ts';
+import { createHostClientAsync } from '../lib/hostClient.ts';
 
 /**
  * 简化版 AppShell Iframe 组件
