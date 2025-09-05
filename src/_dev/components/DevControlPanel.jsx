@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useCallback } from 'react';
-import { IonButton, IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonItem, IonLabel, IonList, IonToast } from '@ionic/react';
+import { IonToast } from '@ionic/react';
 import { QRCodeCanvas } from 'qrcode.react';
 
 /**
@@ -16,6 +16,7 @@ export default function DevControlPanel({
     hostClient,
     hostClientReady,
     getPreviewUrl,
+    onClose,
 }) {
     const [toast, setToast] = useState({ open: false, message: '', color: 'primary' });
 
@@ -84,61 +85,88 @@ export default function DevControlPanel({
     }, [previewUrl, showToast]);
 
     return (
-        <IonCard>
-            <IonCardHeader>
-                <IonCardTitle>调试与控制</IonCardTitle>
-            </IonCardHeader>
-            <IonCardContent>
-                {/* 连接状态 */}
-                <div style={{ marginBottom: '12px' }}>
-                    <strong>连接状态: </strong>
-                    <span style={{ color: hostClientReady ? '#22c55e' : '#ef4444', fontWeight: 'bold' }}>
-                        {hostClientReady ? '已连接' : '未连接'}
-                    </span>
-                </div>
-
-                {/* 上传应用 */}
-                <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-                    <IonButton size="default" onClick={tryUpload} disabled={!hostClientReady}>
-                        上传 / 更新 应用
-                    </IonButton>
-                </div>
-
-                {/* 分享应用 */}
-                <div style={{ margin: '12px 0' }}>
-                    <strong>预览链接</strong>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
-                        <code style={{ fontSize: '11px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'inline-block', maxWidth: '60%' }}>
-                            {previewUrl || '—'}
-                        </code>
-                        <IonButton size="small" fill="outline" onClick={handleShare} disabled={!previewUrl}>
-                            分享 / 复制
-                        </IonButton>
+        <div className="w-full">
+            {/* Header */}
+            <div className="sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-slate-200 px-4 py-3 rounded-t-xl">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <span className="text-base font-semibold text-slate-800">调试与控制</span>
+                        <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${hostClientReady ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}` }>
+                            <span className={`w-2 h-2 rounded-full ${hostClientReady ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
+                            {hostClientReady ? '已连接' : '未连接'}
+                        </span>
                     </div>
-                </div>
-
-                {/* 二维码 */}
-                <div style={{ marginTop: '12px' }}>
-                    <strong>扫码预览</strong>
-                    <div style={{ marginTop: '8px', background: '#fff', padding: '8px', display: 'inline-block', borderRadius: '8px' }}>
-                        {previewUrl ? (
-                            <QRCodeCanvas value={previewUrl} size={160} includeMargin={true} />
-                        ) : (
-                            <div style={{ fontSize: '12px', color: '#666' }}>预览链接不可用</div>
+                    <div className="flex items-center gap-2">
+                        <div className="text-[11px] text-slate-500">App ID: {appId}</div>
+                        {onClose && (
+                            <button
+                                onClick={onClose}
+                                className="p-1 rounded-md hover:bg-slate-100 transition-colors"
+                                aria-label="关闭控制面板"
+                            >
+                                <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
                         )}
                     </div>
                 </div>
+            </div>
 
-                <IonToast
-                    isOpen={toast.open}
-                    message={toast.message}
-                    duration={2000}
-                    color={toast.color}
-                    onDidDismiss={closeToast}
-                    position="top"
-                />
-            </IonCardContent>
-        </IonCard>
+            <div className="p-4 space-y-4 bg-white rounded-b-xl shadow-sm border border-slate-200">
+                {/* Upload */}
+                <div className="">
+                    <div className="text-sm font-medium text-slate-700 mb-2">上传应用</div>
+                    <button
+                        onClick={tryUpload}
+                        disabled={!hostClientReady}
+                        className={`inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium shadow-sm transition ${hostClientReady ? 'bg-indigo-600 text-white hover:bg-indigo-500' : 'bg-slate-200 text-slate-500 cursor-not-allowed'}`}
+                    >
+                        上传 / 更新 应用
+                    </button>
+                </div>
+
+                {/* Share */}
+                <div>
+                    <div className="text-sm font-medium text-slate-700 mb-2">预览链接</div>
+                    <div className="flex items-center gap-2">
+                        <div className="flex-1 min-w-0">
+                            <div className="text-[11px] text-slate-600 truncate bg-slate-50 border border-slate-200 rounded-md px-2 py-2">
+                                {previewUrl || '—'}
+                            </div>
+                        </div>
+                        <button
+                            onClick={handleShare}
+                            disabled={!previewUrl}
+                            className={`inline-flex items-center justify-center rounded-md px-3 py-2 text-xs font-medium whitespace-nowrap transition ${previewUrl ? 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50' : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'}`}
+                        >
+                            分享 / 复制
+                        </button>
+                    </div>
+                </div>
+
+                {/* QR */}
+                <div>
+                    <div className="text-sm font-medium text-slate-700 mb-2">扫码预览</div>
+                    <div className="inline-block bg-white border border-slate-200 rounded-xl p-3">
+                        {previewUrl ? (
+                            <QRCodeCanvas value={previewUrl} size={180} includeMargin={true} />
+                        ) : (
+                            <div className="text-xs text-slate-500">预览链接不可用</div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            <IonToast
+                isOpen={toast.open}
+                message={toast.message}
+                duration={2000}
+                color={toast.color}
+                onDidDismiss={closeToast}
+                position="top"
+            />
+        </div>
     );
 }
 
