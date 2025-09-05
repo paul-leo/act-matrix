@@ -11,7 +11,7 @@
 /* Desktop split layout */
 .splitLayout {
     display: grid;
-    grid-template-columns: 420px 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 16px;
     height: 100vh;
     padding: 16px;
@@ -27,7 +27,7 @@
 
 .phoneFrame {
     width: 100%;
-    max-width: 390px; /* iPhone 12/13 最大宽度 */
+    max-width: min(390px, 80%); /* iPhone 12/13 最大宽度，但不超过容器的80% */
     aspect-ratio: 390 / 844; /* 保持比例 */
     height: auto;
     max-height: calc(100vh - 32px); /* 不超过可视区域（减去左右内边距）*/
@@ -48,7 +48,10 @@
 }
 
 .controlPanelWrapper {
-    overflow: auto;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-width: 350px;
 }
 
 /* 默认隐藏，仅在移动端展示 */
@@ -108,6 +111,8 @@
     cursor: pointer;
     transition: all 0.3s ease;
     pointer-events: auto;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 .mobileExpandBtn:hover {
@@ -150,6 +155,15 @@
     justify-content: center;
     font-weight: bold;
     color: #666;
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+    transition: all 0.2s ease;
+}
+
+.mobileDrawerHandle:hover {
+    background: rgba(255,255,255,1);
+    color: #333;
 }
 
 @media (min-width: 1024px) {

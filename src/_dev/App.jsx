@@ -92,20 +92,6 @@ export default function App() {
     return (
         <IonPage>
             <IonContent className={styles.content}>
-                {/* 顶部项目ID显示 */}
-                <div style={{ 
-                    position: 'absolute', 
-                    top: '10px', 
-                    right: '10px', 
-                    fontSize: '12px', 
-                    color: '#666',
-                    zIndex: 1000,
-                    background: 'rgba(255,255,255,0.9)',
-                    padding: '4px 8px',
-                    borderRadius: '4px'
-                }}>
-                    项目 ID: {projectInfo.id}
-                </div>
 
                 {/* 桌面端：左右分栏；移动端：仅展示 iframe */}
                 <div className={styles.splitLayout}>
@@ -177,7 +163,7 @@ export default function App() {
                         >
                             {isMobileDrawerOpen ? '>' : '<'}
                         </div>
-                        <div style={{ padding: '12px' }}>
+                        <div style={{ padding: '12px', height: 'calc(100% - 24px)', display: 'flex', flexDirection: 'column' }}>
                             <DevControlPanel
                                 appId={projectInfo.id}
                                 isDev={true}
