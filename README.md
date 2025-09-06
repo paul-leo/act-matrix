@@ -1,8 +1,8 @@
-# MorphixAI Code - Open Source Development Framework
+# MorphixAI Code — Rapid, Ready-to-Use Mini‑Apps Framework
 
 > 🇺🇸 English | [🇨🇳 中文](./docs/README_CN.md)
 
-> **Complete development framework for rapidly building MorphixAI mini-apps**
+> **Build and ship ready-to-use mini‑apps fast**
 
 ### 📲 Where to Experience MorphixAI?
 - **iOS**: Search "MorphixAI" in the App Store

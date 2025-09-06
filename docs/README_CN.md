@@ -1,8 +1,8 @@
-# MorphixAI Code - 开源开发框架
+# MorphixAI Code — 快速开发、可直接使用的小工具应用框架
 
 > [🇺🇸 English](../README.md) | 🇨🇳 中文
 
-> **快速开发 MorphixAI 小工具的完整开发框架**
+> **快速构建并上线可直接使用的小工具应用**
 
 ### 📲 在哪里体验 MorphixAI？
 - **iOS**：App Store 搜索 “百变AI助手（MorphixAI）”
