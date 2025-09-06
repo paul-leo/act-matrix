@@ -82,6 +82,11 @@ export default function DevControlPanel({
             try {
                 // 通过 unique_id 获取应用信息
                 const response = await hostClient?.apps?.getAppByUniqueId?.(appId);
+                if (response?.success === false) {
+                    console.log('获取应用信息失败:', response.message);
+                    // 应用不存在是正常情况，不显示错误提示
+                    return;
+                }
                 if (response?.data) {
                     const app = response.data;
                     const info = {
@@ -105,12 +110,14 @@ export default function DevControlPanel({
         (async () => {
             try {
                 const response = await hostClient?.apps?.getAppByUniqueId?.(appId);
-                const remoteVersion = response?.data?.version;
-                const rid = response?.data?.id;
-                if (remoteVersion) {
-                    setAppVersion(remoteVersion);
+                if (response?.success !== false && response?.data) {
+                    const remoteVersion = response.data.version;
+                    const rid = response.data.id;
+                    if (remoteVersion) {
+                        setAppVersion(remoteVersion);
+                    }
+                    if (rid) setRemoteAppId(rid);
                 }
-                if (rid) setRemoteAppId(rid);
             } catch {}
         })();
     }, [hostClient, hostClientReady]);
@@ -188,27 +195,56 @@ export default function DevControlPanel({
             
             // 先获取当前应用信息
             const currentApp = await hostClient?.apps?.getAppByUniqueId?.(appId);
-            if (!currentApp?.data?.id) {
-                showToast('应用不存在，请先发布应用', 'warning');
-                return;
-            }
-
-            // 使用 updateApp 方法更新应用信息
-            const updateRequest = {
-                name: editingAppInfo.title,
-                desc: editingAppInfo.description,
-                icon: editingAppInfo.icon,
-                color: editingAppInfo.themeColor,
-            };
-            
-            const result = await hostClient?.apps?.updateApp?.(currentApp.data.id, updateRequest);
-            
-            if (result?.success !== false) {
+            console.log('currentApp', currentApp);
+            // 检查获取应用信息是否成功，以及应用是否存在
+            if (currentApp?.success === false || !currentApp?.data?.id) {
+                // 应用不存在或获取失败，创建新应用
+                showToast('应用不存在，正在创建...', 'primary');
+                
+                const initialVersion = '0.1.0';
+                const code = JSON.stringify(appFiles);
+                const createReq = {
+                    name: editingAppInfo.title || `App ${appId}`,
+                    code,
+                    version: initialVersion,
+                    unique_id: appId,
+                    desc: editingAppInfo.description,
+                    visible: true,
+                    icon: editingAppInfo.icon,
+                    color: editingAppInfo.themeColor,
+                };
+                
+                const createRes = await hostClient?.apps?.createApp?.(createReq);
+                console.log('createRes', createRes);
+                if (createRes?.success === false) {
+                    showToast(`创建应用失败: ${createRes?.message || '未知错误'}`, 'danger');
+                    return;
+                }
+                
+                // 创建成功后更新状态
                 setAppInfo(editingAppInfo);
+                setAppVersion(initialVersion);
+                setRemoteAppId(createRes?.data?.id || '');
                 setIsEditingApp(false);
-                showToast('应用信息已保存', 'success');
+                showToast('应用已创建并保存', 'success');
             } else {
-                showToast(`保存失败: ${result?.message || '未知错误'}`, 'danger');
+                // 应用存在，更新应用信息
+                const updateRequest = {
+                    name: editingAppInfo.title,
+                    desc: editingAppInfo.description,
+                    icon: editingAppInfo.icon,
+                    color: editingAppInfo.themeColor,
+                };
+                
+                const result = await hostClient?.apps?.updateApp?.(currentApp.data.id, updateRequest);
+                
+                if (result?.success === false) {
+                    showToast(`保存失败: ${result?.message || '未知错误'}`, 'danger');
+                } else {
+                    setAppInfo(editingAppInfo);
+                    setIsEditingApp(false);
+                    showToast('应用信息已保存', 'success');
+                }
             }
         } catch (error) {
             console.error('保存应用信息失败:', error);
@@ -216,7 +252,7 @@ export default function DevControlPanel({
         } finally {
             setGlobalLoading(false);
         }
-    }, [hostClient, hostClientReady, editingAppInfo, showToast, appId]);
+    }, [hostClient, hostClientReady, editingAppInfo, showToast, appId, appFiles]);
 
     // 更新编辑中的应用信息
     const handleUpdateEditingApp = useCallback((field, value) => {
@@ -260,7 +296,7 @@ export default function DevControlPanel({
 
             // 1) 查询远端应用是否存在（按 unique_id）
             let appResponse = await hostClient?.apps?.getAppByUniqueId?.(appId);
-            let remoteApp = appResponse?.data;
+            let remoteApp = (appResponse?.success !== false) ? appResponse?.data : null;
 
             // 2) 如果不存在则创建
             if (!remoteApp) {
@@ -276,7 +312,7 @@ export default function DevControlPanel({
                     color: appInfo?.themeColor,
                 };
                 const createRes = await hostClient?.apps?.createApp?.(createReq);
-                if (!createRes?.success) throw new Error(createRes?.message || '创建应用失败');
+                if (createRes?.success === false) throw new Error(createRes?.message || '创建应用失败');
                 remoteApp = createRes?.data;
                 setAppVersion(initialVersion);
                 showToast('应用已创建，准备发布新版本...', 'success');
@@ -302,7 +338,7 @@ export default function DevControlPanel({
             // 并发下创建冲突的兜底：重查 unique_id 后重试更新
             try {
                 const retry = await hostClient?.apps?.getAppByUniqueId?.(appId);
-                if (retry?.data?.id) {
+                if (retry?.success !== false && retry?.data?.id) {
                     const currentVersion = retry?.data?.version || appVersion || '0.1.0';
                     const nextVersion = bumpPatch(currentVersion);
                     const code = JSON.stringify(appFiles);
