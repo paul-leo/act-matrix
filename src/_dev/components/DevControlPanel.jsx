@@ -195,7 +195,7 @@ export default function DevControlPanel({
             
             // 先获取当前应用信息
             const currentApp = await hostClient?.apps?.getAppByUniqueId?.(appId);
-            
+            console.log('currentApp', currentApp);
             // 检查获取应用信息是否成功，以及应用是否存在
             if (currentApp?.success === false || !currentApp?.data?.id) {
                 // 应用不存在或获取失败，创建新应用
@@ -215,6 +215,7 @@ export default function DevControlPanel({
                 };
                 
                 const createRes = await hostClient?.apps?.createApp?.(createReq);
+                console.log('createRes', createRes);
                 if (createRes?.success === false) {
                     showToast(`创建应用失败: ${createRes?.message || '未知错误'}`, 'danger');
                     return;
