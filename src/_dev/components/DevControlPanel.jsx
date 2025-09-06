@@ -22,6 +22,13 @@ export default function DevControlPanel({
     const [userInfo, setUserInfo] = useState(null);
     const [appInfo, setAppInfo] = useState(null);
     const [appVersion, setAppVersion] = useState('1.0.0');
+    const [isEditingApp, setIsEditingApp] = useState(false);
+    const [editingAppInfo, setEditingAppInfo] = useState({
+        title: '',
+        description: '',
+        icon: '',
+        themeColor: '#6366f1'
+    });
 
     const previewUrl = useMemo(() => {
         try {
@@ -56,16 +63,17 @@ export default function DevControlPanel({
         const fetchAppInfo = async () => {
             try {
                 const info = await hostClient?.app?.getAppInfo?.() || await hostClient.call?.('app', 'getInfo');
-                setAppInfo(info);
+                if (info) {
+                    setAppInfo(info);
+                    setEditingAppInfo({
+                        title: info.title || '',
+                        description: info.description || '',
+                        icon: info.icon || '',
+                        themeColor: info.themeColor || '#6366f1'
+                    });
+                }
             } catch (error) {
                 console.log('获取应用信息失败:', error);
-                // 设置默认应用信息
-                setAppInfo({
-                    title: 'MorphixAI 应用',
-                    description: '基于 MorphixAI 平台构建的应用',
-                    icon: null,
-                    themeColor: '#6366f1'
-                });
             }
         };
 
@@ -106,6 +114,65 @@ export default function DevControlPanel({
             showToast('登录过程中发生错误', 'danger');
         }
     }, [hostClient, hostClientReady, showToast]);
+
+    // 开始编辑应用信息
+    const handleStartEditApp = useCallback(() => {
+        if (!appInfo) {
+            // 如果没有应用信息，设置默认值
+            setEditingAppInfo({
+                title: '',
+                description: '',
+                icon: '',
+                themeColor: '#6366f1'
+            });
+        }
+        setIsEditingApp(true);
+    }, [appInfo]);
+
+    // 取消编辑
+    const handleCancelEditApp = useCallback(() => {
+        if (appInfo) {
+            setEditingAppInfo({
+                title: appInfo.title || '',
+                description: appInfo.description || '',
+                icon: appInfo.icon || '',
+                themeColor: appInfo.themeColor || '#6366f1'
+            });
+        }
+        setIsEditingApp(false);
+    }, [appInfo]);
+
+    // 保存应用信息
+    const handleSaveAppInfo = useCallback(async () => {
+        if (!hostClientReady || !hostClient) {
+            showToast('连接未就绪', 'warning');
+            return;
+        }
+
+        try {
+            const result = await hostClient?.app?.updateAppInfo?.(editingAppInfo) || 
+                          await hostClient.call?.('app', 'updateInfo', editingAppInfo);
+            
+            if (result?.success !== false) {
+                setAppInfo(editingAppInfo);
+                setIsEditingApp(false);
+                showToast('应用信息已保存', 'success');
+            } else {
+                showToast('保存失败', 'danger');
+            }
+        } catch (error) {
+            console.error('保存应用信息失败:', error);
+            showToast('保存过程中发生错误', 'danger');
+        }
+    }, [hostClient, hostClientReady, editingAppInfo, showToast]);
+
+    // 更新编辑中的应用信息
+    const handleUpdateEditingApp = useCallback((field, value) => {
+        setEditingAppInfo(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    }, []);
 
     // 尝试以多种方式调用上传能力，以适配不同的 HostSDK 实现
     const tryUpload = useCallback(async () => {
@@ -157,7 +224,7 @@ export default function DevControlPanel({
     }, [previewUrl, showToast]);
 
     return (
-        <div className="w-full h-full flex flex-col">
+        <div className="w-full h-full max-h-screen flex flex-col">
             {/* Header with gradient background */}
             <div className="flex-shrink-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 px-6 py-4 rounded-t-2xl">
                 <div className="flex items-center justify-between">
@@ -198,19 +265,95 @@ export default function DevControlPanel({
             </div>
 
             {/* Content with glassmorphism effect - flex-1 to fill remaining height */}
-            <div className="flex-1 bg-white/95 backdrop-blur-xl rounded-b-2xl border border-white/20 overflow-hidden">
-                <div className="h-full p-6 space-y-6 overflow-y-auto">
+            <div className="flex-1 bg-white/95 backdrop-blur-xl rounded-b-2xl border border-white/20 overflow-hidden min-h-0">
+                <div className="h-full p-6 space-y-6 overflow-y-auto max-h-full">
                     {/* App Info Section */}
-                    {appInfo && (
-                        <div className="group">
-                            <div className="flex items-center gap-2 mb-3">
+                    <div className="group">
+                        <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
                                 <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
                                 <h3 className="text-sm font-semibold text-slate-800">应用信息</h3>
                                 <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">v{appVersion}</span>
                             </div>
-                            <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-4 border border-slate-200">
+                            {!isEditingApp ? (
+                                <button
+                                    onClick={handleStartEditApp}
+                                    className="text-xs text-purple-600 hover:text-purple-700 cursor-pointer font-medium"
+                                >
+                                    {appInfo ? '编辑' : '添加'}
+                                </button>
+                            ) : (
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={handleSaveAppInfo}
+                                        className="text-xs text-green-600 hover:text-green-700 cursor-pointer font-medium"
+                                    >
+                                        保存
+                                    </button>
+                                    <button
+                                        onClick={handleCancelEditApp}
+                                        className="text-xs text-slate-500 hover:text-slate-600 cursor-pointer font-medium"
+                                    >
+                                        取消
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                        <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-4 border border-slate-200">
+                            {isEditingApp ? (
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-xs font-medium text-slate-700 mb-1">应用名称</label>
+                                        <input
+                                            type="text"
+                                            value={editingAppInfo.title}
+                                            onChange={(e) => handleUpdateEditingApp('title', e.target.value)}
+                                            placeholder="输入应用名称"
+                                            className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-slate-700 mb-1">应用描述</label>
+                                        <textarea
+                                            value={editingAppInfo.description}
+                                            onChange={(e) => handleUpdateEditingApp('description', e.target.value)}
+                                            placeholder="输入应用描述"
+                                            rows={2}
+                                            className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-slate-700 mb-1">应用图标URL</label>
+                                        <input
+                                            type="url"
+                                            value={editingAppInfo.icon}
+                                            onChange={(e) => handleUpdateEditingApp('icon', e.target.value)}
+                                            placeholder="输入图标URL"
+                                            className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-slate-700 mb-1">主题色</label>
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="color"
+                                                value={editingAppInfo.themeColor}
+                                                onChange={(e) => handleUpdateEditingApp('themeColor', e.target.value)}
+                                                className="w-8 h-8 rounded border border-slate-300 cursor-pointer"
+                                            />
+                                            <input
+                                                type="text"
+                                                value={editingAppInfo.themeColor}
+                                                onChange={(e) => handleUpdateEditingApp('themeColor', e.target.value)}
+                                                placeholder="#6366f1"
+                                                className="flex-1 px-3 py-2 text-sm font-mono border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : appInfo ? (
                                 <div className="flex items-start gap-3">
                                     {appInfo.icon ? (
                                         <img src={appInfo.icon} alt="App Icon" className="w-12 h-12 rounded-lg shadow-sm" />
@@ -237,9 +380,16 @@ export default function DevControlPanel({
                                         )}
                                     </div>
                                 </div>
-                            </div>
+                            ) : (
+                                <div className="text-center py-8 text-slate-500">
+                                    <svg className="w-8 h-8 mx-auto mb-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                    </svg>
+                                    <p className="text-sm">点击"添加"设置应用信息</p>
+                                </div>
+                            )}
                         </div>
-                    )}
+                    </div>
 
                     {/* User Status Section */}
                     <div className="group">

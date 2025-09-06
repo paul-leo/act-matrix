@@ -89,6 +89,19 @@ export default function App() {
         );
     }
 
+    // 创建单一的 AppShellIframe 实例，避免重复创建
+    const appShellIframe = useMemo(() => (
+        <AppShellIframe
+            ref={appShellRef}
+            appId={projectInfo.id}
+            isDev={true}
+            onHostClientReady={handleHostClientReady}
+            onAppLoad={handleAppLoad}
+            onAppError={handleAppError}
+            onAppUpdate={handleAppUpdate}
+        />
+    ), [projectInfo.id, handleHostClientReady]);
+
     return (
         <IonPage>
             <IonContent className={styles.content}>
@@ -99,15 +112,7 @@ export default function App() {
                     <div className={styles.devicePreview}>
                         <div className={styles.phoneFrame}>
                             <div className={styles.phoneScreen}>
-                                <AppShellIframe
-                                    ref={appShellRef}
-                                    appId={projectInfo.id}
-                                    isDev={true}
-                                    onHostClientReady={handleHostClientReady}
-                                    onAppLoad={handleAppLoad}
-                                    onAppError={handleAppError}
-                                    onAppUpdate={handleAppUpdate}
-                                />
+                                {appShellIframe}
                             </div>
                         </div>
                     </div>
@@ -127,14 +132,7 @@ export default function App() {
 
                 {/* 移动端：全屏显示 iframe */}
                 <div className={styles.mobileOnly}>
-                    <AppShellIframe
-                        appId={projectInfo.id}
-                        isDev={true}
-                        onHostClientReady={handleHostClientReady}
-                        onAppLoad={handleAppLoad}
-                        onAppError={handleAppError}
-                        onAppUpdate={handleAppUpdate}
-                    />
+                    {appShellIframe}
                 </div>
 
                 {/* 移动端：展开按钮（抽屉关闭时显示） */}
@@ -163,7 +161,7 @@ export default function App() {
                         >
                             {isMobileDrawerOpen ? '>' : '<'}
                         </div>
-                        <div style={{ padding: '12px', height: 'calc(100% - 24px)', display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ padding: '12px', height: 'calc(100vh - 24px)', maxHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                             <DevControlPanel
                                 appId={projectInfo.id}
                                 isDev={true}

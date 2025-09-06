@@ -206,19 +206,24 @@ const AppShellIframe = forwardRef(function AppShellIframe(
         [hostClientReady, handleReload]
     );
 
+    // 使用 useMemo 优化 iframe 渲染，避免不必要的重新渲染
+    const iframeElement = useMemo(() => (
+        <iframe
+            ref={iframeRef}
+            src={iframeUrl}
+            className={styles.iframe}
+            onLoad={handleIframeLoad}
+            onError={handleIframeError}
+            title={`MorphixAI App: ${appId}`}
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
+            allow="camera; microphone; geolocation; clipboard-read; clipboard-write"
+        />
+    ), [iframeUrl, handleIframeLoad, handleIframeError, appId]);
+
     return (
         <div className={styles.container}>
             <div className={styles.iframeWrapper}>
-                <iframe
-                    ref={iframeRef}
-                    src={iframeUrl}
-                    className={styles.iframe}
-                    onLoad={handleIframeLoad}
-                    onError={handleIframeError}
-                    title={`MorphixAI App: ${appId}`}
-                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
-                    allow="camera; microphone; geolocation; clipboard-read; clipboard-write"
-                />
+                {iframeElement}
 
 
 
