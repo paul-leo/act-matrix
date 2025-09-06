@@ -22,6 +22,8 @@ morphixai-code/
 │   ├── file-protection.md     # 文件保护规则
 │   ├── docs-context.md        # 文档上下文规则
 │   └── README.md              # 规则说明
+├── CLAUDE.md                   # Claude Code 开发规范
+├── CLAUDE-CODE-SETUP.md        # Claude Code 使用指南
 ├── docs/                      # 项目文档（AI 上下文）
 │   ├── requirements/          # 需求文档
 │   ├── design/               # 设计文档
@@ -82,22 +84,37 @@ src/app/                      # 开发沙盒
 └── src/_dev/               # 开发辅助
 ```
 
-## 🔧 Cursor AI 配置详解
+## 🔧 AI 编辑器配置详解
 
-### AI 规则文件说明
+### 支持的 AI 编辑器
 
-#### 1. file-protection.md
-文件保护规则，确保开发活动仅限于 `src/app/` 目录：
-- 防止修改系统配置文件
-- 保护构建脚本和依赖配置
-- 确保项目稳定性
+#### 1. Cursor AI 配置
+项目内置了完整的 Cursor AI 配置：
 
-#### 2. morphixai-app-development.md
-核心开发规范，基于官方文档制定：
-- 项目结构规范
-- 组件开发规范
-- 样式管理规范
-- API 使用规范
+**AI 规则文件说明：**
+- `file-protection.md` - 文件保护规则，确保开发活动仅限于 `src/app/` 目录
+- `morphixai-app-development.md` - 核心开发规范，基于官方文档制定
+- `docs-context.md` - 文档上下文规则，提供项目背景信息
+
+#### 2. Claude Code 支持 🆕
+项目现已完美支持 Claude Code：
+
+**特色功能：**
+- **智能规范遵循**：自动遵循 MorphixAI 开发规范
+- **自然语言编程**：用中文描述需求，自动生成代码
+- **完整错误处理**：自动添加 try-catch 和 reportError
+- **移动端优化**：自动生成移动端优化的代码
+- **最佳实践应用**：自动应用行业最佳实践
+
+**使用方式：**
+1. 打开 Claude Code 编辑器
+2. 加载项目文件夹
+3. 直接与 Claude 对话描述需求
+4. Claude 自动生成符合规范的代码
+
+**配置文件：**
+- `CLAUDE.md` - 完整的 Claude Code 开发规范
+- `CLAUDE-CODE-SETUP.md` - Claude Code 使用指南
 
 #### 3. docs-context.md
 文档上下文规则，利用 `docs/` 目录为 AI 提供上下文：

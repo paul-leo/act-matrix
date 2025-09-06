@@ -93,14 +93,20 @@ npm install
    - 免费使用
    - 最好的 AI 编程体验
    
-2. **VS Code + AI 插件**（备选）
+2. **Claude Code**（新推荐 ⭐⭐⭐⭐⭐）
+   - 基于 Claude AI 的智能编程助手
+   - 支持自然语言编程
+   - 完美支持 MorphixAI 开发规范
+   - 内置项目规范和最佳实践
+   
+3. **VS Code + AI 插件**（备选）
    - 下载 VS Code：https://code.visualstudio.com
    - 安装 AI 插件
 
 #### 🎉 开始神奇的 AI 编程体验
 
 1. **用 AI 编辑器打开项目文件夹**
-   - 打开 Cursor（或其他 AI 编辑器）
+   - 打开 Cursor 或 Claude Code（或其他 AI 编辑器）
    - 点击"打开文件夹"
    - 选择你下载的项目文件夹
 
@@ -291,6 +297,8 @@ npm install --registry https://registry.npmmirror.com
 
 ### 📖 更多资源
 
+- **Claude Code 使用指南** - [CLAUDE-CODE-SETUP.md](./CLAUDE-CODE-SETUP.md) （Claude Code 用户专用）
 - **开发者文档** - [DEVELOPER.md](./DEVELOPER.md) （技术人员专用）
+- **完整开发规范** - [CLAUDE.md](./CLAUDE.md) （AI 编程规范）
 - **官方规范** - [开发规范](https://app-shell.focusbe.com/docs/app-development-specification.md)
 - **API 参考** - [SDK 文档](https://app-shell.focusbe.com/docs/app-sdk-api.md)
