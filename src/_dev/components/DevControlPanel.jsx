@@ -689,7 +689,7 @@ export default function DevControlPanel({
                                         <div className="relative">
                                             <QRCodeCanvas 
                                                 value={previewUrl} 
-                                                size={200} 
+                                                size={160} 
                                                 includeMargin={true}
                                                 fgColor="#1e293b"
                                                 bgColor="#ffffff"

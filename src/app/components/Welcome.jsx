@@ -50,24 +50,24 @@ export default function Welcome() {
                 <div className={styles.step}>
                     <div className={styles.stepNumber}>1</div>
                     <div className={styles.stepContent}>
-                        <h3>Describe your idea</h3>
-                        <p>Tell AI what kind of app you want</p>
+                        <h3>Describe</h3>
+                        <p>Your app idea</p>
                     </div>
                 </div>
 
                 <div className={styles.step}>
                     <div className={styles.stepNumber}>2</div>
                     <div className={styles.stepContent}>
-                        <h3>AI builds it</h3>
-                        <p>AI generates and previews the app</p>
+                        <h3>Generate</h3>
+                        <p>AI builds a preview</p>
                     </div>
                 </div>
 
                 <div className={styles.step}>
                     <div className={styles.stepNumber}>3</div>
                     <div className={styles.stepContent}>
-                        <h3>Start using it</h3>
-                        <p>Use it directly in Morphix AI Assistant</p>
+                        <h3>Launch</h3>
+                        <p>Use in Morphix</p>
                     </div>
                 </div>
             </div>
