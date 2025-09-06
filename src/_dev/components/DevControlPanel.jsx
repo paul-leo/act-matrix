@@ -242,6 +242,14 @@ export default function DevControlPanel({
             showToast('HostClient 未就绪', 'warning');
             return;
         }
+
+        // 检查应用信息是否完整
+        if (!appInfo?.title || !appInfo?.icon) {
+            showToast('请先完善应用信息（名称和图标）', 'warning');
+            setIsEditingApp(true);
+            return;
+        }
+
         try {
             setIsPublishing(true);
             setGlobalLoading(true);
