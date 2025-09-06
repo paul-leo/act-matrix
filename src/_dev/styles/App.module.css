@@ -59,27 +59,7 @@
     display: none;
 }
 
-@media (max-width: 1023px) {
-    .splitLayout {
-        display: block;
-        height: 100vh;
-        padding: 0;
-    }
-    .devicePreview, .controlPanelWrapper {
-        display: none;
-    }
-    .mobileOnly {
-        display: block;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        height: 100dvh;
-        width: 100vw;
-        z-index: 1000;
-    }
-}
+/* 移除移动端专用布局：始终使用桌面布局 */
 
 /* Mobile drawer for control panel */
 .mobileDrawerOverlay {

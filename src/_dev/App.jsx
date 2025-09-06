@@ -11,7 +11,6 @@ export default function App() {
     const appShellRef = useRef(null);
     const [hostClient, setHostClient] = useState(null);
     const [hostClientReady, setHostClientReady] = useState(false);
-    const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(true);
 
     useEffect(() => {
         // 获取项目 ID
@@ -106,9 +105,9 @@ export default function App() {
         <IonPage>
             <IonContent className={styles.content}>
 
-                {/* 桌面端：左右分栏；移动端：仅展示 iframe */}
+                {/* 桌面端：左右分栏布局 */}
                 <div className={styles.splitLayout}>
-                    {/* 左侧手机预览容器（桌面可见） */}
+                    {/* 左侧手机预览容器 */}
                     <div className={styles.devicePreview}>
                         <div className={styles.phoneFrame}>
                             <div className={styles.phoneScreen}>
@@ -117,7 +116,7 @@ export default function App() {
                         </div>
                     </div>
 
-                    {/* 右侧控制面板（桌面可见，始终展示） */}
+                    {/* 右侧控制面板 */}
                     <div className={styles.controlPanelWrapper}>
                         <DevControlPanel
                             appId={projectInfo.id}
@@ -126,51 +125,6 @@ export default function App() {
                             hostClientReady={hostClientReady}
                             getPreviewUrl={getPreviewUrl}
                         />
-                    </div>
-                </div>
-
-
-                {/* 移动端：全屏显示 iframe */}
-                <div className={styles.mobileOnly}>
-                    {appShellIframe}
-                </div>
-
-                {/* 移动端：展开按钮（抽屉关闭时显示） */}
-                {!isMobileDrawerOpen && (
-                    <div 
-                        className={styles.mobileExpandBtn}
-                        onClick={() => setIsMobileDrawerOpen(true)}
-                        role="button"
-                        aria-label="展开控制面板"
-                    >
-                        <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                    </div>
-                )}
-
-                {/* 移动端：右侧可折叠控制面板 */}
-                <div className={styles.mobileDrawerOverlay}>
-                    <div className={`${styles.mobileDrawer} ${isMobileDrawerOpen ? '' : 'hidden'}`}>
-                        <div
-                            className={styles.mobileDrawerHandle}
-                            onClick={() => setIsMobileDrawerOpen(!isMobileDrawerOpen)}
-                            role="button"
-                            aria-label="Toggle control panel"
-                        >
-                            {isMobileDrawerOpen ? '>' : '<'}
-                        </div>
-                        <div style={{ padding: '12px', height: 'calc(100vh - 24px)', maxHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                            <DevControlPanel
-                                appId={projectInfo.id}
-                                isDev={true}
-                                hostClient={hostClient}
-                                hostClientReady={hostClientReady}
-                                getPreviewUrl={getPreviewUrl}
-                                onClose={() => setIsMobileDrawerOpen(false)}
-                            />
-                        </div>
                     </div>
                 </div>
             </IonContent>
