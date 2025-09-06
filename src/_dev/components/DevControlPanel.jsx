@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import { IonToast } from '@ionic/react';
 import { QRCodeCanvas } from 'qrcode.react';
+import initialAppFiles from '../app-files.js';
 
 /**
  * DevControlPanel - 调试与控制面板
@@ -22,6 +23,8 @@ export default function DevControlPanel({
     const [userInfo, setUserInfo] = useState(null);
     const [appInfo, setAppInfo] = useState(null);
     const [appVersion, setAppVersion] = useState('1.0.0');
+    const [isPublishing, setIsPublishing] = useState(false);
+    const [appFiles, setAppFiles] = useState(initialAppFiles);
     const [isEditingApp, setIsEditingApp] = useState(false);
     const [editingAppInfo, setEditingAppInfo] = useState({
         title: '',
@@ -45,7 +48,18 @@ export default function DevControlPanel({
 
     const closeToast = useCallback(() => setToast(prev => ({ ...prev, open: false })), []);
 
-    // 获取用户信息和应用信息
+    // HMR: 监听 app-files 变化
+    useEffect(() => {
+        let dispose;
+        if (import.meta?.hot) {
+            dispose = import.meta.hot.accept('../app-files.js', (newModule) => {
+                setAppFiles(newModule?.default ?? initialAppFiles);
+            });
+        }
+        return () => dispose?.();
+    }, []);
+
+    // 获取用户信息和应用信息 + 远端应用版本
     useEffect(() => {
         if (!hostClientReady || !hostClient) return;
 
@@ -79,6 +93,16 @@ export default function DevControlPanel({
 
         fetchUserInfo();
         fetchAppInfo();
+        // 读取远端应用版本（若存在）
+        (async () => {
+            try {
+                const response = await hostClient?.apps?.getAppByUniqueId?.(appId);
+                const remoteVersion = response?.data?.version;
+                if (remoteVersion) {
+                    setAppVersion(remoteVersion);
+                }
+            } catch {}
+        })();
     }, [hostClient, hostClientReady]);
 
     // 复制项目ID
@@ -174,33 +198,88 @@ export default function DevControlPanel({
         }));
     }, []);
 
-    // 尝试以多种方式调用上传能力，以适配不同的 HostSDK 实现
-    const tryUpload = useCallback(async () => {
+    // 版本号 Patch 递增
+    const bumpPatch = useCallback((v) => {
+        const m = String(v).match(/^(\d+)\.(\d+)\.(\d+)$/);
+        if (!m) return String((Number(v) || 0) + 1);
+        const major = Number(m[1]);
+        const minor = Number(m[2]);
+        const patch = Number(m[3]);
+        return `${major}.${minor}.${patch + 1}`;
+    }, []);
+
+    // 发布/更新应用
+    const handlePublishApp = useCallback(async () => {
         if (!hostClientReady || !hostClient) {
             showToast('HostClient 未就绪', 'warning');
             return;
         }
+        try {
+            setIsPublishing(true);
+            showToast('正在发布应用...', 'primary');
 
-        const tryCalls = [
-            async () => hostClient?.dev?.openUploadDialog?.(),
-            async () => hostClient?.dev?.uploadApp?.(),
-            async () => hostClient.call?.('dev', 'openUploadDialog'),
-            async () => hostClient.call?.('dev', 'uploadApp'),
-            async () => hostClient.call?.('app', 'upload'),
-        ];
+            // 将 appFiles 序列化为字符串
+            const code = JSON.stringify(appFiles);
 
-        for (const fn of tryCalls) {
-            try {
-                const result = await fn?.();
-                showToast('已请求打开上传/更新功能', 'success');
-                return result;
-            } catch (e) {
-                // 继续尝试下一种调用方式
+            // 1) 查询远端应用是否存在（按 unique_id）
+            let appResponse = await hostClient?.apps?.getAppByUniqueId?.(appId);
+            let remoteApp = appResponse?.data;
+
+            // 2) 如果不存在则创建
+            if (!remoteApp) {
+                const initialVersion = '0.1.0';
+                const createReq = {
+                    name: (appInfo?.title || `App ${appId}`),
+                    code,
+                    version: initialVersion,
+                    unique_id: appId,
+                    desc: appInfo?.description,
+                    visible: true,
+                };
+                const createRes = await hostClient?.apps?.createApp?.(createReq);
+                if (!createRes?.success) throw new Error(createRes?.message || '创建应用失败');
+                remoteApp = createRes?.data;
+                setAppVersion(initialVersion);
+                showToast('应用已创建，准备发布新版本...', 'success');
             }
-        }
 
-        showToast('未找到可用的上传能力，请确认 iframe HostSDK 实现', 'danger');
-    }, [hostClient, hostClientReady, showToast]);
+            // 3) 计算新版本并更新代码
+            const currentVersion = remoteApp?.version || appVersion || '0.1.0';
+            const nextVersion = bumpPatch(currentVersion);
+            const updateReq = {
+                code,
+                version: nextVersion,
+                desc: appInfo?.description,
+                visible: true,
+            };
+            const updateRes = await hostClient?.apps?.updateApp?.(remoteApp.id, updateReq);
+            if (updateRes?.success === false) throw new Error(updateRes?.message || '更新应用失败');
+
+            setAppVersion(nextVersion);
+            showToast(`发布成功: v${nextVersion}`, 'success');
+        } catch (err) {
+            // 并发下创建冲突的兜底：重查 unique_id 后重试更新
+            try {
+                const retry = await hostClient?.apps?.getAppByUniqueId?.(appId);
+                if (retry?.data?.id) {
+                    const currentVersion = retry?.data?.version || appVersion || '0.1.0';
+                    const nextVersion = bumpPatch(currentVersion);
+                    const code = JSON.stringify(appFiles);
+                    const updateRes = await hostClient?.apps?.updateApp?.(retry.data.id, { code, version: nextVersion, desc: appInfo?.description, visible: true });
+                    if (updateRes?.success !== false) {
+                        setAppVersion(nextVersion);
+                        showToast(`发布成功: v${nextVersion}`, 'success');
+                        setIsPublishing(false);
+                        return;
+                    }
+                }
+            } catch {}
+            console.error('发布失败:', err);
+            showToast(err?.message || '发布失败，请重试', 'danger');
+        } finally {
+            setIsPublishing(false);
+        }
+    }, [hostClient, hostClientReady, showToast, appId, appInfo, appFiles, appVersion, bumpPatch]);
 
     const handleShare = useCallback(async () => {
         if (!previewUrl) {
@@ -445,14 +524,14 @@ export default function DevControlPanel({
                             <h3 className="text-sm font-semibold text-slate-800">应用上传</h3>
                         </div>
                         <button
-                            onClick={tryUpload}
-                            disabled={!hostClientReady}
-                            className={`w-full inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold transition-all duration-200 transform whitespace-nowrap ${hostClientReady ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-500 hover:to-purple-500 hover:scale-105 shadow-lg hover:shadow-xl cursor-pointer' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
+                            onClick={handlePublishApp}
+                            disabled={!hostClientReady || isPublishing}
+                            className={`w-full inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold transition-all duration-200 transform whitespace-nowrap ${hostClientReady && !isPublishing ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-500 hover:to-purple-500 hover:scale-105 shadow-lg hover:shadow-xl cursor-pointer' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
                         >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                             </svg>
-                            上传 / 更新应用
+                            {isPublishing ? '发布中...' : '上传 / 更新应用'}
                         </button>
                     </div>
 

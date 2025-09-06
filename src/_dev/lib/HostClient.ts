@@ -14,9 +14,19 @@
  * // 使用模块化API
  * const version = await client.base.getVersion();
  * const authStatus = await client.auth.getAuthStatus();
+ * const appsList = await client.apps.getAppsList({ page: 1, limit: 10 });
+ * 
+ * // 创建应用
+ * const createResult = await client.apps.createApp({
+ *     name: '我的应用',
+ *     code: 'console.log("Hello World");',
+ *     version: '1.0.0',
+ *     unique_id: crypto.randomUUID()
+ * });
  * 
  * // 或使用手动调用
  * const userInfo = await client.call('auth', 'getUserInfo');
+ * const app = await client.call('apps', 'getAppById', 'app-id-123');
  * 
  * // 检查状态
  * const isReady = client.isClientReady();
@@ -281,7 +291,7 @@ export class HostClient {
       window.addEventListener('message', this.messageListener);
       
       // 等待 iframe 加载完成
-      await this.waitForIframeLoad();
+      // await this.waitForIframeLoad();
       
       // 尝试与 HostSDK 建立连接
       await this.establishConnection();

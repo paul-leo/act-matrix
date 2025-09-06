@@ -53,9 +53,12 @@ const AppShellIframe = forwardRef(function AppShellIframe(
         if (!iframeRef.current || hostClientRef.current) return;
 
         try {
+            console.log('HostClient 初始化开始:', iframeRef.current);
             const client = await createHostClientAsync(iframeRef.current);
+            console.log('HostClient 初始化成功:', client);
             hostClientRef.current = client;
             setHostClientReady(true);
+           
             onHostClientReady?.(client);
         } catch (error) {
             console.error('HostClient 初始化失败:', error);
