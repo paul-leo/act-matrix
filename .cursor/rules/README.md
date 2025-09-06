@@ -29,6 +29,29 @@
   - API 使用指南
   - 基于官方文档：[应用开发规范](https://app-shell.focusbe.com/docs/app-development-specification.md) 和 [App SDK API 文档](https://app-shell.focusbe.com/docs/app-sdk-api.md)
 
+- **[code_standards.md](./code_standards.md)** - 详细技术标准
+  - 完整的技术栈规范
+  - AppSdk 使用示例
+  - 路由和组件规范
+  - 编码原则和最佳实践
+
+- **[appsdk-best-practices.md](./appsdk-best-practices.md)** - AppSdk 最佳实践
+  - 基于实际项目经验的使用模式
+  - 错误处理和性能优化
+  - 常用服务层实现
+  - Hook 和状态管理模式
+
+- **[appsdk-api.md](./appsdk-api.md)** - AppSdk API 参考文档
+  - 完整的 API 接口文档
+  - 详细的参数和返回值说明
+  - 实际使用示例
+
+- **[icons-usage.md](./icons-usage.md)** - Ionicons 图标使用规范
+  - 三种图标样式（默认/轮廓/锐角）的使用场景
+  - 常用图标分类和导入方式
+  - Tab导航、按钮、列表等组件中的图标最佳实践
+  - 图标状态切换和颜色使用规范
+
 ### 📚 文档上下文
 - **[docs-context.md](./docs-context.md)** - 文档上下文规则
   - 利用 docs/ 目录中的文档作为 AI 开发上下文
