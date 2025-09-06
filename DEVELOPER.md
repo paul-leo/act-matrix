@@ -196,16 +196,16 @@ npm run watch-apps
 ```
 功能：
 - 监控 `src/app/` 目录下的所有文件
-- 自动生成 `public/app-files.json`
+- 自动生成 `public/app-files.js`
 - 支持热重载和实时更新
 
 #### 还原文件
 ```bash
-npm run restore-apps        # 从 app-files.json 还原文件
+npm run restore-apps        # 从 app-files.js 还原文件
 npm run restore-apps help   # 显示帮助信息
 ```
 功能：
-- 从 `app-files.json` 还原文件到 `src/app/` 目录
+- 从 `app-files.js` 还原文件到 `src/app/` 目录
 - 自动创建目录结构
 - 保持文件内容同步
 
