@@ -1,7 +1,9 @@
 import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import { IonToast } from '@ionic/react';
 import { QRCodeCanvas } from 'qrcode.react';
+import { APP_SHELL_CONFIG } from '../config/appShellConfig.js';
 import initialAppFiles from '../app-files.js';
+import AppIcon, { AVAILABLE_ICONS, THEME_COLORS } from './AppIcon.jsx';
 
 /**
  * DevControlPanel - 调试与控制面板
@@ -21,10 +23,13 @@ export default function DevControlPanel({
 }) {
     const [toast, setToast] = useState({ open: false, message: '', color: 'primary' });
     const [userInfo, setUserInfo] = useState(null);
+    // 需求更新：用户信息仅展示，不支持编辑
     const [appInfo, setAppInfo] = useState(null);
     const [appVersion, setAppVersion] = useState('1.0.0');
     const [isPublishing, setIsPublishing] = useState(false);
     const [appFiles, setAppFiles] = useState(initialAppFiles);
+    const [remoteAppId, setRemoteAppId] = useState('');
+    const [globalLoading, setGlobalLoading] = useState(false);
     const [isEditingApp, setIsEditingApp] = useState(false);
     const [editingAppInfo, setEditingAppInfo] = useState({
         title: '',
@@ -34,13 +39,11 @@ export default function DevControlPanel({
     });
 
     const previewUrl = useMemo(() => {
-        try {
-            const url = getPreviewUrl?.();
-            return url || '';
-        } catch (e) {
-            return '';
-        }
-    }, [getPreviewUrl, appId, isDev]);
+        // 仅使用远端 appId 构建链接；未解析到时返回空
+        if (!remoteAppId) return '';
+        const baseUrl = isDev ? APP_SHELL_CONFIG.devBaseUrl : APP_SHELL_CONFIG.baseUrl;
+        return `${baseUrl}/app/${remoteAppId}?t=${Date.now()}`;
+    }, [remoteAppId, isDev]);
 
     const showToast = useCallback((message, color = 'primary') => {
         setToast({ open: true, message, color });
@@ -68,6 +71,7 @@ export default function DevControlPanel({
                 const authStatus = await hostClient?.auth?.getAuthStatus?.();
                 const user = await hostClient?.auth?.getUserInfo?.();
                 setUserInfo({ authStatus, user });
+                // 展示用，不做编辑
             } catch (error) {
                 console.log('获取用户信息失败:', error);
                 setUserInfo({ authStatus: { isAuthenticated: false, isLoading: false }, user: null });
@@ -76,18 +80,22 @@ export default function DevControlPanel({
 
         const fetchAppInfo = async () => {
             try {
-                const info = await hostClient?.app?.getAppInfo?.() || await hostClient.call?.('app', 'getInfo');
-                if (info) {
+                // 通过 unique_id 获取应用信息
+                const response = await hostClient?.apps?.getAppByUniqueId?.(appId);
+                if (response?.data) {
+                    const app = response.data;
+                    const info = {
+                        title: app.name || '',
+                        description: app.desc || '',
+                        icon: app.icon || '',
+                        themeColor: app.color || '#6366f1'
+                    };
                     setAppInfo(info);
-                    setEditingAppInfo({
-                        title: info.title || '',
-                        description: info.description || '',
-                        icon: info.icon || '',
-                        themeColor: info.themeColor || '#6366f1'
-                    });
+                    setEditingAppInfo(info);
                 }
             } catch (error) {
                 console.log('获取应用信息失败:', error);
+                showToast(`获取应用信息失败: ${error.message}`, 'danger');
             }
         };
 
@@ -98,9 +106,11 @@ export default function DevControlPanel({
             try {
                 const response = await hostClient?.apps?.getAppByUniqueId?.(appId);
                 const remoteVersion = response?.data?.version;
+                const rid = response?.data?.id;
                 if (remoteVersion) {
                     setAppVersion(remoteVersion);
                 }
+                if (rid) setRemoteAppId(rid);
             } catch {}
         })();
     }, [hostClient, hostClientReady]);
@@ -174,21 +184,39 @@ export default function DevControlPanel({
         }
 
         try {
-            const result = await hostClient?.app?.updateAppInfo?.(editingAppInfo) || 
-                          await hostClient.call?.('app', 'updateInfo', editingAppInfo);
+            setGlobalLoading(true);
+            
+            // 先获取当前应用信息
+            const currentApp = await hostClient?.apps?.getAppByUniqueId?.(appId);
+            if (!currentApp?.data?.id) {
+                showToast('应用不存在，请先发布应用', 'warning');
+                return;
+            }
+
+            // 使用 updateApp 方法更新应用信息
+            const updateRequest = {
+                name: editingAppInfo.title,
+                desc: editingAppInfo.description,
+                icon: editingAppInfo.icon,
+                color: editingAppInfo.themeColor,
+            };
+            
+            const result = await hostClient?.apps?.updateApp?.(currentApp.data.id, updateRequest);
             
             if (result?.success !== false) {
                 setAppInfo(editingAppInfo);
                 setIsEditingApp(false);
                 showToast('应用信息已保存', 'success');
             } else {
-                showToast('保存失败', 'danger');
+                showToast(`保存失败: ${result?.message || '未知错误'}`, 'danger');
             }
         } catch (error) {
             console.error('保存应用信息失败:', error);
-            showToast('保存过程中发生错误', 'danger');
+            showToast(`保存失败: ${error.message}`, 'danger');
+        } finally {
+            setGlobalLoading(false);
         }
-    }, [hostClient, hostClientReady, editingAppInfo, showToast]);
+    }, [hostClient, hostClientReady, editingAppInfo, showToast, appId]);
 
     // 更新编辑中的应用信息
     const handleUpdateEditingApp = useCallback((field, value) => {
@@ -216,6 +244,7 @@ export default function DevControlPanel({
         }
         try {
             setIsPublishing(true);
+            setGlobalLoading(true);
             showToast('正在发布应用...', 'primary');
 
             // 将 appFiles 序列化为字符串
@@ -235,6 +264,8 @@ export default function DevControlPanel({
                     unique_id: appId,
                     desc: appInfo?.description,
                     visible: true,
+                    icon: appInfo?.icon,
+                    color: appInfo?.themeColor,
                 };
                 const createRes = await hostClient?.apps?.createApp?.(createReq);
                 if (!createRes?.success) throw new Error(createRes?.message || '创建应用失败');
@@ -251,6 +282,8 @@ export default function DevControlPanel({
                 version: nextVersion,
                 desc: appInfo?.description,
                 visible: true,
+                icon: appInfo?.icon,
+                color: appInfo?.themeColor,
             };
             const updateRes = await hostClient?.apps?.updateApp?.(remoteApp.id, updateReq);
             if (updateRes?.success === false) throw new Error(updateRes?.message || '更新应用失败');
@@ -265,7 +298,7 @@ export default function DevControlPanel({
                     const currentVersion = retry?.data?.version || appVersion || '0.1.0';
                     const nextVersion = bumpPatch(currentVersion);
                     const code = JSON.stringify(appFiles);
-                    const updateRes = await hostClient?.apps?.updateApp?.(retry.data.id, { code, version: nextVersion, desc: appInfo?.description, visible: true });
+                    const updateRes = await hostClient?.apps?.updateApp?.(retry.data.id, { code, version: nextVersion, desc: appInfo?.description, visible: true, icon: appInfo?.icon, color: appInfo?.themeColor });
                     if (updateRes?.success !== false) {
                         setAppVersion(nextVersion);
                         showToast(`发布成功: v${nextVersion}`, 'success');
@@ -278,6 +311,7 @@ export default function DevControlPanel({
             showToast(err?.message || '发布失败，请重试', 'danger');
         } finally {
             setIsPublishing(false);
+            setGlobalLoading(false);
         }
     }, [hostClient, hostClientReady, showToast, appId, appInfo, appFiles, appVersion, bumpPatch]);
 
@@ -302,8 +336,10 @@ export default function DevControlPanel({
         }
     }, [previewUrl, showToast]);
 
+    // 用户信息不支持编辑，移除相关逻辑
+
     return (
-        <div className="w-full h-full max-h-screen flex flex-col">
+        <div className="w-full h-full max-h-screen flex flex-col relative">
             {/* Header with gradient background */}
             <div className="flex-shrink-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 px-6 py-4 rounded-t-2xl">
                 <div className="flex items-center justify-between">
@@ -313,10 +349,10 @@ export default function DevControlPanel({
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
-                            <span className="text-lg font-bold text-white">调试控制台</span>
+                            <span className="text-lg font-bold text-white no-wrap">控制台</span>
                         </div>
                         <div className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full backdrop-blur-sm ${hostClientReady ? 'bg-emerald-500/20 text-emerald-100 border border-emerald-400/30' : 'bg-red-500/20 text-red-100 border border-red-400/30'}` }>
-                            <div className={`w-2 h-2 rounded-full ${hostClientReady ? 'bg-emerald-400 shadow-sm shadow-emerald-400/50' : 'bg-red-400 shadow-sm shadow-red-400/50'}`}></div>
+                            <div className={`no-wrap w-2 h-2 rounded-full ${hostClientReady ? 'bg-emerald-400 shadow-sm shadow-emerald-400/50' : 'bg-red-400 shadow-sm shadow-red-400/50'}`}></div>
                             {hostClientReady ? '已连接' : '未连接'}
                         </div>
                     </div>
@@ -361,7 +397,7 @@ export default function DevControlPanel({
                                     onClick={handleStartEditApp}
                                     className="text-xs text-purple-600 hover:text-purple-700 cursor-pointer font-medium"
                                 >
-                                    {appInfo ? '编辑' : '添加'}
+                                    修改
                                 </button>
                             ) : (
                                 <div className="flex gap-2">
@@ -404,67 +440,86 @@ export default function DevControlPanel({
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-medium text-slate-700 mb-1">应用图标URL</label>
-                                        <input
-                                            type="url"
-                                            value={editingAppInfo.icon}
-                                            onChange={(e) => handleUpdateEditingApp('icon', e.target.value)}
-                                            placeholder="输入图标URL"
-                                            className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                                        />
+                                        <label className="block text-xs font-medium text-slate-700 mb-1">应用图标</label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {AVAILABLE_ICONS.map((icon) => (
+                                                <button
+                                                    key={icon}
+                                                    type="button"
+                                                    onClick={() => handleUpdateEditingApp('icon', icon)}
+                                                    className={`flex-shrink-0 p-2 rounded-lg border ${editingAppInfo.icon === icon ? 'border-purple-500 ring-2 ring-purple-200' : 'border-slate-200'} cursor-pointer bg-transparent`}
+                                                >
+                                                    <AppIcon
+                                                        name={icon}
+                                                        color={editingAppInfo.icon === icon ? (editingAppInfo.themeColor || '#6366f1') : '#ccc'}
+                                                        size={36}
+                                                    />
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
                                     <div>
                                         <label className="block text-xs font-medium text-slate-700 mb-1">主题色</label>
-                                        <div className="flex items-center gap-2">
-                                            <input
-                                                type="color"
-                                                value={editingAppInfo.themeColor}
-                                                onChange={(e) => handleUpdateEditingApp('themeColor', e.target.value)}
-                                                className="w-8 h-8 rounded border border-slate-300 cursor-pointer"
-                                            />
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            {THEME_COLORS.map((c) => (
+                                                <button
+                                                    key={c}
+                                                    type="button"
+                                                    onClick={() => handleUpdateEditingApp('themeColor', c)}
+                                                    className={`w-7 h-7 rounded-full border ${editingAppInfo.themeColor === c ? 'border-purple-600 ring-2 ring-purple-200' : 'border-slate-300'} cursor-pointer`}
+                                                    style={{ backgroundColor: c }}
+                                                    aria-label={c}
+                                                />
+                                            ))}
                                             <input
                                                 type="text"
                                                 value={editingAppInfo.themeColor}
                                                 onChange={(e) => handleUpdateEditingApp('themeColor', e.target.value)}
                                                 placeholder="#6366f1"
-                                                className="flex-1 px-3 py-2 text-sm font-mono border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                                                className="px-3 py-2 text-sm font-mono border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                                                style={{ width: 120 }}
                                             />
                                         </div>
                                     </div>
-                                </div>
-                            ) : appInfo ? (
-                                <div className="flex items-start gap-3">
-                                    {appInfo.icon ? (
-                                        <img src={appInfo.icon} alt="App Icon" className="w-12 h-12 rounded-lg shadow-sm" />
-                                    ) : (
-                                        <div 
-                                            className="w-12 h-12 rounded-lg shadow-sm flex items-center justify-center text-white font-bold text-lg"
-                                            style={{ backgroundColor: appInfo.themeColor || '#6366f1' }}
+                                    
+                                    {/* 表单底部保存按钮 */}
+                                    <div className="flex gap-3 pt-4 border-t border-slate-200">
+                                        <button
+                                            onClick={handleSaveAppInfo}
+                                            disabled={globalLoading}
+                                            className={`flex-1 inline-flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold transition-all ${globalLoading ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-green-500 text-white hover:bg-green-600 cursor-pointer'}`}
                                         >
-                                            {appInfo.title?.charAt(0) || 'A'}
-                                        </div>
-                                    )}
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            保存
+                                        </button>
+                                        <button
+                                            onClick={handleCancelEditApp}
+                                            disabled={globalLoading}
+                                            className={`px-4 py-3 text-sm font-semibold rounded-lg transition-all ${globalLoading ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 cursor-pointer'}`}
+                                        >
+                                            取消
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex items-start gap-3">
+                                    <AppIcon name={appInfo?.icon || 'apps'} color={appInfo?.themeColor || '#6366f1'} size={48} />
                                     <div className="flex-1 min-w-0">
-                                        <h4 className="font-semibold text-slate-800 truncate">{appInfo.title || '未命名应用'}</h4>
-                                        <p className="text-xs text-slate-600 mt-1 line-clamp-2">{appInfo.description || '暂无描述'}</p>
-                                        {appInfo.themeColor && (
+                                        <h4 className="font-semibold text-slate-800 truncate">{appInfo?.title || '未命名应用'}</h4>
+                                        <p className="text-xs text-slate-600 mt-1 line-clamp-2">{appInfo?.description || '暂无描述'}</p>
+                                        {appInfo?.themeColor && (
                                             <div className="flex items-center gap-2 mt-2">
                                                 <span className="text-xs text-slate-500">主题色:</span>
                                                 <div 
                                                     className="w-4 h-4 rounded-full border border-slate-200 shadow-sm"
-                                                    style={{ backgroundColor: appInfo.themeColor }}
+                                                    style={{ backgroundColor: appInfo?.themeColor }}
                                                 ></div>
-                                                <span className="text-xs font-mono text-slate-600">{appInfo.themeColor}</span>
+                                                <span className="text-xs font-mono text-slate-600">{appInfo?.themeColor}</span>
                                             </div>
                                         )}
                                     </div>
-                                </div>
-                            ) : (
-                                <div className="text-center py-8 text-slate-500">
-                                    <svg className="w-8 h-8 mx-auto mb-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                    </svg>
-                                    <p className="text-sm">点击"添加"设置应用信息</p>
                                 </div>
                             )}
                         </div>
@@ -479,40 +534,50 @@ export default function DevControlPanel({
                             <h3 className="text-sm font-semibold text-slate-800">用户状态</h3>
                         </div>
                         <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-4 border border-slate-200">
-                            {userInfo?.authStatus?.isAuthenticated ? (
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-green-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                                        {userInfo.user?.email?.charAt(0)?.toUpperCase() || 'U'}
-                                    </div>
-                                    <div className="flex-1">
-                                        <p className="text-sm font-medium text-slate-800">
-                                            {userInfo.user?.email || '已登录用户'}
-                                        </p>
-                                        <p className="text-xs text-green-600">✓ 已登录</p>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="flex items-center justify-between">
+                            <div className="space-y-3">
+                                {userInfo?.authStatus?.isAuthenticated ? (
                                     <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 bg-slate-300 rounded-full flex items-center justify-center">
-                                            <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <p className="text-sm text-slate-600">未登录</p>
-                                            <p className="text-xs text-slate-500">登录以获得完整功能</p>
+                                        {userInfo.user?.avatar ? (
+                                            <img 
+                                                src={userInfo.user.avatar} 
+                                                alt="用户头像" 
+                                                className="w-8 h-8 rounded-full object-cover border border-slate-200"
+                                            />
+                                        ) : (
+                                            <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-green-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                                                {userInfo.user?.email?.charAt(0)?.toUpperCase() || 'U'}
+                                            </div>
+                                        )}
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-medium text-slate-800 truncate">
+                                                {userInfo.user?.email || '已登录用户'}
+                                            </p>
+                                            <p className="text-xs text-green-600">✓ 已登录</p>
                                         </div>
                                     </div>
-                                    <button
-                                        onClick={handleLogin}
-                                        disabled={!hostClientReady}
-                                        className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all ${hostClientReady ? 'bg-blue-500 text-white hover:bg-blue-600 cursor-pointer' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
-                                    >
-                                        登录
-                                    </button>
-                                </div>
-                            )}
+                                ) : (
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 bg-slate-300 rounded-full flex items-center justify-center">
+                                                <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-slate-600">未登录</p>
+                                                <p className="text-xs text-slate-500">登录以获得完整功能</p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={handleLogin}
+                                            disabled={!hostClientReady}
+                                            className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all ${hostClientReady ? 'bg-blue-500 text-white hover:bg-blue-600 cursor-pointer' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
+                                        >登录</button>
+                                    </div>
+                                )}
+
+                                {/* 用户信息不可编辑 */}
+                            </div>
                         </div>
                     </div>
                     {/* Upload Section */}
@@ -613,6 +678,16 @@ export default function DevControlPanel({
                 onDidDismiss={closeToast}
                 position="top"
             />
+
+            {/* 全局 Loading 遮罩 */}
+            {globalLoading && (
+                <div className="absolute inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 rounded-2xl">
+                    <div className="bg-white rounded-xl p-6 shadow-xl flex flex-col items-center gap-3">
+                        <div className="w-8 h-8 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                        <p className="text-sm text-slate-600 font-medium">处理中...</p>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
