@@ -269,7 +269,6 @@ AI：我来优化卡片样式：
 
 ### 📖 更多资源
 
-- **Claude Code 使用指南** - [CLAUDE-CODE-SETUP.md](../CLAUDE-CODE-SETUP.md) （Claude Code 用户专用）
 - **开发者文档** - [DEVELOPER.md](../DEVELOPER.md) （技术人员专用）
 - **完整开发规范** - [CLAUDE.md](../CLAUDE.md) （AI 编程规范）
 - **项目技术文档** - [technical/project-overview.md](./technical/project-overview.md)
