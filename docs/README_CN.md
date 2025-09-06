@@ -45,7 +45,7 @@
 
 ### 第二步：下载项目
 ```bash
-git clone https://github.com/morphixai/morphixai-code.git
+git clone https://github.com/Morphicai/morphixai-code.git
 cd morphixai-code
 ```
 

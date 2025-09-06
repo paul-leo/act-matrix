@@ -45,7 +45,7 @@ If Node.js is missing, download from the [official site](https://nodejs.org/). F
 
 ### Step 2: Clone
 ```bash
-git clone https://github.com/morphixai/morphixai-code.git
+git clone https://github.com/Morphicai/morphixai-code.git
 cd morphixai-code
 ```
 
