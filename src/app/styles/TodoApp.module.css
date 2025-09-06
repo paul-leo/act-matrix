@@ -4,6 +4,54 @@
     padding: 16px;
 }
 
+/* 头部操作区域 */
+.headerActions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-right: 8px;
+}
+
+.networkBadge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 12px;
+}
+
+.networkBadge ion-icon {
+    font-size: 14px;
+}
+
+/* 加载状态 */
+.loadingCard {
+    margin-bottom: 16px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.loadingContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    text-align: center;
+}
+
+.loadingContent ion-spinner {
+    margin-bottom: 16px;
+    --color: var(--ion-color-primary);
+}
+
+.loadingContent p {
+    margin: 0;
+    color: var(--ion-color-medium);
+    font-size: 14px;
+}
+
 /* 统计卡片 */
 .statsCard {
     margin-bottom: 16px;
