@@ -79,7 +79,7 @@ export default function Welcome() {
                     onClick={openDownload}
                 >
                     <IonIcon icon={downloadOutline} />
-                    Download Morphix AI Assistant
+                    Download Morphix AI
                 </button>
                 
                 <button 
