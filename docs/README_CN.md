@@ -2,274 +2,217 @@
 
 > [🇺🇸 English](../README.md) | 🇨🇳 中文
 
-> 🚀 **快速开发 MorphixAI 小工具的完整开发框架**
+> **快速开发 MorphixAI 小工具的完整开发框架**
+
+### 📲 在哪里体验 MorphixAI？
+- **iOS**：App Store 搜索 “百变AI助手（MorphixAI）”
+- **Android**：前往[官方网站](https://baibian.app/)下载
+- **Web**：打开[小工具市场](https://app-shell.focusbe.com/app-market)
+
+## 📚 目录
+- [快速开始](#-快速开始)
+- [故障排查](#-故障排查)
+- [项目结构](#-项目结构)
+- [什么是 MorphixAI？](#-什么是-morphixai)
+- [MorphixAI Code 是什么？](#-morphixai-code-是什么)
+- [开发流程](#-开发流程)
+- [小工具开发特点](#-小工具开发特点)
+- [小工具能做什么？](#-小工具能做什么)
+- [AI 智能开发示例](#-ai-智能开发示例)
+- [发布与分享](#-发布与分享)
+- [收费说明](#-收费说明)
+- [如何获得帮助](#-如何获得帮助)
+- [更多资源](#-更多资源)
+- [参与贡献](#-参与贡献)
+- [许可证](#-许可证)
+
+## 🚀 快速开始
+
+> 🎯 专为零基础用户设计，按步骤即可运行。
+
+### 第一步：环境准备
+- Node.js：建议使用 LTS 版本（18 或 20）。检查：
+  ```bash
+  node --version
+  ```
+- Git（可选）：
+  ```bash
+  git --version
+  ```
+- 支持系统：macOS / Windows / Linux
+
+如未安装 Node.js，请访问[Node.js 官方网站](https://nodejs.org/)。Git 可参考 [git-scm.com](https://git-scm.com/)。
+
+### 第二步：下载项目
+```bash
+git clone https://github.com/morphixai/morphixai-code.git
+cd morphixai-code
+```
+
+### 第三步：安装依赖
+```bash
+npm install
+```
+
+### 第四步：启动开发
+1. 用你喜欢的编辑器打开项目
+2. 启动开发服务器
+   ```bash
+   npm run dev
+   ```
+3. 浏览器会自动打开；如未打开，访问 `http://localhost:8812`
+4. 从 `src/app/` 开始编写你的代码
+
+提示：推荐使用 [Cursor](https://cursor.sh) 获得更好的 AI 编程体验。
+
+## 🧰 故障排查
+- **端口被占用（8812）**：关闭占用该端口的进程，或在 `vite.config.js` 修改 `server.port`。
+- **安装失败（网络/权限）**：执行 `npm cache clean --force` 后重试 `npm install`。macOS/Linux 必要时使用 `sudo`。
+- **浏览器未自动打开**：手动访问 `http://localhost:8812`；或确保 `vite.config.js` 中 `server.open` 为 `true`。
+- **Mermaid 图未渲染**：请在 GitHub 或支持 Mermaid 的 Markdown 工具中查看。
+
+## 🗂 项目结构
+```
+src/
+  app/                # 你的应用代码（建议从这里开始）
+  _dev/               # 开发壳、工具、示例与配置
+public/               # 静态资源
+scripts/              # 开发辅助脚本（watch、恢复、ID 生成）
+vite.config.js        # 开发服务器配置（默认端口 8812）
+```
 
 ## 🤖 什么是 MorphixAI？
 
-**MorphixAI（中文名：百变AI助手）** 是一款集 AI 问答与用户利用 AI 生成自定义小工具于一体的应用。你可以：
-
-- 📱 **直接使用** - 使用他人分享的各种实用小工具
-- 🛠️ **自己创造** - 通过 AI 对话或代码开发生成专属小工具  
-- 🌍 **分享给世界** - 将你的小工具发布到官方应用市场
-
-### 📲 在哪里体验 MorphixAI？
-- **iOS**：App Store 搜索 "百变AI助手（MorphixAI）"
-- **Android**：官方网站下载 https://baibian.app/
-- **Web**：在线体验小工具市场 https://app-shell.focusbe.com/app-market
+**MorphixAI（中文名：百变AI助手）** 集 AI 问答与用户自定义小工具于一体。你可以：
+- **直接使用**：体验他人分享的各种实用小工具
+- **自己创造**：通过 AI 对话或代码开发生成专属小工具
+- **分享给世界**：发布到官方应用市场
 
 ## 💡 MorphixAI Code 是什么？
 
-这是一个开源的 MorphixAI 小工具开发框架，提供完整的开发环境、规范和工具链，让开发者能够快速创建符合 MorphixAI 平台规范的小工具。
+开源的小工具开发框架，提供完整的开发环境、规范与工具链，帮助你快速构建符合 MorphixAI 平台规范的小工具。
 
 ## ⚡ 开发流程
 
 ```mermaid
 graph LR
     A["💻 开发者"] --> B["MorphixAI Code<br/>⚡ 代码开发"]
-    
     B --> C["🛠️ 小工具"]
-    
     C --> D["🌍 应用市场"]
-    
     E["👤 普通用户<br/>（可选）"] -.-> F["MorphixAI App<br/>💬 对话生成"]
     F -.-> C
-    
     style B fill:#e1f5fe
     style C fill:#fff3e0
     style D fill:#e8f5e8
     style F fill:#f3e5f5
 ```
 
-### 🚀 超快开发体验
-- **💻 主要方式** - 使用 MorphixAI Code 和 AI 编程助手开发
-- **🛠️ 专业输出** - 创建功能完整的专业级小工具
-- **🌍 轻松分享** - 一键发布到应用市场供用户使用
-- **📱 备选方式** - 也可在 MorphixAI App 内通过对话快速生成
+## 🚀 超快开发体验
+- **主要方式**：使用 MorphixAI Code 与 AI 编程助手
+- **专业输出**：构建功能完整的专业级小工具
+- **轻松分享**：一键发布到应用市场
+- **备选方式**：在 MorphixAI App 内对话生成
 
 ## 🎯 小工具开发特点
-
-- ⚡ **极速开发** - 从创意到成品，AI 助力超快开发体验
-- 👶 **零门槛开发** - 前端小白也能快速开发专业级小工具
-- 🚀 **即开即用** - 开发完成即可在 MorphixAI 中直接使用，无需应用商店审核
-- 🤖 **AI 智能助手** - 告诉 AI 你想要什么功能，自动生成完整代码
-- 📱 **跨平台运行** - 一次开发，在 Web、iOS、Android 三端无缝运行
+- **极速开发**：从创意到成品，AI 加速交付
+- **零门槛**：前端小白也能快速上手
+- **即开即用**：在 MorphixAI 内直接使用，无需商店审核
+- **AI 助手**：用自然语言描述，自动生成完整代码
+- **跨平台**：一次开发，Web / iOS / Android 运行
 
 ## 🛠️ 小工具能做什么？
 
-MorphixAI 小工具拥有强大的系统能力和 AI 集成：
-
 ### 📱 系统能力
-- **数据存储** - 本地缓存，持久化保存用户数据
-- **相机相册** - 拍照、录像、访问相册图片
-- **文件操作** - 读取与保存各种格式文件
-- **定位服务** - 获取地理位置，支持地图功能
-- **日历集成** - 读写日历事件，提醒管理
-- **应用通知** - 发送本地通知提醒
+- 数据存储
+- 相机与相册
+- 文件读写
+- 定位与地图
+- 日历集成
+- 本地通知
 
 ### 🤖 AI 能力
-- **智能问答** - 集成多种 AI 模型（GPT、Claude 等）
-- **图像识别** - AI 视觉分析，识别图片内容
-- **多模态交互** - 文字、图片、语音多种输入方式
-- **网络请求** - 调用各种 API 接口
+- 智能问答（GPT、Claude 等）
+- 图像识别
+- 多模态交互（文字/图片/语音）
+- 网络请求
 
 ### 🌟 应用场景
-- **个人效率工具** - 待办事项、习惯追踪、时间管理
-- **生活助手** - 记账工具、健康监测、学习笔记
-- **创意工具** - 图片处理、文案生成、设计助手
-- **商务应用** - 数据分析、报表生成、客户管理
-
-
-
-## 🚀 小工具开发方式
-
-**使用 AI 编程助手快速开发** - 更灵活、更强大的开发体验：
-
-💡 **提示**：如果你不想写代码，也可以直接在 MorphixAI App 内通过 AI 对话生成小工具。
-
-## 🚀 快速开始
-
-> 🎯 **专为零基础用户设计，跟着步骤走就能成功！**
-
-### 第一步：环境准备
-
-<details>
-<summary><strong>📋 安装必要工具（点击展开）</strong></summary>
-
-#### 🔧 安装 Node.js
-在终端中输入以下命令检查是否已安装：
-```bash
-node --version
-```
-
-- ✅ 如果显示版本号（如 `v18.17.0`），说明已安装
-- ❌ 如果显示"命令不存在"，需要安装：
-
-**安装步骤：**
-1. 访问：https://nodejs.org
-2. 下载并安装 LTS 版本（推荐版本）
-3. 安装完成后重启终端
-
-#### 💻 安装 Git（可选，但推荐）
-在终端中输入以下命令检查是否已安装：
-```bash
-git --version
-```
-
-- ✅ 如果显示版本号，说明已安装
-- ❌ 如果显示"命令不存在"，需要安装：
-
-**安装步骤：**
-- **Windows**：访问 https://git-scm.com/ 下载安装
-- **Mac**：通常已预装，或运行 `xcode-select --install`
-- **Linux**：运行 `sudo apt install git`（Ubuntu/Debian）
-
-</details>
-
-### 第二步：下载项目到电脑
-
-```bash
-git clone https://github.com/morphixai/morphixai-code.git
-cd morphixai-code
-```
-
-### 第三步：安装项目依赖
-在终端中输入：
-```bash
-npm install
-```
-⏳ 等待安装完成（可能需要 1-3 分钟）
-
-### 第四步：开始智能开发
-
-#### 🤖 使用 AI 代码编辑器（推荐）
-
-推荐使用以下 AI 编程工具来获得最佳开发体验：
-
-- **Cursor** - https://cursor.sh
-- **Claude Code** - 基于 Claude AI 的智能编程助手
-
-#### 🎉 启动开发环境
-
-1. **用代码编辑器打开项目文件夹**
-
-2. **启动预览服务器**
-   ```bash
-   npm run dev
-   ```
-   
-3. **开始开发**
-   - 浏览器会自动打开显示你的应用
-   - 在 `src/app/` 文件夹中开始编程
-   - 如果使用 AI 编辑器，可以用中文与 AI 对话来生成代码
-
+- 个人效率、生活助手、创意工具、商务应用
 
 ## 🤖 AI 智能开发示例
 
-### 自然语言编程
-通过与 AI 对话，你可以用中文描述需求来开发应用：
+通过与 AI 对话，用自然语言完成开发。
 
-#### 示例对话 1：创建组件
+#### 示例 1：创建组件
 ```
-你：帮我创建一个用户资料卡片组件，包含头像、姓名、简介和关注按钮
+你：创建一个用户资料卡片组件，包含头像、姓名、简介和关注按钮。
 
-AI：我来为你创建一个用户资料卡片组件：
-
-1. 创建 src/app/components/UserProfile.jsx
-2. 创建 src/app/styles/UserProfile.module.css
-3. 使用现代化 UI 组件和 MorphixAI 规范
-4. 包含响应式设计和精美动画
+AI：我来创建：
+1) 创建 src/app/components/UserProfile.jsx
+2) 创建 src/app/styles/UserProfile.module.css
+3) 使用现代化 UI 与 MorphixAI 规范
+4) 添加响应式与动画
 ```
 
-#### 示例对话 2：添加功能
+#### 示例 2：添加功能
 ```
-你：在用户卡片中添加点赞功能，并保存到本地存储
+你：给用户卡片添加点赞功能，并持久化到本地存储。
 
-AI：我来为用户卡片添加点赞功能：
-
-1. 使用 useState 管理点赞状态
-2. 集成 StorageAPI 进行本地存储
-3. 添加点赞动画效果
-4. 包含错误处理
-```
-
-#### 示例对话 3：样式调整
-```
-你：让卡片更加现代化，添加阴影效果和圆角
-
-AI：我来优化卡片样式：
-
-1. 更新 CSS Module 样式
-2. 添加现代化阴影效果
-3. 优化圆角和间距
-4. 确保移动端适配
+AI：我来添加：
+1) 使用 useState 管理点赞状态
+2) 集成 StorageAPI 做持久化
+3) 添加点赞动画
+4) 处理异常
 ```
 
-### AI 自动生成的代码特点
+### AI 自动生成代码的优势
+✅ 专业质量 • ✅ 移动端优化 • ✅ 错误处理 • ✅ 性能最佳实践 • ✅ 安全校验
 
-✅ **专业级代码** - 自动生成符合行业标准的高质量代码
-✅ **移动端优化** - 自动适配各种屏幕尺寸和设备
-✅ **智能错误处理** - 自动添加异常处理和用户提示
-✅ **性能优化** - 自动应用最佳实践，确保应用流畅运行
-✅ **安全可靠** - 自动添加数据验证和安全检查
+## 🌍 发布与分享
 
----
+### 官方应用市场（推荐）
+1. 确保你的小工具功能正常
+2. 将小工具信息发送到 `contact@baibian.app`
+3. 提供：App ID、功能简述、使用场景
+4. 审核通过后，将在应用市场展示
 
-## ❓ 常见问题解答
+### 私下分享
+1. 在本地运行
+2. 压缩代码目录并分享给朋友
+3. 对方按相同步骤运行
 
-### 🤔 我完全不会编程，能用这个吗？
-**当然可以！** 这个项目就是专门为零基础用户设计的：
-- 📝 用中文和 AI 对话，不需要写代码
-- 🤖 AI 会自动生成所有需要的代码
-- 📱 生成的应用可以直接在手机上使用
+### 应用市场优势
+- 全球用户可发现和使用你的小工具
+- 在 MorphixAI 内直接使用，无需下载
+- 天然跨平台
 
+## 💰 收费说明
 
-### 📱 我的小工具如何分享给别人？
+### 免费
+- 基础 AI 模型
+- 自研或他人分享的小工具使用
+- 应用市场浏览与使用
 
-#### 🌍 发布到官方应用市场（推荐）
-1. **开发完成后**：确保小工具功能正常
-2. **提交审核**：将小工具信息发送邮件到 contact@baibian.app
-3. **提供信息**：
-   - App ID（小工具唯一标识）
-   - 功能简要说明
-   - 使用场景描述
-4. **审核通过**：小工具将在 MorphixAI 应用市场展示，所有用户都能使用
+### 付费
+- 高级 AI 模型（如 Claude、GPT-4）按使用量计费
+- 定价与 OpenRouter 保持一致（按 tokens）
+- 按需付费，仅为实际调用的 AI 支付
 
-#### 👥 私下分享
-1. **本地运行**：小工具在你电脑上运行
-2. **代码分享**：把代码文件夹压缩发给朋友
-3. **朋友使用**：朋友按相同步骤在自己电脑上运行
+## 🔧 如何获得帮助
+- 开发者文档：[DEVELOPER.md](../DEVELOPER.md)
+- 官方规范：[MorphixAI 开发规范](https://app-shell.focusbe.com/docs/app-development-specification.md)
+- 社区支持：GitHub Issues
+- AI 助手：在编辑器中直接提问
+- 官方邮箱：`contact@baibian.app`
 
-#### 🎯 应用市场优势
-- **全球用户**：数万用户可以发现和使用你的小工具
-- **无需安装**：用户在 MorphixAI 中直接使用，无需下载安装
-- **跨平台**：自动支持 Web、iOS、Android 三个平台
+## 📖 更多资源
+- 开发者文档 — [DEVELOPER.md](../DEVELOPER.md)
+- 完整开发规范 — [CLAUDE.md](../CLAUDE.md)
+- 项目技术文档 — [technical/project-overview.md](./technical/project-overview.md)
+- 开发指南 — [requirements/development-guidelines.md](./requirements/development-guidelines.md)
 
-### 💰 收费说明
+## 🤝 参与贡献
+欢迎通过 Issue 或 Pull Request 参与贡献。开发环境搭建与本地调试请参考 `DEVELOPER.md`。
 
-#### 🆓 免费使用
-- **基础 AI 模型** - 免费使用基础 AI 功能
-- **小工具使用** - 自己开发或他人分享的小工具完全免费
-- **应用市场** - 浏览、下载、使用小工具完全免费
-
-#### 💎 付费服务
-- **高级 AI 模型** - Claude、GPT-4 等高级模型按使用量计费
-- **定价透明** - 价格与 OpenRouter 保持一致，按 tokens 计费
-- **按需付费** - 只为实际使用的 AI 功能付费
-
-### 🔧 如何获得帮助？
-
-- 📚 **查看开发者文档**：[DEVELOPER.md](../DEVELOPER.md)
-- 🌐 **官方文档**：[MorphixAI 开发规范](https://app-shell.focusbe.com/docs/app-development-specification.md)
-- 💬 **社区支持**：在 GitHub Issues 中提问
-- 🤖 **AI 助手**：直接在编辑器中问 AI！
-- 📧 **官方邮箱**：contact@baibian.app
-
----
-
-
-### 📖 更多资源
-
-- **开发者文档** - [DEVELOPER.md](../DEVELOPER.md) （技术人员专用）
-- **完整开发规范** - [CLAUDE.md](../CLAUDE.md) （AI 编程规范）
-- **项目技术文档** - [technical/project-overview.md](./technical/project-overview.md)
-- **开发指南** - [requirements/development-guidelines.md](./requirements/development-guidelines.md)
+## 📄 许可证
+本项目基于 MIT 许可证开源。
