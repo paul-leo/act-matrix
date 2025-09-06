@@ -42,7 +42,7 @@ export default function Welcome() {
                     <span className={styles.titleGradient}>Morphix AI</span>
                     <span className={styles.titleSubtext}>Code</span>
                 </h1>
-                <p className={styles.subtitle}>用AI创建自己的专属APP</p>
+                <p className={styles.subtitle}>Create your own app with AI</p>
             </div>
 
             {/* 三个步骤 */}
@@ -50,24 +50,24 @@ export default function Welcome() {
                 <div className={styles.step}>
                     <div className={styles.stepNumber}>1</div>
                     <div className={styles.stepContent}>
-                        <h3>描述想法</h3>
-                        <p>告诉 AI 你想要什么样的应用</p>
+                        <h3>Describe your idea</h3>
+                        <p>Tell AI what kind of app you want</p>
                     </div>
                 </div>
 
                 <div className={styles.step}>
                     <div className={styles.stepNumber}>2</div>
                     <div className={styles.stepContent}>
-                        <h3>AI 生成</h3>
-                        <p>AI生成并预览APP</p>
+                        <h3>AI builds it</h3>
+                        <p>AI generates and previews the app</p>
                     </div>
                 </div>
 
                 <div className={styles.step}>
                     <div className={styles.stepNumber}>3</div>
                     <div className={styles.stepContent}>
-                        <h3>立即使用</h3>
-                        <p>在百变AI助手中直接使用</p>
+                        <h3>Start using it</h3>
+                        <p>Use it directly in Morphix AI Assistant</p>
                     </div>
                 </div>
             </div>
@@ -79,7 +79,7 @@ export default function Welcome() {
                     onClick={openDownload}
                 >
                     <IonIcon icon={downloadOutline} />
-                    下载百变AI助手
+                    Download Morphix AI Assistant
                 </button>
                 
                 <button 
@@ -87,13 +87,13 @@ export default function Welcome() {
                     onClick={openWebsite}
                 >
                     <IonIcon icon={globeOutline} />
-                    访问官网
+                    Visit Website
                 </button>
             </div>
 
             {/* 底部 */}
             <div className={styles.footer}>
-                <p>2024 Morphix AI. 让每个人都能创造应用。</p>
+                <p>2024 Morphix AI. Empowering everyone to create apps.</p>
             </div>
         </div>
     );

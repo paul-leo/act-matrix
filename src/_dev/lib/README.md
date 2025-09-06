@@ -1,303 +1,302 @@
-# HostClient - 独立使用指南
+# HostClient - Standalone Usage Guide
 
-## 📦 独立复制
+## 📦 Copy as a Single File
 
-`HostClient.ts` 文件可以独立复制到其他项目中使用，包含了所有必要的：
+The `HostClient.ts` file can be copied directly into other projects. It contains everything you need:
 
-- ✅ 标准消息协议定义 (`HOST_SDK_EVENT`, `HostRequest`, `HostResponse`)
-- ✅ 完整的类型定义 (`TypedHostClient`, `AuthStatus`, `UserInfo` 等)
-- ✅ 核心客户端实现 (`HostClient` 类)
-- ✅ 代理和工厂函数 (`createHostClient`, `createHostClientAsync`)
-- ✅ 调试工具和版本信息
+- ✅ Standard message protocol definitions (`HOST_SDK_EVENT`, `HostRequest`, `HostResponse`)
+- ✅ Complete type definitions (`TypedHostClient`, `AuthStatus`, `UserInfo`, etc.)
+- ✅ Core client implementation (`HostClient` class)
+- ✅ Proxy and factory helpers (`createHostClient`, `createHostClientAsync`)
+- ✅ Debug tools and version info
 
-## 🚀 快速开始
+## 🚀 Quick Start
 
-### 1. 复制文件
+### 1) Copy the file
 
 ```bash
-# 只需要复制这一个文件
+# Only this one file is required
 cp HostClient.ts your-project/lib/
 ```
 
-### 2. 基础使用
+### 2) Basic usage
 
 ```typescript
 import { createHostClient, TypedHostClient } from './lib/HostClient';
 
-// 创建客户端实例
+// Create client instance
 const iframe = document.getElementById('app-iframe') as HTMLIFrameElement;
 const client: TypedHostClient = createHostClient(iframe);
 
-// 等待初始化完成
+// Wait for initialization
 await client.readyPromise;
 
-// 使用模块化 API（推荐）
+// Modular API (recommended)
 const version = await client.base.getVersion();
 const authStatus = await client.auth.getAuthStatus();
 const appsList = await client.apps.getAppsList({ page: 1, limit: 10 });
 
-// 或使用手动调用
+// Or manual calls
 const userInfo = await client.call('auth', 'getUserInfo');
 const app = await client.call('apps', 'getAppById', 'app-id-123');
 ```
 
-### 3. 安全配置
+### 3) Security
 
 ```typescript
-// 指定安全域，避免跨域攻击
+// Specify a trusted origin to prevent cross-origin issues
 const client = createHostClient(iframe, 'https://trusted-app-domain.com');
 ```
 
-### 4. 错误处理
+### 4) Error handling
 
 ```typescript
 try {
-    // 认证相关
-    const result = await client.auth.triggerLogin();
-    if (result.success) {
-        console.log('登录成功');
-    } else {
-        console.error('登录失败:', result.error);
-    }
+  // Auth
+  const result = await client.auth.triggerLogin();
+  if (result.success) {
+    console.log('Login successful');
+  } else {
+    console.error('Login failed:', result.error);
+  }
 
-    // 应用管理相关
-    const createResult = await client.apps.createApp({
-        name: '我的应用',
-        code: 'console.log("Hello World");',
-        version: '1.0.0',
-        unique_id: crypto.randomUUID()
-    });
-    
-    if (createResult.success) {
-        console.log('应用创建成功:', createResult.data);
-    } else {
-        console.error('应用创建失败:', createResult.message);
-    }
+  // App management
+  const createResult = await client.apps.createApp({
+    name: 'My App',
+    code: 'console.log("Hello World");',
+    version: '1.0.0',
+    unique_id: crypto.randomUUID()
+  });
+
+  if (createResult.success) {
+    console.log('App created:', createResult.data);
+  } else {
+    console.error('App creation failed:', createResult.message);
+  }
 } catch (error) {
-    console.error('调用失败:', error);
+  console.error('Call failed:', error);
 }
 ```
 
-### 5. 状态检查
+### 5) Status check
 
 ```typescript
-// 检查客户端是否就绪
+// Check if client is ready
 if (client.isClientReady()) {
-    // 检查 HostSDK 初始化状态
-    const initStatus = await client.checkSDKInitialization();
-    if (initStatus.initialized) {
-        console.log('SDK 版本:', initStatus.version);
-    } else {
-        console.error('SDK 未初始化:', initStatus.error);
-    }
+  // Verify HostSDK initialization
+  const initStatus = await client.checkSDKInitialization();
+  if (initStatus.initialized) {
+    console.log('SDK version:', initStatus.version);
+  } else {
+    console.error('SDK not initialized:', initStatus.error);
+  }
 }
 ```
 
-### 6. 资源清理
+### 6) Cleanup
 
 ```typescript
-// 在组件卸载或页面离开时清理
+// Clean up on unmount or page leave
 client.destroy();
 ```
 
-## 🔧 配置选项
+## 🔧 API Options
 
 ### createHostClient(iframe, targetOrigin?)
 
-- `iframe`: 目标 iframe 元素
-- `targetOrigin`: 可选，目标域名，默认为 `'*'`
+- `iframe`: target iframe element
+- `targetOrigin` (optional): expected origin, default `'*'`
 
 ### createHostClientAsync(iframe, targetOrigin?)
 
-- 异步版本，返回 Promise
-- 等待初始化完成后返回客户端实例
+- Async version returning a Promise
+- Resolves after initialization completes
 
-## 📋 可用的 API
+## 📋 Available APIs
 
-### 基础能力 (client.base)
+### Base (client.base)
 
-- `getVersion()`: 获取 SDK 版本号
+- `getVersion()`: get SDK version
 
-### 认证能力 (client.auth)
+### Auth (client.auth)
 
-- `getAuthStatus()`: 获取认证状态
-- `getUserInfo()`: 获取用户信息
-- `triggerLogin()`: 触发登录流程
-- `logout()`: 执行登出操作
-- `getAppState()`: 获取完整的应用状态
+- `getAuthStatus()`: get auth status
+- `getUserInfo()`: get current user info
+- `triggerLogin()`: trigger login flow
+- `logout()`: logout
+- `getAppState()`: get aggregated app state
 
-### 应用管理能力 (client.apps)
+### Apps (client.apps)
 
-- `createApp(request)`: 创建应用
-- `getAppById(appId, isFork?)`: 根据ID获取应用
-- `getAppByUniqueId(uniqueId)`: 根据unique_id获取应用
-- `updateApp(appId, request)`: 更新应用
-- `getAppCode(appId)`: 获取应用代码
-- `getAppBuildCode(appId)`: 获取应用构建代码
-- `deleteApp(appId)`: 删除应用
-- `getAppsList(request?)`: 获取应用列表
-- `validateCreateAppRequest(request)`: 验证创建应用参数
+- `createApp(request)`: create app
+- `getAppById(appId, isFork?)`: get app by ID
+- `getAppByUniqueId(uniqueId)`: get app by unique_id
+- `updateApp(appId, request)`: update app
+- `getAppCode(appId)`: get app source code
+- `getAppBuildCode(appId)`: get app build code
+- `deleteApp(appId)`: delete app
+- `getAppsList(request?)`: list apps
+- `validateCreateAppRequest(request)`: validate create request
 
-### 客户端方法
+### Client methods
 
-- `call(module, method, ...params)`: 手动调用方法
-- `isClientReady()`: 检查客户端是否就绪
-- `checkSDKInitialization()`: 检查 SDK 初始化状态
-- `getCapabilities()`: 获取可用能力列表
-- `destroy()`: 销毁客户端
+- `call(module, method, ...params)`: manual call
+- `isClientReady()`: ready state
+- `checkSDKInitialization()`: check SDK init status
+- `getCapabilities()`: get available capabilities
+- `destroy()`: destroy client
 
-## 🛡️ 安全注意事项
+## 🛡️ Security Notes
 
-1. **设置 targetOrigin**: 避免使用 `'*'`，指定具体的域名
-2. **验证响应**: 检查返回的数据格式和内容
-3. **错误处理**: 妥善处理网络错误和超时
-4. **资源清理**: 及时调用 `destroy()` 清理资源
+1. Set `targetOrigin` instead of using `'*'` in production
+2. Validate response formats and contents
+3. Handle network errors and timeouts
+4. Always clean up by calling `destroy()`
 
-## 🐛 调试
+## 🐛 Debugging
 
-在开发环境中，HostClient 会自动注册调试工具：
+In development, HostClient registers debug helpers:
 
 ```javascript
-// 浏览器控制台中可用
+// In the browser console
 window.__HOST_CLIENT__.createHostClient(iframe);
-window.__HOST_CLIENT__.HOST_SDK_EVENT; // 协议事件名
-window.__HOST_CLIENT__.HOST_CLIENT_VERSION; // 客户端版本
+window.__HOST_CLIENT__.HOST_SDK_EVENT; // protocol event name
+window.__HOST_CLIENT__.HOST_CLIENT_VERSION; // client version
 ```
 
-## 📄 版本兼容性
+## 📄 Version Compatibility
 
 - **HostClient**: v1.0.0+
 - **HostSDK**: v1.0.0+
 - **TypeScript**: v4.0.0+
-- **浏览器**: Chrome 80+, Firefox 75+, Safari 13+, Edge 80+
+- **Browsers**: Chrome 80+, Firefox 75+, Safari 13+, Edge 80+
 
-## 🚀 完整使用示例
+## 🚀 Full Example
 
-### 应用管理完整流程
+### End-to-end app management
 
 ```typescript
 import { createHostClient, TypedHostClient } from './lib/HostClient';
 
 async function appManagementExample() {
-    // 1. 创建客户端
-    const iframe = document.getElementById('app-iframe') as HTMLIFrameElement;
-    const client: TypedHostClient = createHostClient(iframe, 'https://trusted-domain.com');
-    
-    // 2. 等待初始化完成
-    await client.readyPromise;
-    
-    try {
-        // 3. 创建应用
-        const createResult = await client.apps.createApp({
-            name: '示例应用',
-            code: 'console.log("Hello from my app!");',
-            version: '1.0.0',
-            unique_id: crypto.randomUUID(),
-            desc: '这是一个示例应用',
-            visible: true,
-            icon: 'https://example.com/icon.png',
-            color: '#007bff'
-        });
-        
-        if (!createResult.success) {
-            throw new Error(createResult.message);
-        }
-        
-        const appId = createResult.data!.id;
-        console.log('应用创建成功:', appId);
-        
-        // 4. 获取应用信息
-        const appInfo = await client.apps.getAppById(appId);
-        console.log('应用信息:', appInfo.data);
-        
-        // 5. 更新应用
-        const updateResult = await client.apps.updateApp(appId, {
-            desc: '更新后的描述',
-            version: '1.0.1'
-        });
-        console.log('更新结果:', updateResult);
-        
-        // 6. 获取应用代码
-        const codeResult = await client.apps.getAppCode(appId);
-        console.log('应用代码:', codeResult.data?.code);
-        
-        // 7. 获取应用列表
-        const listResult = await client.apps.getAppsList({
-            page: 1,
-            limit: 10,
-            visible: true,
-            search: '示例'
-        });
-        console.log('应用列表:', listResult.data);
-        console.log('分页信息:', listResult.pagination);
-        
-        // 8. 参数验证示例
-        const validation = await client.apps.validateCreateAppRequest({
-            name: '测试应用',
-            code: 'console.log("test");',
-            version: '1.0.0',
-            unique_id: 'invalid-uuid' // 这会导致验证失败
-        });
-        
-        if (!validation.valid) {
-            console.log('验证失败:', validation.errors);
-        }
-        
-    } catch (error) {
-        console.error('应用管理操作失败:', error);
-    } finally {
-        // 9. 清理资源
-        client.destroy();
+  // 1. Create client
+  const iframe = document.getElementById('app-iframe') as HTMLIFrameElement;
+  const client: TypedHostClient = createHostClient(iframe, 'https://trusted-domain.com');
+
+  // 2. Wait for init
+  await client.readyPromise;
+
+  try {
+    // 3. Create app
+    const createResult = await client.apps.createApp({
+      name: 'Sample App',
+      code: 'console.log("Hello from my app!");',
+      version: '1.0.0',
+      unique_id: crypto.randomUUID(),
+      desc: 'This is a sample app',
+      visible: true,
+      icon: 'https://example.com/icon.png',
+      color: '#007bff'
+    });
+
+    if (!createResult.success) {
+      throw new Error(createResult.message);
     }
+
+    const appId = createResult.data!.id;
+    console.log('App created:', appId);
+
+    // 4. Get app info
+    const appInfo = await client.apps.getAppById(appId);
+    console.log('App info:', appInfo.data);
+
+    // 5. Update app
+    const updateResult = await client.apps.updateApp(appId, {
+      desc: 'Updated description',
+      version: '1.0.1'
+    });
+    console.log('Update result:', updateResult);
+
+    // 6. Get app code
+    const codeResult = await client.apps.getAppCode(appId);
+    console.log('App code:', codeResult.data?.code);
+
+    // 7. List apps
+    const listResult = await client.apps.getAppsList({
+      page: 1,
+      limit: 10,
+      visible: true,
+      search: 'sample'
+    });
+    console.log('Apps:', listResult.data);
+    console.log('Pagination:', listResult.pagination);
+
+    // 8. Validation example
+    const validation = await client.apps.validateCreateAppRequest({
+      name: 'Test App',
+      code: 'console.log("test");',
+      version: '1.0.0',
+      unique_id: 'invalid-uuid' // will fail
+    });
+
+    if (!validation.valid) {
+      console.log('Validation failed:', validation.errors);
+    }
+
+  } catch (error) {
+    console.error('App management failed:', error);
+  } finally {
+    // 9. Cleanup
+    client.destroy();
+  }
 }
 
-// 运行示例
+// Run example
 appManagementExample();
 ```
 
-### 认证与应用管理结合使用
+### Auth + App management
 
 ```typescript
 async function authAndAppExample() {
-    const client = createHostClient(iframe);
-    await client.readyPromise;
-    
-    // 检查认证状态
-    const authStatus = await client.auth.getAuthStatus();
-    if (!authStatus.isAuthenticated) {
-        // 触发登录
-        const loginResult = await client.auth.triggerLogin();
-        if (!loginResult.success) {
-            console.error('登录失败');
-            return;
-        }
+  const client = createHostClient(iframe);
+  await client.readyPromise;
+
+  // Check auth
+  const authStatus = await client.auth.getAuthStatus();
+  if (!authStatus.isAuthenticated) {
+    const loginResult = await client.auth.triggerLogin();
+    if (!loginResult.success) {
+      console.error('Login failed');
+      return;
     }
-    
-    // 获取用户信息
-    const userInfo = await client.auth.getUserInfo();
-    console.log('当前用户:', userInfo);
-    
-    // 获取用户的应用列表
-    const userApps = await client.apps.getAppsList({
-        page: 1,
-        limit: 20
-    });
-    
-    console.log(`用户 ${userInfo?.email} 的应用:`, userApps.data);
+  }
+
+  // Get user info
+  const userInfo = await client.auth.getUserInfo();
+  console.log('Current user:', userInfo);
+
+  // Get user apps
+  const userApps = await client.apps.getAppsList({
+    page: 1,
+    limit: 20
+  });
+
+  console.log(`Apps of ${userInfo?.email}:`, userApps.data);
 }
 ```
 
-## 🔗 协议规范
+## 🔗 Protocol
 
-HostClient 使用标准的 PostMessage 协议与嵌入的应用通信：
+HostClient uses the standard `postMessage` protocol to communicate with the embedded app:
 
-- **事件名称**: `'HOSTSDK_MESSAGE'`
-- **消息格式**: 包含 `requestId`, `module`, `method`, `params` 等字段
-- **超时时间**: 30 秒
-- **重试机制**: 连接建立时最多重试 5 次
+- **Event name**: `'HOSTSDK_MESSAGE'`
+- **Message format**: includes `requestId`, `module`, `method`, `params`, etc.
+- **Timeout**: 30 seconds
+- **Retry**: up to 5 times when establishing connection
 
-### 支持的模块
+### Supported modules
 
-- **base**: 基础能力模块
-- **auth**: 认证能力模块  
-- **apps**: 应用管理能力模块
+- **base**: base capabilities
+- **auth**: authentication
+- **apps**: app management

@@ -3,8 +3,8 @@ import { IonButton, IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonIte
 import AppShellIframe from '../components/AppShellIframe.jsx';
 
 /**
- * HostClient 使用示例组件
- * 演示如何使用集成了 HostClient 的 AppShellIframe 组件
+ * HostClient example component
+ * Demonstrates using AppShellIframe integrated with HostClient
  */
 export default function HostClientExample() {
     const appShellRef = useRef(null);
@@ -12,24 +12,24 @@ export default function HostClientExample() {
     const [capabilities, setCapabilities] = useState({});
     const [callResults, setCallResults] = useState([]);
 
-    // HostClient 准备就绪的回调
+    // Callback when HostClient is ready
     const handleHostClientReady = useCallback((client) => {
-        console.log('🎉 HostClient 准备就绪！');
+        console.log('🎉 HostClient is ready!');
         setHostClient(client);
         setCapabilities(client.getCapabilities());
     }, []);
 
-    // 调用 iframe 中的方法示例
+    // Example: call a method in iframe
     const callIframeMethod = useCallback(async (method, ...params) => {
         if (!hostClient) {
-            alert('HostClient 尚未准备就绪');
+            alert('HostClient is not ready');
             return;
         }
 
         try {
-            console.log(`📤 调用方法: ${method}`, params);
+            console.log(`📤 Calling method: ${method}`, params);
             const result = await hostClient.call(method, ...params);
-            console.log(`📥 调用结果:`, result);
+            console.log(`📥 Result:`, result);
             
             // 记录调用结果
             setCallResults(prev => [{
@@ -42,7 +42,7 @@ export default function HostClientExample() {
             
             return result;
         } catch (error) {
-            console.error(`❌ 调用失败:`, error);
+            console.error(`❌ Call failed:`, error);
             
             // 记录错误
             setCallResults(prev => [{
@@ -53,34 +53,34 @@ export default function HostClientExample() {
                 success: false
             }, ...prev.slice(0, 9)]);
             
-            alert(`调用失败: ${error.message}`);
+            alert(`Call failed: ${error.message}`);
         }
     }, [hostClient]);
 
-    // 示例方法调用
+    // Example method calls
     const exampleCalls = [
         {
-            name: '获取应用信息',
+            name: 'Get App Info',
             method: 'getAppInfo',
             params: []
         },
         {
-            name: '获取用户数据',
+            name: 'Get User Data',
             method: 'getUserData',
             params: []
         },
         {
-            name: '设置主题',
+            name: 'Set Theme',
             method: 'setTheme',
             params: ['dark']
         },
         {
-            name: '显示提示',
+            name: 'Show Toast',
             method: 'showToast',
             params: ['Hello from Host!', 'success']
         },
         {
-            name: '获取设备信息',
+            name: 'Get Device Info',
             method: 'getDeviceInfo',
             params: []
         }
@@ -88,7 +88,7 @@ export default function HostClientExample() {
 
     return (
         <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
-            {/* 控制面板 */}
+            {/* Control panel */}
             <div style={{ 
                 position: 'fixed', 
                 top: '20px', 
@@ -100,24 +100,24 @@ export default function HostClientExample() {
             }}>
                 <IonCard>
                     <IonCardHeader>
-                        <IonCardTitle>HostClient 控制面板</IonCardTitle>
+                        <IonCardTitle>HostClient Control Panel</IonCardTitle>
                     </IonCardHeader>
                     <IonCardContent>
-                        {/* 连接状态 */}
+                        {/* Connection status */}
                         <div style={{ marginBottom: '16px' }}>
-                            <strong>连接状态: </strong>
+                            <strong>Status: </strong>
                             <span style={{ 
                                 color: hostClient ? '#22c55e' : '#ef4444',
                                 fontWeight: 'bold'
                             }}>
-                                {hostClient ? '已连接' : '未连接'}
+                                {hostClient ? 'Connected' : 'Disconnected'}
                             </span>
                         </div>
 
-                        {/* 可用能力 */}
+                        {/* Capabilities */}
                         {Object.keys(capabilities).length > 0 && (
                             <div style={{ marginBottom: '16px' }}>
-                                <strong>可用能力:</strong>
+                                <strong>Capabilities:</strong>
                                 <pre style={{ 
                                     fontSize: '11px', 
                                     background: '#f5f5f5', 
@@ -131,9 +131,9 @@ export default function HostClientExample() {
                             </div>
                         )}
 
-                        {/* 示例方法调用 */}
+                        {/* Example method calls */}
                         <div style={{ marginBottom: '16px' }}>
-                            <strong>示例方法调用:</strong>
+                            <strong>Examples:</strong>
                             <div style={{ display: 'grid', gap: '8px', marginTop: '8px' }}>
                                 {exampleCalls.map((call, index) => (
                                     <IonButton
@@ -149,10 +149,10 @@ export default function HostClientExample() {
                             </div>
                         </div>
 
-                        {/* 调用历史 */}
+                        {/* Call history */}
                         {callResults.length > 0 && (
                             <div>
-                                <strong>调用历史:</strong>
+                                <strong>Call History:</strong>
                                 <IonList style={{ marginTop: '8px' }}>
                                     {callResults.map((result, index) => (
                                         <IonItem key={index}>
@@ -189,7 +189,7 @@ export default function HostClientExample() {
                             </div>
                         )}
 
-                        {/* 手动操作 */}
+                        {/* Manual actions */}
                         <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #eee' }}>
                             <IonButton
                                 size="small"
@@ -200,7 +200,7 @@ export default function HostClientExample() {
                                     }
                                 }}
                             >
-                                重新加载 iframe
+                                Reload iframe
                             </IonButton>
                             
                             <IonButton
@@ -210,7 +210,7 @@ export default function HostClientExample() {
                                     setCallResults([]);
                                 }}
                             >
-                                清空历史
+                                Clear history
                             </IonButton>
                         </div>
                     </IonCardContent>
@@ -224,10 +224,10 @@ export default function HostClientExample() {
                 isDev={true}
                 onHostClientReady={handleHostClientReady}
                 onAppLoad={(data) => {
-                    console.log('📱 应用加载完成:', data);
+                    console.log('📱 App loaded:', data);
                 }}
                 onAppError={(error) => {
-                    console.error('❌ 应用加载错误:', error);
+                    console.error('❌ App load error:', error);
                 }}
             />
         </div>

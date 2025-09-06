@@ -4,7 +4,7 @@
  */
 export async function extractProjectId() {
   try {
-    // 使用动态导入 JSON 文件，添加 import assertion
+    // Dynamically import JSON file
     const configModule = await import('../project-config.json');
     const config = configModule.default;
     
@@ -14,7 +14,7 @@ export async function extractProjectId() {
     
     return null;
   } catch (error) {
-    console.warn('读取项目配置失败，可能文件不存在:', error.message);
+    console.warn('Failed to read project config, file may not exist:', error.message);
     return null;
   }
 }
@@ -30,7 +30,7 @@ export async function getProjectIdWithWarning() {
     return {
       id: 'no-project-id',
       hasWarning: true,
-      warningMessage: '未找到项目 ID，请运行 "npm run generate-id" 生成项目唯一标识'
+      warningMessage: 'Project ID not found. Run "npm run generate-id" to generate a unique project ID.'
     };
   }
   

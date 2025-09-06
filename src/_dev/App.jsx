@@ -13,7 +13,7 @@ export default function App() {
     const [hostClientReady, setHostClientReady] = useState(false);
 
     useEffect(() => {
-        // 获取项目 ID
+        // Get project ID
         async function loadProjectId() {
             const info = await getProjectIdWithWarning();
             setProjectInfo(info);
@@ -21,14 +21,14 @@ export default function App() {
             if (info.hasWarning) {
                 console.warn(info.warningMessage);
             } else {
-                console.log('项目 ID:', info.id);
+                console.log('Project ID:', info.id);
             }
         }
         
         loadProjectId();
     }, []);
 
-    // App Shell 事件处理
+    // App Shell event handlers
     const handleAppLoad = (data) => {
         console.log('App loaded in iframe:', data);
     };
@@ -52,7 +52,7 @@ export default function App() {
         return `${baseUrl}/app-runner/${projectInfo.id}?t=${Date.now()}`;
     }, [projectInfo.id]);
 
-    // 如果有警告，显示提示界面
+    // If there's a warning, show guidance UI
     if (projectInfo.hasWarning) {
         return (
             <IonPage>
@@ -68,19 +68,19 @@ export default function App() {
                         gap: '1rem'
                     }}>
                         <IonText color="warning">
-                            <h2>⚠️ 项目 ID 未找到</h2>
+                            <h2>⚠️ Project ID Not Found</h2>
                         </IonText>
                         <IonText>
                             <p>{projectInfo.warningMessage}</p>
                         </IonText>
                         <IonButton onClick={() => {
-                            console.log('请在终端运行: npm run generate-id');
+                            console.log('Please run in terminal: npm run generate-id');
                             setTimeout(() => window.location.reload(), 100);
                         }} color="primary">
-                            🔄 刷新检查
+                            🔄 Refresh & Check
                         </IonButton>
                         <IonText color="medium">
-                            <small>在终端运行 <code>npm run generate-id</code> 后点击刷新</small>
+                            <small>Run <code>npm run generate-id</code> in terminal, then click refresh</small>
                         </IonText>
                     </div>
                 </IonContent>
@@ -105,9 +105,9 @@ export default function App() {
         <IonPage>
             <IonContent className={styles.content}>
 
-                {/* 桌面端：左右分栏布局 */}
+                {/* Desktop: split layout */}
                 <div className={styles.splitLayout}>
-                    {/* 左侧手机预览容器 */}
+                    {/* Left: phone preview */}
                     <div className={styles.devicePreview}>
                         <div className={styles.phoneFrame}>
                             <div className={styles.phoneScreen}>
@@ -116,7 +116,7 @@ export default function App() {
                         </div>
                     </div>
 
-                    {/* 右侧控制面板 */}
+                    {/* Right: control panel */}
                     <div className={styles.controlPanelWrapper}>
                         <DevControlPanel
                             appId={projectInfo.id}

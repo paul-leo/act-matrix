@@ -14,11 +14,11 @@ import { APP_SHELL_CONFIG } from '../config/appShellConfig.js';
 import { createHostClientAsync } from '../lib/hostClient.ts';
 
 /**
- * 简化版 AppShell Iframe 组件
- * 核心功能：
- * 1. 嵌入 iframe
- * 2. 基础通信
- * 3. HostClient 集成
+ * Simplified AppShell Iframe component
+ * Core features:
+ * 1. Embed iframe
+ * 2. Basic messaging
+ * 3. HostClient integration
  */
 const AppShellIframe = forwardRef(function AppShellIframe(
     {
@@ -33,7 +33,7 @@ const AppShellIframe = forwardRef(function AppShellIframe(
     const iframeRef = useRef(null);
     const hostClientRef = useRef(null);
 
-    // 基础状态
+    // Basic state
     const [error, setError] = useState(null);
     const [lastUpdateTime, setLastUpdateTime] = useState(Date.now());
     const [showToast, setShowToast] = useState(false);
@@ -48,25 +48,25 @@ const AppShellIframe = forwardRef(function AppShellIframe(
         return `${baseUrl}/app-runner/${appId}?t=${lastUpdateTime}`;
     }, [appId, isDev, lastUpdateTime]);
 
-    // 初始化 HostClient (简化版)
+    // Initialize HostClient (simplified)
     const initializeHostClient = useCallback(async () => {
         if (!iframeRef.current || hostClientRef.current) return;
 
         try {
-            console.log('HostClient 初始化开始:', iframeRef.current);
+            console.log('HostClient initialization start:', iframeRef.current);
             const client = await createHostClientAsync(iframeRef.current);
-            console.log('HostClient 初始化成功:', client);
+            console.log('HostClient initialized successfully:', client);
             hostClientRef.current = client;
             setHostClientReady(true);
            
             onHostClientReady?.(client);
         } catch (error) {
-            console.error('HostClient 初始化失败:', error);
+            console.error('HostClient initialization failed:', error);
             setError(error.message);
         }
     }, [onHostClientReady]);
 
-    // 销毁 HostClient
+    // Destroy HostClient
     const destroyHostClient = useCallback(() => {
         if (hostClientRef.current) {
             hostClientRef.current.destroy();
@@ -75,14 +75,14 @@ const AppShellIframe = forwardRef(function AppShellIframe(
         }
     }, []);
 
-    // 重新加载
+    // Reload
     const handleReload = useCallback(() => {
         setError(null);
         destroyHostClient();
         setLastUpdateTime(Date.now());
     }, [destroyHostClient]);
 
-    // 发送文件更新消息到 iframe
+    // Send file update message to iframe
     const sendFileUpdateMessage = useCallback(
         (targetAppId = '*') => {
             if (iframeRef.current && iframeRef.current.contentWindow) {
@@ -100,16 +100,16 @@ const AppShellIframe = forwardRef(function AppShellIframe(
                     message,
                     targetOrigin
                 );
-                console.log('🔄 发送文件更新消息到 iframe:', message);
+                console.log('🔄 Sent file update message to iframe:', message);
 
                 // 显示提示
-                setToastMessage('代码已更新，正在通知应用重新加载...');
+                setToastMessage('Code updated, notifying app to reload...');
                 setShowToast(true);
             }
         },
         [isDev]
     );
-    // 消息通信 (简化版)
+    // Message handling (simplified)
     const handleMessage = useCallback(
         (event) => {
             try {
@@ -125,11 +125,11 @@ const AppShellIframe = forwardRef(function AppShellIframe(
                         onAppLoad?.(data);
                         break;
                     case 'BAIBIAN_APP_ERROR':
-                        setError(data.error || data.message || '应用加载失败');
+                        setError(data.error || data.message || 'Failed to load the app');
                         onAppError?.(data.error || data.message);
                         break;
                     case 'GET_APP_FILES_REQUEST':
-                        // 直接返回文件
+                        // Return files directly
                         console.log('appFiles', appFiles);
                         if (event.source?.postMessage) {
                             event.source.postMessage(
@@ -145,13 +145,13 @@ const AppShellIframe = forwardRef(function AppShellIframe(
                         break;
                 }
             } catch (err) {
-                console.error('消息解析错误:', err);
+                console.error('Message parsing error:', err);
             }
         },
         [onAppLoad, onAppError, appFiles]
     );
 
-    // iframe 加载处理
+    // iframe load handling
     const handleIframeLoad = useCallback(() => {
         setError(null);
         // 简单延迟后初始化
@@ -159,10 +159,10 @@ const AppShellIframe = forwardRef(function AppShellIframe(
     }, [initializeHostClient]);
 
     const handleIframeError = useCallback(() => {
-        setError('无法加载 App Shell');
+        setError('Unable to load App Shell');
     }, []);
 
-    // HMR 支持 (简化版)
+    // HMR support (simplified)
     useEffect(() => {
         let dispose;
         if (import.meta.hot) {
@@ -171,26 +171,23 @@ const AppShellIframe = forwardRef(function AppShellIframe(
                 setAppFiles(newModule.default);
                 sendFileUpdateMessage();
                 // handleReload();
-                // setToastMessage('代码已更新');
-                // setShowToast(true);
-                // handleReload();
             });
         }
         return () => dispose?.();
     }, []);
 
-    // 事件监听
+    // Event listeners
     useEffect(() => {
         window.addEventListener('message', handleMessage);
         return () => window.removeEventListener('message', handleMessage);
     }, [handleMessage]);
 
-    // 组件卸载清理
+    // Cleanup on unmount
     useEffect(() => {
         return () => destroyHostClient();
     }, [destroyHostClient]);
 
-    // 暴露简化的 API
+    // Expose simplified API
     useImperativeHandle(
         ref,
         () => ({
@@ -198,10 +195,10 @@ const AppShellIframe = forwardRef(function AppShellIframe(
             isHostClientReady: () => hostClientReady,
             reload: handleReload,
             getIframe: () => iframeRef.current,
-            // 基础 API 调用
+            // Basic API calls
             call: async (module, method, ...params) => {
                 if (!hostClientRef.current) {
-                    throw new Error('HostClient 未初始化');
+                    throw new Error('HostClient is not initialized');
                 }
                 return hostClientRef.current.call(module, method, ...params);
             },
@@ -230,18 +227,18 @@ const AppShellIframe = forwardRef(function AppShellIframe(
 
 
 
-                {/* 简化的错误显示 */}
+                {/* Simplified error display */}
                 {error && (
                     <div className={styles.errorOverlay}>
                         <div className={styles.errorMessage}>
                             {error}
-                            <button onClick={handleReload}>重试</button>
+                            <button onClick={handleReload}>Retry</button>
                         </div>
                     </div>
                 )}
             </div>
 
-            {/* Toast 通知 */}
+            {/* Toast notification */}
             <IonToast
                 isOpen={showToast}
                 message={toastMessage}

@@ -300,14 +300,14 @@ export class HostClient {
       await this.establishConnection();
       
       this.isReady = true;
-      console.log('✅ HostClient 初始化完成');
+      console.log('✅ HostClient initialized');
   }
 
   /**
    * 等待 iframe 加载完成
    */
   private async waitForIframeLoad(): Promise<void> {
-      console.log('等待 iframe 加载完成');
+      console.log('Waiting for iframe to load');
       console.log(this.iframe.contentDocument?.readyState);
       if (this.iframe.contentDocument?.readyState === 'complete') {
           return;
@@ -337,11 +337,11 @@ export class HostClient {
       for (let i = 0; i < maxRetries; i++) {
           try {
               await this.call('base', 'getVersion');
-              console.log('🤝 HostClient 与 HostSDK 连接建立成功');
+              console.log('🤝 HostClient connected to HostSDK successfully');
               return;
           } catch {
               if (i === maxRetries - 1) {
-                  console.warn('⚠️ HostClient 无法连接到 HostSDK，继续初始化但功能可能受限');
+                  console.warn('⚠️ HostClient cannot connect to HostSDK; continuing initialization with limited features');
                   return;
               }
               await new Promise(resolve => setTimeout(resolve, retryDelay));
@@ -360,7 +360,7 @@ export class HostClient {
 
       // 如果配置了特定域，检查来源
       if (this.targetOrigin !== '*' && event.origin !== this.targetOrigin) {
-          console.warn(`HostClient: 拒绝来自 ${event.origin} 的消息，期望来源: ${this.targetOrigin}`);
+          console.warn(`HostClient: Message from ${event.origin} rejected, expected origin: ${this.targetOrigin}`);
           return;
       }
 
@@ -396,7 +396,7 @@ export class HostClient {
               this.handleResponse(response);
           }
       } catch (error) {
-          console.error('HostClient: 处理消息时出错:', error);
+          console.error('HostClient: error handling message:', error);
       }
   }
 
@@ -493,7 +493,7 @@ export class HostClient {
       }
 
       this.isReady = false;
-      console.log('🧹 HostClient 已销毁');
+      console.log('🧹 HostClient destroyed');
   }
 
   /**
@@ -507,8 +507,8 @@ export class HostClient {
    * 获取可用的能力列表
    */
   getCapabilities(): Record<string, string[]> {
-      // 这是一个占位实现，实际应该从嵌入页面获取
-      console.warn('getCapabilities() 需要从嵌入页面的 HostSDK 获取能力列表');
+      // Placeholder implementation; should fetch from embedded page
+      console.warn('getCapabilities() should fetch capabilities from the embedded page HostSDK');
       return {};
   }
 
@@ -633,8 +633,8 @@ if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
   
   console.log(
       '%c HostClient %c v' + HOST_CLIENT_VERSION + '\n' +
-      '使用 window.__HOST_CLIENT__.createHostClient(iframe) 创建客户端\n' +
-      '协议版本: ' + HOST_SDK_EVENT,
+      'Use window.__HOST_CLIENT__.createHostClient(iframe) to create client\n' +
+      'Protocol event: ' + HOST_SDK_EVENT,
       'background:#2196F3;color:white;padding:4px;border-radius:4px;',
       'font-weight:bold;'
   );
