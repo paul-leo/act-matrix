@@ -1,173 +1,303 @@
-# HostClient 集成说明
+# HostClient - 独立使用指南
 
-## 概述
+## 📦 独立复制
 
-`hostClient.ts` 是一个用于快速访问 iframe 中能力的客户端 SDK，已集成到 `AppShellIframe.jsx` 组件中。
+`HostClient.ts` 文件可以独立复制到其他项目中使用，包含了所有必要的：
 
-## 功能特性
+- ✅ 标准消息协议定义 (`HOST_SDK_EVENT`, `HostRequest`, `HostResponse`)
+- ✅ 完整的类型定义 (`TypedHostClient`, `AuthStatus`, `UserInfo` 等)
+- ✅ 核心客户端实现 (`HostClient` 类)
+- ✅ 代理和工厂函数 (`createHostClient`, `createHostClientAsync`)
+- ✅ 调试工具和版本信息
 
-- ✅ **自动初始化**: iframe 加载完成后立即初始化 HostClient
-- ✅ **Proxy 代理**: 支持直接调用 iframe 中的方法
-- ✅ **生命周期管理**: 自动处理客户端的创建和销毁
-- ✅ **错误处理**: 完善的错误处理和超时机制
-- ✅ **状态指示**: 可视化的连接状态指示器
-- ✅ **TypeScript 支持**: 完整的类型定义
+## 🚀 快速开始
 
-## 使用方法
+### 1. 复制文件
 
-### 1. 基础使用
-
-```jsx
-import React, { useRef } from 'react';
-import AppShellIframe from '../components/AppShellIframe.jsx';
-
-function MyComponent() {
-    const appShellRef = useRef(null);
-
-    const handleHostClientReady = (client) => {
-        console.log('HostClient 准备就绪！');
-        console.log('可用能力:', client.getCapabilities());
-    };
-
-    return (
-        <AppShellIframe
-            ref={appShellRef}
-            appId="my-app"
-            onHostClientReady={handleHostClientReady}
-        />
-    );
-}
+```bash
+# 只需要复制这一个文件
+cp HostClient.ts your-project/lib/
 ```
 
-### 2. 通过 ref 调用方法
+### 2. 基础使用
 
-```jsx
-// 获取 HostClient 实例
-const hostClient = appShellRef.current?.getHostClient();
+```typescript
+import { createHostClient, TypedHostClient } from './lib/HostClient';
 
-// 调用 iframe 中的方法
-if (hostClient) {
-    try {
-        const result = await hostClient.call('methodName', param1, param2);
-        console.log('调用结果:', result);
-    } catch (error) {
-        console.error('调用失败:', error);
-    }
-}
+// 创建客户端实例
+const iframe = document.getElementById('app-iframe') as HTMLIFrameElement;
+const client: TypedHostClient = createHostClient(iframe);
 
-// 或者使用 ref 的简化方法
+// 等待初始化完成
+await client.readyPromise;
+
+// 使用模块化 API（推荐）
+const version = await client.base.getVersion();
+const authStatus = await client.auth.getAuthStatus();
+const appsList = await client.apps.getAppsList({ page: 1, limit: 10 });
+
+// 或使用手动调用
+const userInfo = await client.call('auth', 'getUserInfo');
+const app = await client.call('apps', 'getAppById', 'app-id-123');
+```
+
+### 3. 安全配置
+
+```typescript
+// 指定安全域，避免跨域攻击
+const client = createHostClient(iframe, 'https://trusted-app-domain.com');
+```
+
+### 4. 错误处理
+
+```typescript
 try {
-    const result = await appShellRef.current?.call('methodName', param1, param2);
-    console.log('调用结果:', result);
+    // 认证相关
+    const result = await client.auth.triggerLogin();
+    if (result.success) {
+        console.log('登录成功');
+    } else {
+        console.error('登录失败:', result.error);
+    }
+
+    // 应用管理相关
+    const createResult = await client.apps.createApp({
+        name: '我的应用',
+        code: 'console.log("Hello World");',
+        version: '1.0.0',
+        unique_id: crypto.randomUUID()
+    });
+    
+    if (createResult.success) {
+        console.log('应用创建成功:', createResult.data);
+    } else {
+        console.error('应用创建失败:', createResult.message);
+    }
 } catch (error) {
     console.error('调用失败:', error);
 }
 ```
 
-### 3. 检查连接状态
+### 5. 状态检查
 
-```jsx
-// 检查 HostClient 是否就绪
-const isReady = appShellRef.current?.isHostClientReady();
-
-// 获取 HostClient 实例
-const hostClient = appShellRef.current?.getHostClient();
-
-if (hostClient && isReady) {
-    // 可以安全地调用方法
+```typescript
+// 检查客户端是否就绪
+if (client.isClientReady()) {
+    // 检查 HostSDK 初始化状态
+    const initStatus = await client.checkSDKInitialization();
+    if (initStatus.initialized) {
+        console.log('SDK 版本:', initStatus.version);
+    } else {
+        console.error('SDK 未初始化:', initStatus.error);
+    }
 }
 ```
 
-## AppShellIframe 新增 Props
-
-| Prop | 类型 | 描述 |
-|------|------|------|
-| `onHostClientReady` | `(client) => void` | HostClient 准备就绪时的回调 |
-
-## AppShellIframe 新增 Ref 方法
-
-| 方法 | 参数 | 返回值 | 描述 |
-|------|------|--------|------|
-| `getHostClient()` | - | `HostClient \| null` | 获取 HostClient 实例 |
-| `isHostClientReady()` | - | `boolean` | 检查 HostClient 是否就绪 |
-| `call(method, ...params)` | `string, ...any` | `Promise<any>` | 调用 iframe 中的方法 |
-| `initializeHostClient()` | - | `Promise<void>` | 手动初始化 HostClient |
-| `destroyHostClient()` | - | `void` | 销毁 HostClient |
-
-## HostClient API
-
-### 核心方法
+### 6. 资源清理
 
 ```typescript
-// 调用 iframe 中的方法
-await hostClient.call<ReturnType>('methodName', ...params);
-
-// 获取可用能力
-const capabilities = hostClient.getCapabilities();
-
-// 检查是否就绪
-const isReady = hostClient.isClientReady();
-
-// 销毁客户端
-hostClient.destroy();
+// 在组件卸载或页面离开时清理
+client.destroy();
 ```
 
-### Proxy 代理调用
+## 🔧 配置选项
 
-```typescript
-// 如果 iframe 中有方法 `getUserData`
-const userData = await hostClient.getUserData();
+### createHostClient(iframe, targetOrigin?)
 
-// 如果 iframe 中有方法 `setTheme`
-await hostClient.setTheme('dark');
+- `iframe`: 目标 iframe 元素
+- `targetOrigin`: 可选，目标域名，默认为 `'*'`
 
-// 如果 iframe 中有方法 `showNotification`
-await hostClient.showNotification('Hello!', 'success');
-```
+### createHostClientAsync(iframe, targetOrigin?)
 
-## 状态指示器
+- 异步版本，返回 Promise
+- 等待初始化完成后返回客户端实例
 
-在开发环境中，右下角会显示 HostClient 的连接状态：
+## 📋 可用的 API
 
-- 🟢 **已连接**: HostClient 成功连接到 iframe
-- 🔴 **未连接**: HostClient 尚未连接或连接失败
+### 基础能力 (client.base)
 
-## 示例代码
+- `getVersion()`: 获取 SDK 版本号
 
-查看 `src/_dev/examples/HostClientExample.jsx` 获取完整的使用示例。
+### 认证能力 (client.auth)
 
-## 开发调试
+- `getAuthStatus()`: 获取认证状态
+- `getUserInfo()`: 获取用户信息
+- `triggerLogin()`: 触发登录流程
+- `logout()`: 执行登出操作
+- `getAppState()`: 获取完整的应用状态
 
-在开发环境中，HostClient 会暴露到全局变量：
+### 应用管理能力 (client.apps)
+
+- `createApp(request)`: 创建应用
+- `getAppById(appId, isFork?)`: 根据ID获取应用
+- `getAppByUniqueId(uniqueId)`: 根据unique_id获取应用
+- `updateApp(appId, request)`: 更新应用
+- `getAppCode(appId)`: 获取应用代码
+- `getAppBuildCode(appId)`: 获取应用构建代码
+- `deleteApp(appId)`: 删除应用
+- `getAppsList(request?)`: 获取应用列表
+- `validateCreateAppRequest(request)`: 验证创建应用参数
+
+### 客户端方法
+
+- `call(module, method, ...params)`: 手动调用方法
+- `isClientReady()`: 检查客户端是否就绪
+- `checkSDKInitialization()`: 检查 SDK 初始化状态
+- `getCapabilities()`: 获取可用能力列表
+- `destroy()`: 销毁客户端
+
+## 🛡️ 安全注意事项
+
+1. **设置 targetOrigin**: 避免使用 `'*'`，指定具体的域名
+2. **验证响应**: 检查返回的数据格式和内容
+3. **错误处理**: 妥善处理网络错误和超时
+4. **资源清理**: 及时调用 `destroy()` 清理资源
+
+## 🐛 调试
+
+在开发环境中，HostClient 会自动注册调试工具：
 
 ```javascript
-// 在浏览器控制台中
+// 浏览器控制台中可用
 window.__HOST_CLIENT__.createHostClient(iframe);
-window.__HOST_CLIENT__.createHostClientAsync(iframe);
+window.__HOST_CLIENT__.HOST_SDK_EVENT; // 协议事件名
+window.__HOST_CLIENT__.HOST_CLIENT_VERSION; // 客户端版本
 ```
 
-## 注意事项
+## 📄 版本兼容性
 
-1. **初始化时机**: HostClient 会在 iframe 加载完成时自动初始化（onLoad 事件触发后）
-2. **错误处理**: 始终使用 try-catch 包装 HostClient 调用
-3. **生命周期**: 组件卸载时会自动清理 HostClient
-4. **超时设置**: 默认请求超时时间为 30 秒
-5. **安全性**: 消息通信会验证来源，确保安全性
-6. **早期初始化**: 由于 HostClient 在 iframe 加载后立即初始化，可能在应用完全就绪前尝试连接
+- **HostClient**: v1.0.0+
+- **HostSDK**: v1.0.0+
+- **TypeScript**: v4.0.0+
+- **浏览器**: Chrome 80+, Firefox 75+, Safari 13+, Edge 80+
 
-## 故障排除
+## 🚀 完整使用示例
 
-### HostClient 无法连接
+### 应用管理完整流程
 
-1. 检查 iframe 是否正确加载（onLoad 事件是否触发）
-2. 确认 iframe 应用是否发送了 `hostSdkReady` 事件
-3. 查看浏览器控制台是否有错误信息，特别关注初始化日志
-4. 确认消息来源验证是否正确
-5. 如果初始化过早，iframe 应用可能尚未完全准备就绪，可以重试或等待应用完全加载
+```typescript
+import { createHostClient, TypedHostClient } from './lib/HostClient';
 
-### 方法调用失败
+async function appManagementExample() {
+    // 1. 创建客户端
+    const iframe = document.getElementById('app-iframe') as HTMLIFrameElement;
+    const client: TypedHostClient = createHostClient(iframe, 'https://trusted-domain.com');
+    
+    // 2. 等待初始化完成
+    await client.readyPromise;
+    
+    try {
+        // 3. 创建应用
+        const createResult = await client.apps.createApp({
+            name: '示例应用',
+            code: 'console.log("Hello from my app!");',
+            version: '1.0.0',
+            unique_id: crypto.randomUUID(),
+            desc: '这是一个示例应用',
+            visible: true,
+            icon: 'https://example.com/icon.png',
+            color: '#007bff'
+        });
+        
+        if (!createResult.success) {
+            throw new Error(createResult.message);
+        }
+        
+        const appId = createResult.data!.id;
+        console.log('应用创建成功:', appId);
+        
+        // 4. 获取应用信息
+        const appInfo = await client.apps.getAppById(appId);
+        console.log('应用信息:', appInfo.data);
+        
+        // 5. 更新应用
+        const updateResult = await client.apps.updateApp(appId, {
+            desc: '更新后的描述',
+            version: '1.0.1'
+        });
+        console.log('更新结果:', updateResult);
+        
+        // 6. 获取应用代码
+        const codeResult = await client.apps.getAppCode(appId);
+        console.log('应用代码:', codeResult.data?.code);
+        
+        // 7. 获取应用列表
+        const listResult = await client.apps.getAppsList({
+            page: 1,
+            limit: 10,
+            visible: true,
+            search: '示例'
+        });
+        console.log('应用列表:', listResult.data);
+        console.log('分页信息:', listResult.pagination);
+        
+        // 8. 参数验证示例
+        const validation = await client.apps.validateCreateAppRequest({
+            name: '测试应用',
+            code: 'console.log("test");',
+            version: '1.0.0',
+            unique_id: 'invalid-uuid' // 这会导致验证失败
+        });
+        
+        if (!validation.valid) {
+            console.log('验证失败:', validation.errors);
+        }
+        
+    } catch (error) {
+        console.error('应用管理操作失败:', error);
+    } finally {
+        // 9. 清理资源
+        client.destroy();
+    }
+}
 
-1. 确认 HostClient 已经连接（`isHostClientReady()` 返回 `true`）
-2. 检查方法名是否正确
-3. 确认 iframe 应用中是否存在该方法
-4. 查看参数格式是否正确
+// 运行示例
+appManagementExample();
+```
+
+### 认证与应用管理结合使用
+
+```typescript
+async function authAndAppExample() {
+    const client = createHostClient(iframe);
+    await client.readyPromise;
+    
+    // 检查认证状态
+    const authStatus = await client.auth.getAuthStatus();
+    if (!authStatus.isAuthenticated) {
+        // 触发登录
+        const loginResult = await client.auth.triggerLogin();
+        if (!loginResult.success) {
+            console.error('登录失败');
+            return;
+        }
+    }
+    
+    // 获取用户信息
+    const userInfo = await client.auth.getUserInfo();
+    console.log('当前用户:', userInfo);
+    
+    // 获取用户的应用列表
+    const userApps = await client.apps.getAppsList({
+        page: 1,
+        limit: 20
+    });
+    
+    console.log(`用户 ${userInfo?.email} 的应用:`, userApps.data);
+}
+```
+
+## 🔗 协议规范
+
+HostClient 使用标准的 PostMessage 协议与嵌入的应用通信：
+
+- **事件名称**: `'HOSTSDK_MESSAGE'`
+- **消息格式**: 包含 `requestId`, `module`, `method`, `params` 等字段
+- **超时时间**: 30 秒
+- **重试机制**: 连接建立时最多重试 5 次
+
+### 支持的模块
+
+- **base**: 基础能力模块
+- **auth**: 认证能力模块  
+- **apps**: 应用管理能力模块

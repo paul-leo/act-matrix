@@ -54,6 +54,81 @@ export interface OperationResult {
   error?: string;
 }
 
+/** 创建应用请求参数 */
+export interface CreateAppRequest {
+  name: string;           // 必填 - 应用名称
+  code: string;           // 必填 - 应用代码
+  version: string;        // 必填 - 应用版本
+  unique_id: string;      // 必填 - 唯一标识符（UUID格式）
+  build_code?: string;    // 可选 - 构建代码
+  desc?: string;          // 可选 - 应用描述
+  visible?: boolean;      // 可选 - 是否可见
+  icon?: string;          // 可选 - 应用图标
+  color?: string;         // 可选 - 应用颜色
+  prd?: string;           // 可选 - PRD内容
+}
+
+/** 更新应用请求参数 */
+export interface UpdateAppRequest {
+  name?: string;          // 可选 - 应用名称
+  code?: string;          // 可选 - 应用代码
+  version?: string;       // 可选 - 应用版本（更新代码时必需）
+  build_code?: string;    // 可选 - 构建代码
+  desc?: string;          // 可选 - 应用描述
+  visible?: boolean;      // 可选 - 是否可见
+  icon?: string;          // 可选 - 应用图标
+  color?: string;         // 可选 - 应用颜色
+  prd?: string;           // 可选 - PRD内容
+}
+
+/** 应用列表查询参数 */
+export interface GetAppsListRequest {
+  page?: number;          // 页码，默认1
+  limit?: number;         // 每页数量，默认20，最大100
+  visible?: boolean;      // 是否只显示可见应用
+  search?: string;        // 搜索关键词
+}
+
+/** 应用对象 */
+export interface App {
+  id: string;
+  name: string;
+  code?: string;
+  build_code?: string;
+  version: string;
+  desc?: string;
+  visible: boolean;
+  icon?: string;
+  color?: string;
+  unique_id: string;
+  prd?: string;
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+}
+
+/** 分页信息 */
+export interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+/** API响应格式 */
+export interface ApiResponse<T = unknown> {
+  success: boolean;
+  data?: T;
+  message?: string;
+  pagination?: Pagination; // 仅在列表接口中存在
+}
+
+/** 参数验证结果 */
+export interface ValidationResult {
+  valid: boolean;
+  errors?: string[];
+}
+
 // 客户端SDK版本号
 export const HOST_CLIENT_VERSION = '1.0.0';
 
@@ -99,6 +174,28 @@ export interface ModuleCapabilities {
           user: UserInfo | null;
           timestamp: number;
       }>;
+  };
+
+  /** 应用管理能力模块 */
+  apps: {
+      /** 创建应用 */
+      createApp(request: CreateAppRequest): Promise<ApiResponse<App>>;
+      /** 根据ID获取应用 */
+      getAppById(appId: string, isFork?: boolean): Promise<ApiResponse<App>>;
+      /** 根据unique_id获取应用 */
+      getAppByUniqueId(uniqueId: string): Promise<ApiResponse<App>>;
+      /** 更新应用 */
+      updateApp(appId: string, request: UpdateAppRequest): Promise<ApiResponse<App>>;
+      /** 获取应用代码 */
+      getAppCode(appId: string): Promise<ApiResponse<{ code: string }>>;
+      /** 获取应用构建代码 */
+      getAppBuildCode(appId: string): Promise<ApiResponse<{ build_code: string }>>;
+      /** 删除应用 */
+      deleteApp(appId: string): Promise<ApiResponse<void>>;
+      /** 获取应用列表 */
+      getAppsList(request?: GetAppsListRequest): Promise<ApiResponse<App[]>>;
+      /** 验证创建应用参数 */
+      validateCreateAppRequest(request: CreateAppRequest): Promise<ValidationResult>;
   };
 }
 
@@ -178,18 +275,17 @@ export class HostClient {
    */
   private async initialize(): Promise<void> {
       // 添加消息监听器
-      console.log('🔄 HostClient 添加消息监听器');
       this.messageListener = (event: MessageEvent) => {
           this.handleMessage(event);
       };
       window.addEventListener('message', this.messageListener);
       
       // 等待 iframe 加载完成
-      // await this.waitForIframeLoad();
-      console.log('🔄 HostClient 等待 iframe 加载完成');
+      await this.waitForIframeLoad();
+      
       // 尝试与 HostSDK 建立连接
       await this.establishConnection();
-      console.log('🔄 HostClient 尝试与 HostSDK 建立连接1');
+      
       this.isReady = true;
       console.log('✅ HostClient 初始化完成');
   }
@@ -199,7 +295,6 @@ export class HostClient {
    */
   private async waitForIframeLoad(): Promise<void> {
       return new Promise((resolve) => {
-          console.log('🔄 HostClient 等待 iframe 加载完成', this.iframe);
           if (this.iframe.contentDocument?.readyState === 'complete') {
               resolve();
               return;
@@ -220,11 +315,10 @@ export class HostClient {
   private async establishConnection(): Promise<void> {
       const maxRetries = 5;
       const retryDelay = 200;
-      console.log('🔄 HostClient 尝试与 HostSDK 建立连接 start');
+      
       for (let i = 0; i < maxRetries; i++) {
           try {
-              const version = await this.call('base', 'getVersion');
-              console.log('🤝 HostClient 与 HostSDK 连接建立成功', version);
+              await this.call('base', 'getVersion');
               console.log('🤝 HostClient 与 HostSDK 连接建立成功');
               return;
           } catch {
