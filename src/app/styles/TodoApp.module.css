@@ -210,6 +210,37 @@
     font-size: 14px;
 }
 
+/* 同步状态样式 */
+.syncBadge {
+    margin-left: 8px;
+    font-size: 10px;
+}
+
+/* 加载状态样式 */
+.loadingCard {
+    margin: 16px;
+}
+
+.loadingContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    gap: 12px;
+}
+
+.loadingContent p {
+    margin: 0;
+    color: var(--ion-color-medium);
+    font-size: 14px;
+}
+
+/* 本地数据标识 */
+.localBadge {
+    margin-left: 8px;
+    font-size: 10px;
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
     .content {
