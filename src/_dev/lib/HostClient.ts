@@ -43,6 +43,9 @@
 // =============================================================================
 // 基础类型定义 - 独立实现，便于复制到其他项目
 // =============================================================================
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 /** 认证状态类型 */
 export interface AuthStatus {
@@ -291,7 +294,7 @@ export class HostClient {
       window.addEventListener('message', this.messageListener);
       
       // 等待 iframe 加载完成
-      // await this.waitForIframeLoad();
+      // await Promise.all([this.waitForIframeLoad(), sleep(5000)]);
       
       // 尝试与 HostSDK 建立连接
       await this.establishConnection();
@@ -304,6 +307,11 @@ export class HostClient {
    * 等待 iframe 加载完成
    */
   private async waitForIframeLoad(): Promise<void> {
+      console.log('等待 iframe 加载完成');
+      console.log(this.iframe.contentDocument?.readyState);
+      if (this.iframe.contentDocument?.readyState === 'complete') {
+          return;
+      }
       return new Promise((resolve) => {
           if (this.iframe.contentDocument?.readyState === 'complete') {
               resolve();
