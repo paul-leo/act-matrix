@@ -54,8 +54,8 @@ export default function DevControlPanel({
     const isReadOnlyMode = useMemo(() => {
         if (!isUserLoggedIn) return true;
         if (!appInfo?.id) return false;
-        return computeReadOnly({ created_by: appInfo?.created_by }, userInfo?.user);
-    }, [isUserLoggedIn, appInfo?.id, appInfo?.created_by, userInfo?.user]);
+        return computeReadOnly({ user_id: appInfo?.user_id }, userInfo?.user);
+    }, [isUserLoggedIn, appInfo?.id, appInfo?.user_id, userInfo?.user]);
 
     // 检查是否可以进行操作（需要登录且不是只读模式）
     const canPerformOperations = useMemo(() => isUserLoggedIn && !isReadOnlyMode, [isUserLoggedIn, isReadOnlyMode]);
@@ -87,7 +87,7 @@ export default function DevControlPanel({
                 const user = await hostClient?.auth?.getUserInfo?.();
                 const userInfo = { authStatus, user };
                 setUserInfo(userInfo);
-                
+                console.log('userInfo', userInfo);
                 // 如果用户已登录，获取应用信息
                 if (authStatus?.isAuthenticated && user) {
                     await fetchAppInfo(user);
@@ -125,12 +125,13 @@ export default function DevControlPanel({
                 const info = {
                     id: app.id,
                     version: app.version,
-                    created_by: app.created_by,
+                    user_id: app.user_id,
                     title: app.name || '',
                     description: app.desc || '',
                     icon: app.icon || '',
-                    themeColor: app.color || '#6366f1'
+                    themeColor: app.color || '#6366f1',
                 };
+                console.log('appInfo', app);
                 setAppInfo(info);
                 setEditingAppInfo(info);
                 
@@ -311,7 +312,7 @@ export default function DevControlPanel({
                     ...editingAppInfo,
                     id: createRes?.data?.id || '',
                     version: createRes?.data?.version || initialVersion,
-                    created_by: createRes?.data?.created_by,
+                    user_id: createRes?.data?.user_id,
                 });
                 setIsEditingApp(false);
                 showToast('App created and saved', 'success');
@@ -418,7 +419,7 @@ export default function DevControlPanel({
                     ...(prev || {}),
                     id: remoteApp?.id,
                     version: remoteApp?.version || initialVersion,
-                    created_by: remoteApp?.created_by,
+                    user_id: remoteApp?.user_id,
                 }));
                 showToast('App created, preparing to publish new version...', 'success');
             }

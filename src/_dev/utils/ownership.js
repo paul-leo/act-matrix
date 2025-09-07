@@ -7,7 +7,7 @@
  */
 export function computeReadOnly(app, user) {
   if (!app) return true;
-  const creatorId = app?.created_by;
+  const creatorId = app?.user_id;
   const userId = user?.id;
   if (!creatorId || !userId) return true;
   return creatorId !== userId;
