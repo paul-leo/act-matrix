@@ -45,7 +45,7 @@ const AppShellIframe = forwardRef(function AppShellIframe(
         const baseUrl = isDev
             ? APP_SHELL_CONFIG.devBaseUrl
             : APP_SHELL_CONFIG.baseUrl;
-        return `${baseUrl}/demo`;
+        return `${baseUrl}/app-runner/${appId}?t=${lastUpdateTime}`;
     }, [appId, isDev, lastUpdateTime]);
 
     // Initialize HostClient (simplified)

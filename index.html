@@ -9,12 +9,21 @@
     
     <!-- 支持 iframe 嵌入的安全策略 -->
     <meta http-equiv="Content-Security-Policy" content="
-      default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:;
-      frame-src 'self' https://app-shell.focusbe.com https://app-shell.dev.baibian.app http://localhost:3002 http://127.0.0.1:3002 http://localhost:8812 http://127.0.0.1:8812;
-      connect-src 'self' https://app-shell.focusbe.com https://app-shell.dev.baibian.app http://localhost:3002 http://127.0.0.1:3002 http://localhost:8812 http://127.0.0.1:8812 ws: wss:;
-      img-src 'self' data: blob: https:;
-      script-src 'self' 'unsafe-inline' 'unsafe-eval';
-      style-src 'self' 'unsafe-inline' https:;
+      default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;
+      frame-src   *;
+      child-src   *;
+      frame-ancestors *;
+      connect-src * ws: wss:;
+      img-src     * data: blob:;
+      media-src   *;
+      font-src    * data:;
+      script-src  * 'unsafe-inline' 'unsafe-eval';
+      style-src   * 'unsafe-inline';
+      worker-src  * blob: data:;
+      manifest-src *;
+      prefetch-src *;
+      base-uri    *;
+      form-action *;
     ">
     
     <!-- 浏览器通信脚本 -->
@@ -42,17 +51,23 @@
         // 初始化通信
         init: function() {
           window.addEventListener('message', (event) => {
-            // 验证消息来源
-            const allowedOrigins = [
-              'https://app-shell.focusbe.com',
-              'https://app-shell.dev.baibian.app',
-              'http://localhost:3002',  // 开发环境主端口
-              'http://127.0.0.1:3002', // 开发环境 (IP)
-              'http://localhost:8812',
-              'http://127.0.0.1:8812'
-            ];
-            
-            if (!allowedOrigins.includes(event.origin)) return;
+            // 验证消息来源（通配规则）
+            const isAllowedOrigin = (origin) => {
+              try {
+                const u = new URL(origin);
+                const host = u.hostname;
+                // 本地任意端口
+                if (host === 'localhost' || host === '127.0.0.1') return true;
+                // *.focusbe.com 或 *.baibian.app
+                if (host === 'focusbe.com' || host.endsWith('.focusbe.com')) return true;
+                if (host === 'baibian.app' || host.endsWith('.baibian.app')) return true;
+                return false;
+              } catch {
+                return false;
+              }
+            };
+
+            if (!isAllowedOrigin(event.origin)) return;
             
             // 分发消息给所有监听器
             this.listeners.forEach(listener => {
