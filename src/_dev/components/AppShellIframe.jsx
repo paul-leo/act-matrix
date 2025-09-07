@@ -45,7 +45,7 @@ const AppShellIframe = forwardRef(function AppShellIframe(
         const baseUrl = isDev
             ? APP_SHELL_CONFIG.devBaseUrl
             : APP_SHELL_CONFIG.baseUrl;
-        return `${baseUrl}/app-runner/${appId}?t=${lastUpdateTime}`;
+        return `${baseUrl}/demo`;
     }, [appId, isDev, lastUpdateTime]);
 
     // Initialize HostClient (simplified)
@@ -215,7 +215,7 @@ const AppShellIframe = forwardRef(function AppShellIframe(
             onLoad={handleIframeLoad}
             onError={handleIframeError}
             title={`MorphixAI App: ${appId}`}
-            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-storage-access-by-user-activation"
             allow="camera; microphone; geolocation; clipboard-read; clipboard-write"
         />
     ), [iframeUrl, handleIframeLoad, handleIframeError, appId]);
