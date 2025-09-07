@@ -26,13 +26,10 @@ export default function DevControlPanel({
     const [userInfo, setUserInfo] = useState(null);
     // 需求更新：用户信息仅展示，不支持编辑
     const [appInfo, setAppInfo] = useState(null);
-    const [appVersion, setAppVersion] = useState('1.0.0');
     const [currentOp, setCurrentOp] = useState('idle'); // 'idle' | 'saving' | 'publishing' | 'loading'
     const [appFiles, setAppFiles] = useState(initialAppFiles);
-    const [remoteAppId, setRemoteAppId] = useState('');
     const [globalLoading, setGlobalLoading] = useState(false);
     const [isEditingApp, setIsEditingApp] = useState(false);
-    const [isReadOnlyMode, setIsReadOnlyMode] = useState(false); // 只读模式状态
     const [editingAppInfo, setEditingAppInfo] = useState({
         title: '',
         description: '',
@@ -40,7 +37,10 @@ export default function DevControlPanel({
         themeColor: '#6366f1'
     });
 
-    const previewUrl = usePreview(remoteAppId, isDev);
+    const previewUrl = usePreview(appInfo?.id ?? '', isDev);
+
+    // 从 appInfo 派生版本号
+    const appVersion = useMemo(() => appInfo?.version ?? '1.0.0', [appInfo?.version]);
 
     // 缓存 appFiles 的序列化结果，避免重复 JSON.stringify 计算
     const serializedAppFiles = useMemo(() => JSON.stringify(appFiles), [appFiles]);
@@ -50,10 +50,15 @@ export default function DevControlPanel({
         return userInfo?.authStatus?.isAuthenticated === true;
     }, [userInfo?.authStatus?.isAuthenticated]);
 
+    // 只读模式：未登录时恒为只读；已登录且没有远端应用时可创建（非只读）；有应用则按创建者判断
+    const isReadOnlyMode = useMemo(() => {
+        if (!isUserLoggedIn) return true;
+        if (!appInfo?.id) return false;
+        return computeReadOnly({ created_by: appInfo?.created_by }, userInfo?.user);
+    }, [isUserLoggedIn, appInfo?.id, appInfo?.created_by, userInfo?.user]);
+
     // 检查是否可以进行操作（需要登录且不是只读模式）
-    const canPerformOperations = useMemo(() => {
-        return isUserLoggedIn && !isReadOnlyMode;
-    }, [isUserLoggedIn, isReadOnlyMode]);
+    const canPerformOperations = useMemo(() => isUserLoggedIn && !isReadOnlyMode, [isUserLoggedIn, isReadOnlyMode]);
 
     const showToast = useCallback((message, color = 'primary') => {
         setToast({ open: true, message, color });
@@ -95,8 +100,6 @@ export default function DevControlPanel({
                         icon: '',
                         themeColor: '#6366f1'
                     });
-                    setAppVersion('1.0.0');
-                    setRemoteAppId('');
                     setIsReadOnlyMode(true);
                 }
             } catch (error) {
@@ -120,6 +123,9 @@ export default function DevControlPanel({
             if (appResponse?.success !== false && appResponse?.data) {
                 const app = appResponse.data;
                 const info = {
+                    id: app.id,
+                    version: app.version,
+                    created_by: app.created_by,
                     title: app.name || '',
                     description: app.desc || '',
                     icon: app.icon || '',
@@ -127,10 +133,6 @@ export default function DevControlPanel({
                 };
                 setAppInfo(info);
                 setEditingAppInfo(info);
-                
-                // 设置版本和远程ID
-                if (app.version) setAppVersion(app.version);
-                if (app.id) setRemoteAppId(app.id);
                 
                 // 检查应用所有权以确定是否为只读模式
                 setIsReadOnlyMode(computeReadOnly(app, user));
@@ -307,9 +309,12 @@ export default function DevControlPanel({
                 }
                 
                 // 创建成功后更新状态
-                setAppInfo(editingAppInfo);
-                setAppVersion(initialVersion);
-                setRemoteAppId(createRes?.data?.id || '');
+                setAppInfo({
+                    ...editingAppInfo,
+                    id: createRes?.data?.id || '',
+                    version: createRes?.data?.version || initialVersion,
+                    created_by: createRes?.data?.created_by,
+                });
                 setIsEditingApp(false);
                 showToast('App created and saved', 'success');
             } else {
@@ -410,7 +415,13 @@ export default function DevControlPanel({
                 const createRes = await hostClient?.apps?.createApp?.(createReq);
                 if (createRes?.success === false) throw new Error(createRes?.message || 'Failed to create app');
                 remoteApp = createRes?.data;
-                setAppVersion(initialVersion);
+                // 同步 appInfo 的 id/version
+                setAppInfo(prev => ({
+                    ...(prev || {}),
+                    id: remoteApp?.id,
+                    version: remoteApp?.version || initialVersion,
+                    created_by: remoteApp?.created_by,
+                }));
                 showToast('App created, preparing to publish new version...', 'success');
             }
 
@@ -428,7 +439,8 @@ export default function DevControlPanel({
             const updateRes = await hostClient?.apps?.updateApp?.(remoteApp.id, updateReq);
             if (updateRes?.success === false) throw new Error(updateRes?.message || 'Failed to update app');
 
-            setAppVersion(nextVersion);
+            // 更新 appInfo 的版本
+            setAppInfo(prev => (prev ? { ...prev, version: nextVersion } : prev));
             showToast(`Published: v${nextVersion}`, 'success');
         } catch (err) {
             // 并发下创建冲突的兜底：重查 unique_id 后重试更新
@@ -440,7 +452,7 @@ export default function DevControlPanel({
                     const code = serializedAppFiles;
                     const updateRes = await hostClient?.apps?.updateApp?.(retry.data.id, { code, version: nextVersion, desc: appInfo?.description, visible: true, icon: appInfo?.icon, color: appInfo?.themeColor });
                     if (updateRes?.success !== false) {
-                        setAppVersion(nextVersion);
+                        setAppInfo(prev => (prev ? { ...prev, version: nextVersion } : prev));
                         showToast(`Published: v${nextVersion}`, 'success');
                         setCurrentOp('idle');
                         return;
