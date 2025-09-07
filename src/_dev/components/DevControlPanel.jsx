@@ -31,6 +31,7 @@ export default function DevControlPanel({
     const [remoteAppId, setRemoteAppId] = useState('');
     const [globalLoading, setGlobalLoading] = useState(false);
     const [isEditingApp, setIsEditingApp] = useState(false);
+    const [isReadOnlyMode, setIsReadOnlyMode] = useState(false); // 只读模式状态
     const [editingAppInfo, setEditingAppInfo] = useState({
         title: '',
         description: '',
@@ -44,6 +45,16 @@ export default function DevControlPanel({
         const baseUrl = isDev ? APP_SHELL_CONFIG.devBaseUrl : APP_SHELL_CONFIG.baseUrl;
         return `${baseUrl}/app/${remoteAppId}?t=${Date.now()}`;
     }, [remoteAppId, isDev]);
+
+    // 检查用户是否已登录
+    const isUserLoggedIn = useMemo(() => {
+        return userInfo?.authStatus?.isAuthenticated === true;
+    }, [userInfo?.authStatus?.isAuthenticated]);
+
+    // 检查是否可以进行操作（需要登录且不是只读模式）
+    const canPerformOperations = useMemo(() => {
+        return isUserLoggedIn && !isReadOnlyMode;
+    }, [isUserLoggedIn, isReadOnlyMode]);
 
     const showToast = useCallback((message, color = 'primary') => {
         setToast({ open: true, message, color });
@@ -66,29 +77,22 @@ export default function DevControlPanel({
     useEffect(() => {
         if (!hostClientReady || !hostClient) return;
 
-        const fetchUserInfo = async () => {
+        const fetchData = async () => {
             try {
-                const authStatus = await hostClient?.auth?.getAuthStatus?.();
-                const user = await hostClient?.auth?.getUserInfo?.();
-                setUserInfo({ authStatus, user });
-                // 展示用，不做编辑
-            } catch (error) {
-                console.log('Failed to get user info:', error);
-                setUserInfo({ authStatus: { isAuthenticated: false, isLoading: false }, user: null });
-            }
-        };
+                // 并行获取用户信息和应用信息
+                const [authStatus, user, appResponse] = await Promise.all([
+                    hostClient?.auth?.getAuthStatus?.(),
+                    hostClient?.auth?.getUserInfo?.(),
+                    hostClient?.apps?.getAppByUniqueId?.(appId)
+                ]);
 
-        const fetchAppInfo = async () => {
-            try {
-                // Get app info by unique_id
-                const response = await hostClient?.apps?.getAppByUniqueId?.(appId);
-                if (response?.success === false) {
-                    console.log('Failed to get app info:', response.message);
-                    // App may not exist; treat as normal without error toast
-                    return;
-                }
-                if (response?.data) {
-                    const app = response.data;
+                // 设置用户信息
+                const userInfo = { authStatus, user };
+                setUserInfo(userInfo);
+
+                // 处理应用信息
+                if (appResponse?.success !== false && appResponse?.data) {
+                    const app = appResponse.data;
                     const info = {
                         title: app.name || '',
                         description: app.desc || '',
@@ -97,30 +101,38 @@ export default function DevControlPanel({
                     };
                     setAppInfo(info);
                     setEditingAppInfo(info);
+                    
+                    // 设置版本和远程ID
+                    if (app.version) setAppVersion(app.version);
+                    if (app.id) setRemoteAppId(app.id);
+                    
+                    // 检查应用所有权以确定是否为只读模式
+                    if (user && app.created_by && user.id) {
+                        const isOwner = app.created_by === user.id;
+                        setIsReadOnlyMode(!isOwner);
+                        if (!isOwner) {
+                            console.log('App is in read-only mode - not owned by current user');
+                        }
+                    } else {
+                        // 如果没有用户信息或应用创建者信息，默认为只读模式
+                        setIsReadOnlyMode(true);
+                        console.log('App is in read-only mode - no ownership info available');
+                    }
+                } else {
+                    // 应用不存在，允许创建（非只读模式）
+                    setIsReadOnlyMode(false);
+                    console.log('App does not exist - allowing creation');
                 }
             } catch (error) {
-                console.log('Failed to get app info:', error);
-                showToast(`Failed to get app info: ${error.message}`, 'danger');
+                console.log('Failed to fetch data:', error);
+                setUserInfo({ authStatus: { isAuthenticated: false, isLoading: false }, user: null });
+                setIsReadOnlyMode(true); // 出错时默认为只读模式
+                showToast(`Failed to load data: ${error.message}`, 'danger');
             }
         };
 
-        fetchUserInfo();
-        fetchAppInfo();
-        // 读取远端应用版本（若存在）
-        (async () => {
-            try {
-                const response = await hostClient?.apps?.getAppByUniqueId?.(appId);
-                if (response?.success !== false && response?.data) {
-                    const remoteVersion = response.data.version;
-                    const rid = response.data.id;
-                    if (remoteVersion) {
-                        setAppVersion(remoteVersion);
-                    }
-                    if (rid) setRemoteAppId(rid);
-                }
-            } catch {}
-        })();
-    }, [hostClient, hostClientReady]);
+        fetchData();
+    }, [hostClient, hostClientReady, appId, showToast]);
 
     // 复制项目ID
     const handleCopyProjectId = useCallback(async () => {
@@ -156,8 +168,40 @@ export default function DevControlPanel({
         }
     }, [hostClient, hostClientReady, showToast]);
 
+    // 退出登录操作
+    const handleLogout = useCallback(async () => {
+        if (!hostClientReady || !hostClient) {
+            showToast('Connection not ready', 'warning');
+            return;
+        }
+
+        try {
+            const result = await hostClient?.auth?.logout?.();
+            if (result?.success) {
+                showToast('Logout successful', 'success');
+                // 清除用户信息
+                setUserInfo({ authStatus: { isAuthenticated: false, isLoading: false }, user: null });
+            } else {
+                showToast('Logout failed', 'danger');
+            }
+        } catch (error) {
+            console.error('Logout failed:', error);
+            showToast('An error occurred during logout', 'danger');
+        }
+    }, [hostClient, hostClientReady, showToast]);
+
     // 开始编辑应用信息
     const handleStartEditApp = useCallback(() => {
+        if (!isUserLoggedIn) {
+            showToast('Please sign in to edit app information', 'warning');
+            return;
+        }
+        
+        if (isReadOnlyMode) {
+            showToast('This app is read-only - you cannot edit it', 'warning');
+            return;
+        }
+        
         if (!appInfo) {
             // 如果没有应用信息，设置默认值
             setEditingAppInfo({
@@ -168,7 +212,7 @@ export default function DevControlPanel({
             });
         }
         setIsEditingApp(true);
-    }, [appInfo]);
+    }, [appInfo, isReadOnlyMode, isUserLoggedIn, showToast]);
 
     // 取消编辑
     const handleCancelEditApp = useCallback(() => {
@@ -185,6 +229,16 @@ export default function DevControlPanel({
 
     // 保存应用信息
     const handleSaveAppInfo = useCallback(async () => {
+        if (!isUserLoggedIn) {
+            showToast('Please sign in to save app information', 'warning');
+            return;
+        }
+        
+        if (isReadOnlyMode) {
+            showToast('This app is read-only - you cannot save changes', 'warning');
+            return;
+        }
+        
         if (!hostClientReady || !hostClient) {
             showToast('Connection not ready', 'warning');
             return;
@@ -252,7 +306,7 @@ export default function DevControlPanel({
         } finally {
             setGlobalLoading(false);
         }
-    }, [hostClient, hostClientReady, editingAppInfo, showToast, appId, appFiles]);
+    }, [hostClient, hostClientReady, editingAppInfo, showToast, appId, appFiles, isReadOnlyMode, isUserLoggedIn]);
 
     // 更新编辑中的应用信息
     const handleUpdateEditingApp = useCallback((field, value) => {
@@ -274,6 +328,16 @@ export default function DevControlPanel({
 
     // 发布/更新应用
     const handlePublishApp = useCallback(async () => {
+        if (!isUserLoggedIn) {
+            showToast('Please sign in to upload or update apps', 'warning');
+            return;
+        }
+        
+        if (isReadOnlyMode) {
+            showToast('This app is read-only - you cannot upload or update it', 'warning');
+            return;
+        }
+        
         if (!hostClientReady || !hostClient) {
             showToast('HostClient not ready', 'warning');
             return;
@@ -357,7 +421,7 @@ export default function DevControlPanel({
             setIsPublishing(false);
             setGlobalLoading(false);
         }
-    }, [hostClient, hostClientReady, showToast, appId, appInfo, appFiles, appVersion, bumpPatch]);
+    }, [hostClient, hostClientReady, showToast, appId, appInfo, appFiles, appVersion, bumpPatch, isReadOnlyMode, isUserLoggedIn]);
 
     const handleShare = useCallback(async () => {
         if (!previewUrl) {
@@ -426,6 +490,61 @@ export default function DevControlPanel({
             {/* Content with glassmorphism effect - flex-1 to fill remaining height */}
             <div className="flex-1 bg-white/95 backdrop-blur-xl rounded-b-2xl border border-white/20 overflow-hidden min-h-0">
                 <div className="h-full p-6 space-y-6 overflow-y-auto max-h-full">
+                    {/* User Status Section - Compact */}
+                    <div className="group">
+                        <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg p-3 border border-slate-200">
+                            {userInfo?.authStatus?.isAuthenticated ? (
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        {userInfo.user?.avatar ? (
+                                            <img 
+                                                src={userInfo.user.avatar} 
+                                                alt="User Avatar" 
+                                                className="w-6 h-6 rounded-full object-cover border border-slate-200"
+                                            />
+                                        ) : (
+                                            <div className="w-6 h-6 bg-gradient-to-br from-green-400 to-green-500 rounded-full flex items-center justify-center text-white font-semibold text-xs">
+                                                {userInfo.user?.email?.charAt(0)?.toUpperCase() || 'U'}
+                                            </div>
+                                        )}
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-xs font-medium text-slate-800 truncate">
+                                                {userInfo.user?.email || 'Signed-in User'}
+                                            </p>
+                                            <p className="text-xs text-green-600">✓ Signed in</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={handleLogout}
+                                        disabled={!hostClientReady}
+                                        className={`px-2 py-1 text-xs font-semibold rounded-md transition-all ${hostClientReady ? 'bg-red-500 text-white hover:bg-red-600 cursor-pointer' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
+                                    >
+                                        Sign Out
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-6 h-6 bg-slate-300 rounded-full flex items-center justify-center">
+                                            <svg className="w-3 h-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-slate-600">Not signed in</p>
+                                            <p className="text-xs text-slate-500">Sign in to manage apps</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={handleLogin}
+                                        disabled={!hostClientReady}
+                                        className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${hostClientReady ? 'bg-blue-500 text-white hover:bg-blue-600 cursor-pointer' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
+                                    >Sign In</button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
                     {/* App Info Section */}
                     <div className="group">
                         <div className="flex items-center justify-between mb-3">
@@ -434,14 +553,22 @@ export default function DevControlPanel({
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
                                 <h3 className="text-sm font-semibold text-slate-800">App Info</h3>
-                                <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">v{appVersion}</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">v{appVersion}</span>
+                                    {isReadOnlyMode && (
+                                        <span className="text-xs text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full font-medium">
+                                            🔒 Read Only
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                             {!isEditingApp ? (
                                 <button
                                     onClick={handleStartEditApp}
-                                    className="text-xs text-purple-600 hover:text-purple-700 cursor-pointer font-medium"
+                                    disabled={!canPerformOperations}
+                                    className={`text-xs font-medium ${!canPerformOperations ? 'text-slate-400 cursor-not-allowed' : 'text-purple-600 hover:text-purple-700 cursor-pointer'}`}
                                 >
-                                    Edit
+                                    {!isUserLoggedIn ? 'Sign in to Edit' : (isReadOnlyMode ? 'Read Only' : 'Edit')}
                                 </button>
                             ) : (
                                 <div className="flex gap-2">
@@ -530,13 +657,13 @@ export default function DevControlPanel({
                                     <div className="flex gap-3 pt-4 border-t border-slate-200">
                                         <button
                                             onClick={handleSaveAppInfo}
-                                            disabled={globalLoading}
-                                            className={`flex-1 inline-flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold transition-all ${globalLoading ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-green-500 text-white hover:bg-green-600 cursor-pointer'}`}
+                                            disabled={globalLoading || !canPerformOperations}
+                                            className={`flex-1 inline-flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold transition-all ${globalLoading || !canPerformOperations ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-green-500 text-white hover:bg-green-600 cursor-pointer'}`}
                                         >
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                             </svg>
-                                            Save
+                                            {!isUserLoggedIn ? 'Sign in Required' : (isReadOnlyMode ? 'Read Only' : 'Save')}
                                         </button>
                                         <button
                                             onClick={handleCancelEditApp}
@@ -569,61 +696,6 @@ export default function DevControlPanel({
                         </div>
                     </div>
 
-                    {/* User Status Section */}
-                    <div className="group">
-                        <div className="flex items-center gap-2 mb-3">
-                            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                            <h3 className="text-sm font-semibold text-slate-800">User Status</h3>
-                        </div>
-                        <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-4 border border-slate-200">
-                            <div className="space-y-3">
-                                {userInfo?.authStatus?.isAuthenticated ? (
-                                    <div className="flex items-center gap-3">
-                                        {userInfo.user?.avatar ? (
-                                            <img 
-                                                src={userInfo.user.avatar} 
-                                                alt="User Avatar" 
-                                                className="w-8 h-8 rounded-full object-cover border border-slate-200"
-                                            />
-                                        ) : (
-                                            <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-green-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                                                {userInfo.user?.email?.charAt(0)?.toUpperCase() || 'U'}
-                                            </div>
-                                        )}
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium text-slate-800 truncate">
-                                                {userInfo.user?.email || 'Signed-in User'}
-                                            </p>
-                                            <p className="text-xs text-green-600">✓ Signed in</p>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 bg-slate-300 rounded-full flex items-center justify-center">
-                                                <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                                </svg>
-                                            </div>
-                                            <div>
-                                                <p className="text-sm text-slate-600">Not signed in</p>
-                                                <p className="text-xs text-slate-500">Sign in to access full features</p>
-                                            </div>
-                                        </div>
-                                        <button
-                                            onClick={handleLogin}
-                                            disabled={!hostClientReady}
-                                            className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all ${hostClientReady ? 'bg-blue-500 text-white hover:bg-blue-600 cursor-pointer' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
-                                        >Sign In</button>
-                                    </div>
-                                )}
-
-                                {/* 用户信息不可编辑 */}
-                            </div>
-                        </div>
-                    </div>
                     {/* Upload Section */}
                     <div className="group">
                         <div className="flex items-center gap-2 mb-3">
@@ -634,13 +706,13 @@ export default function DevControlPanel({
                         </div>
                         <button
                             onClick={handlePublishApp}
-                            disabled={!hostClientReady || isPublishing}
-                            className={`w-full inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold transition-all duration-200 transform whitespace-nowrap ${hostClientReady && !isPublishing ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-500 hover:to-purple-500 hover:scale-105 shadow-lg hover:shadow-xl cursor-pointer' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
+                            disabled={!hostClientReady || isPublishing || !canPerformOperations}
+                            className={`w-full inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold transition-all duration-200 transform whitespace-nowrap ${hostClientReady && !isPublishing && canPerformOperations ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-500 hover:to-purple-500 hover:scale-105 shadow-lg hover:shadow-xl cursor-pointer' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
                         >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                             </svg>
-                            {isPublishing ? 'Publishing...' : 'Upload / Update App'}
+                            {!isUserLoggedIn ? 'Sign in to Upload' : (isReadOnlyMode ? 'Read Only Mode' : (isPublishing ? 'Publishing...' : 'Upload / Update App'))}
                         </button>
                     </div>
 
