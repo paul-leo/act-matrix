@@ -1,9 +1,10 @@
 import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import { IonToast } from '@ionic/react';
 import { QRCodeCanvas } from 'qrcode.react';
-import { APP_SHELL_CONFIG } from '../config/appShellConfig.js';
 import initialAppFiles from '../app-files.js';
 import AppIcon, { AVAILABLE_ICONS, THEME_COLORS } from './AppIcon.jsx';
+import { usePreview } from '../utils/preview.js';
+import { computeReadOnly } from '../utils/ownership.js';
 
 /**
  * DevControlPanel - 调试与控制面板
@@ -26,7 +27,7 @@ export default function DevControlPanel({
     // 需求更新：用户信息仅展示，不支持编辑
     const [appInfo, setAppInfo] = useState(null);
     const [appVersion, setAppVersion] = useState('1.0.0');
-    const [isPublishing, setIsPublishing] = useState(false);
+    const [currentOp, setCurrentOp] = useState('idle'); // 'idle' | 'saving' | 'publishing' | 'loading'
     const [appFiles, setAppFiles] = useState(initialAppFiles);
     const [remoteAppId, setRemoteAppId] = useState('');
     const [globalLoading, setGlobalLoading] = useState(false);
@@ -39,12 +40,10 @@ export default function DevControlPanel({
         themeColor: '#6366f1'
     });
 
-    const previewUrl = useMemo(() => {
-        // 仅使用远端 appId 构建链接；未解析到时返回空
-        if (!remoteAppId) return '';
-        const baseUrl = isDev ? APP_SHELL_CONFIG.devBaseUrl : APP_SHELL_CONFIG.baseUrl;
-        return `${baseUrl}/app/${remoteAppId}?t=${Date.now()}`;
-    }, [remoteAppId, isDev]);
+    const previewUrl = usePreview(remoteAppId, isDev);
+
+    // 缓存 appFiles 的序列化结果，避免重复 JSON.stringify 计算
+    const serializedAppFiles = useMemo(() => JSON.stringify(appFiles), [appFiles]);
 
     // 检查用户是否已登录
     const isUserLoggedIn = useMemo(() => {
@@ -73,66 +72,79 @@ export default function DevControlPanel({
         return () => dispose?.();
     }, []);
 
-    // 获取用户信息和应用信息 + 远端应用版本
+    // 获取用户信息
     useEffect(() => {
         if (!hostClientReady || !hostClient) return;
 
-        const fetchData = async () => {
+        const fetchUserInfo = async () => {
             try {
-                // 并行获取用户信息和应用信息
-                const [authStatus, user, appResponse] = await Promise.all([
-                    hostClient?.auth?.getAuthStatus?.(),
-                    hostClient?.auth?.getUserInfo?.(),
-                    hostClient?.apps?.getAppByUniqueId?.(appId)
-                ]);
-
-                // 设置用户信息
+                const authStatus = await hostClient?.auth?.getAuthStatus?.();
+                const user = await hostClient?.auth?.getUserInfo?.();
                 const userInfo = { authStatus, user };
                 setUserInfo(userInfo);
-
-                // 处理应用信息
-                if (appResponse?.success !== false && appResponse?.data) {
-                    const app = appResponse.data;
-                    const info = {
-                        title: app.name || '',
-                        description: app.desc || '',
-                        icon: app.icon || '',
-                        themeColor: app.color || '#6366f1'
-                    };
-                    setAppInfo(info);
-                    setEditingAppInfo(info);
-                    
-                    // 设置版本和远程ID
-                    if (app.version) setAppVersion(app.version);
-                    if (app.id) setRemoteAppId(app.id);
-                    
-                    // 检查应用所有权以确定是否为只读模式
-                    if (user && app.created_by && user.id) {
-                        const isOwner = app.created_by === user.id;
-                        setIsReadOnlyMode(!isOwner);
-                        if (!isOwner) {
-                            console.log('App is in read-only mode - not owned by current user');
-                        }
-                    } else {
-                        // 如果没有用户信息或应用创建者信息，默认为只读模式
-                        setIsReadOnlyMode(true);
-                        console.log('App is in read-only mode - no ownership info available');
-                    }
+                
+                // 如果用户已登录，获取应用信息
+                if (authStatus?.isAuthenticated && user) {
+                    await fetchAppInfo(user);
                 } else {
-                    // 应用不存在，允许创建（非只读模式）
-                    setIsReadOnlyMode(false);
-                    console.log('App does not exist - allowing creation');
+                    // 用户未登录，重置应用相关状态
+                    setAppInfo(null);
+                    setEditingAppInfo({
+                        title: '',
+                        description: '',
+                        icon: '',
+                        themeColor: '#6366f1'
+                    });
+                    setAppVersion('1.0.0');
+                    setRemoteAppId('');
+                    setIsReadOnlyMode(true);
                 }
             } catch (error) {
-                console.log('Failed to fetch data:', error);
+                console.log('Failed to fetch user info:', error);
                 setUserInfo({ authStatus: { isAuthenticated: false, isLoading: false }, user: null });
-                setIsReadOnlyMode(true); // 出错时默认为只读模式
-                showToast(`Failed to load data: ${error.message}`, 'danger');
+                setIsReadOnlyMode(true);
+                showToast(`Failed to load user info: ${error.message}`, 'danger');
             }
         };
 
-        fetchData();
-    }, [hostClient, hostClientReady, appId, showToast]);
+        fetchUserInfo();
+    }, [hostClient, hostClientReady]);
+
+    // 获取应用信息的独立函数
+    const fetchAppInfo = useCallback(async (user) => {
+        if (!hostClient) return;
+        
+        try {
+            const appResponse = await hostClient?.apps?.getAppByUniqueId?.(appId);
+            
+            if (appResponse?.success !== false && appResponse?.data) {
+                const app = appResponse.data;
+                const info = {
+                    title: app.name || '',
+                    description: app.desc || '',
+                    icon: app.icon || '',
+                    themeColor: app.color || '#6366f1'
+                };
+                setAppInfo(info);
+                setEditingAppInfo(info);
+                
+                // 设置版本和远程ID
+                if (app.version) setAppVersion(app.version);
+                if (app.id) setRemoteAppId(app.id);
+                
+                // 检查应用所有权以确定是否为只读模式
+                setIsReadOnlyMode(computeReadOnly(app, user));
+            } else {
+                // 应用不存在，如果用户已登录则允许创建
+                setIsReadOnlyMode(false);
+                console.log('App does not exist - allowing creation');
+            }
+        } catch (error) {
+            console.log('Failed to fetch app info:', error);
+            setIsReadOnlyMode(true);
+            showToast(`Failed to load app info: ${error.message}`, 'danger');
+        }
+    }, [hostClient, appId, showToast]);
 
     // 复制项目ID
     const handleCopyProjectId = useCallback(async () => {
@@ -159,6 +171,11 @@ export default function DevControlPanel({
                 const authStatus = await hostClient?.auth?.getAuthStatus?.();
                 const user = await hostClient?.auth?.getUserInfo?.();
                 setUserInfo({ authStatus, user });
+                
+                // 登录成功后获取应用信息
+                if (user) {
+                    await fetchAppInfo(user);
+                }
             } else {
                 showToast('Login failed', 'danger');
             }
@@ -166,7 +183,7 @@ export default function DevControlPanel({
             console.error('Login failed:', error);
             showToast('An error occurred during login', 'danger');
         }
-    }, [hostClient, hostClientReady, showToast]);
+    }, [hostClient, hostClientReady, showToast, fetchAppInfo]);
 
     // 退出登录操作
     const handleLogout = useCallback(async () => {
@@ -181,6 +198,19 @@ export default function DevControlPanel({
                 showToast('Logout successful', 'success');
                 // 清除用户信息
                 setUserInfo({ authStatus: { isAuthenticated: false, isLoading: false }, user: null });
+                
+                // 清除应用相关信息
+                setAppInfo(null);
+                setEditingAppInfo({
+                    title: '',
+                    description: '',
+                    icon: '',
+                    themeColor: '#6366f1'
+                });
+                setAppVersion('1.0.0');
+                setRemoteAppId('');
+                setIsReadOnlyMode(true);
+                setIsEditingApp(false);
             } else {
                 showToast('Logout failed', 'danger');
             }
@@ -246,6 +276,7 @@ export default function DevControlPanel({
 
         try {
             setGlobalLoading(true);
+            setCurrentOp('saving');
             
             // Get current app info first
             const currentApp = await hostClient?.apps?.getAppByUniqueId?.(appId);
@@ -256,7 +287,7 @@ export default function DevControlPanel({
                 showToast('App does not exist, creating...', 'primary');
                 
                 const initialVersion = '0.1.0';
-                const code = JSON.stringify(appFiles);
+                const code = serializedAppFiles;
                 const createReq = {
                     name: editingAppInfo.title || `App ${appId}`,
                     code,
@@ -305,8 +336,9 @@ export default function DevControlPanel({
             showToast(`Save failed: ${error.message}`, 'danger');
         } finally {
             setGlobalLoading(false);
+            setCurrentOp('idle');
         }
-    }, [hostClient, hostClientReady, editingAppInfo, showToast, appId, appFiles, isReadOnlyMode, isUserLoggedIn]);
+    }, [hostClient, hostClientReady, editingAppInfo, showToast, appId, serializedAppFiles, isReadOnlyMode, isUserLoggedIn]);
 
     // 更新编辑中的应用信息
     const handleUpdateEditingApp = useCallback((field, value) => {
@@ -351,12 +383,12 @@ export default function DevControlPanel({
         }
 
         try {
-            setIsPublishing(true);
+            setCurrentOp('publishing');
             setGlobalLoading(true);
             showToast('Publishing app...', 'primary');
 
             // 将 appFiles 序列化为字符串
-            const code = JSON.stringify(appFiles);
+            const code = serializedAppFiles;
 
             // 1) 查询远端应用是否存在（按 unique_id）
             let appResponse = await hostClient?.apps?.getAppByUniqueId?.(appId);
@@ -405,12 +437,12 @@ export default function DevControlPanel({
                 if (retry?.success !== false && retry?.data?.id) {
                     const currentVersion = retry?.data?.version || appVersion || '0.1.0';
                     const nextVersion = bumpPatch(currentVersion);
-                    const code = JSON.stringify(appFiles);
+                    const code = serializedAppFiles;
                     const updateRes = await hostClient?.apps?.updateApp?.(retry.data.id, { code, version: nextVersion, desc: appInfo?.description, visible: true, icon: appInfo?.icon, color: appInfo?.themeColor });
                     if (updateRes?.success !== false) {
                         setAppVersion(nextVersion);
                         showToast(`Published: v${nextVersion}`, 'success');
-                        setIsPublishing(false);
+                        setCurrentOp('idle');
                         return;
                     }
                 }
@@ -418,10 +450,10 @@ export default function DevControlPanel({
             console.error('Publish failed:', err);
             showToast(err?.message || 'Publish failed, please try again', 'danger');
         } finally {
-            setIsPublishing(false);
+            setCurrentOp('idle');
             setGlobalLoading(false);
         }
-    }, [hostClient, hostClientReady, showToast, appId, appInfo, appFiles, appVersion, bumpPatch, isReadOnlyMode, isUserLoggedIn]);
+    }, [hostClient, hostClientReady, showToast, appId, appInfo, serializedAppFiles, appVersion, bumpPatch, isReadOnlyMode, isUserLoggedIn]);
 
     const handleShare = useCallback(async () => {
         if (!previewUrl) {
@@ -706,13 +738,13 @@ export default function DevControlPanel({
                         </div>
                         <button
                             onClick={handlePublishApp}
-                            disabled={!hostClientReady || isPublishing || !canPerformOperations}
-                            className={`w-full inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold transition-all duration-200 transform whitespace-nowrap ${hostClientReady && !isPublishing && canPerformOperations ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-500 hover:to-purple-500 hover:scale-105 shadow-lg hover:shadow-xl cursor-pointer' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
+                            disabled={!hostClientReady || currentOp === 'publishing' || !canPerformOperations}
+                            className={`w-full inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold transition-all duration-200 transform whitespace-nowrap ${hostClientReady && currentOp !== 'publishing' && canPerformOperations ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-500 hover:to-purple-500 hover:scale-105 shadow-lg hover:shadow-xl cursor-pointer' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
                         >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                             </svg>
-                            {!isUserLoggedIn ? 'Sign in to Upload' : (isReadOnlyMode ? 'Read Only Mode' : (isPublishing ? 'Publishing...' : 'Upload / Update App'))}
+                            {!isUserLoggedIn ? 'Sign in to Upload' : (isReadOnlyMode ? 'Read Only Mode' : (currentOp === 'publishing' ? 'Publishing...' : 'Upload / Update App'))}
                         </button>
                     </div>
 
