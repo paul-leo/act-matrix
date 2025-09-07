@@ -100,12 +100,12 @@ export default function DevControlPanel({
                         icon: '',
                         themeColor: '#6366f1'
                     });
-                    setIsReadOnlyMode(true);
+                    // 未登录：只读由 isReadOnlyMode 计算得出
                 }
             } catch (error) {
                 console.log('Failed to fetch user info:', error);
                 setUserInfo({ authStatus: { isAuthenticated: false, isLoading: false }, user: null });
-                setIsReadOnlyMode(true);
+                // 异常：只读由 isReadOnlyMode 计算得出
                 showToast(`Failed to load user info: ${error.message}`, 'danger');
             }
         };
@@ -134,16 +134,14 @@ export default function DevControlPanel({
                 setAppInfo(info);
                 setEditingAppInfo(info);
                 
-                // 检查应用所有权以确定是否为只读模式
-                setIsReadOnlyMode(computeReadOnly(app, user));
+                // 只读模式由 isReadOnlyMode 计算得出
             } else {
                 // 应用不存在，如果用户已登录则允许创建
-                setIsReadOnlyMode(false);
                 console.log('App does not exist - allowing creation');
             }
         } catch (error) {
             console.log('Failed to fetch app info:', error);
-            setIsReadOnlyMode(true);
+            // 异常：只读由 isReadOnlyMode 计算得出
             showToast(`Failed to load app info: ${error.message}`, 'danger');
         }
     }, [hostClient, appId, showToast]);
@@ -211,7 +209,7 @@ export default function DevControlPanel({
                 });
                 setAppVersion('1.0.0');
                 setRemoteAppId('');
-                setIsReadOnlyMode(true);
+                // 登出后：只读由 isReadOnlyMode 计算得出
                 setIsEditingApp(false);
             } else {
                 showToast('Logout failed', 'danger');
