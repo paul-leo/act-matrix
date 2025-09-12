@@ -289,13 +289,6 @@ export default function ActMatrixForm() {
         setHistoryModalOpen(false);
     };
 
-    const handleEditHistoryItem = (item) => {
-        // 设置要编辑的象限和内容
-        setActiveQuadrant(item.quadrantType);
-        setEditingItem(item);
-        setNewItemText(item.content);
-        setModalOpen(true);
-    };
 
     const handleCreateNewMatrix = async () => {
         try {
@@ -621,7 +614,6 @@ export default function ActMatrixForm() {
                 <HistoryPage 
                     onBack={handleCloseHistory}
                     onCreateNew={handleCreateNewMatrix}
-                    onEditItem={handleEditHistoryItem}
                 />
             </IonModal>
         </IonPage>

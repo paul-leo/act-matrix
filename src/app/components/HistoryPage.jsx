@@ -19,24 +19,21 @@ import {
     IonRow,
     IonCol,
     IonFab,
-    IonFabButton,
-    IonModal
+    IonFabButton
 } from '@ionic/react';
 import AppSdk from '@morphixai/app-sdk';
 import { reportError } from '@morphixai/lib';
-import { chevronBack, add, time, grid, close, create } from 'ionicons/icons';
+import { chevronBack, add, time, grid } from 'ionicons/icons';
 import styles from '../styles/HistoryPage.module.css';
 import { useMatrix } from '../store/matrixStore';
 
 const COLLECTION_NAME = 'act_matrix_quadrants';
 const MATRIX_SESSIONS_COLLECTION = 'act_matrix_sessions';
 
-export default function HistoryPage({ onBack, onCreateNew, onEditItem }) {
+export default function HistoryPage({ onBack, onCreateNew }) {
     const { currentMatrixId, setCurrentMatrix } = useMatrix();
     const [loading, setLoading] = useState(false);
     const [sessions, setSessions] = useState([]);
-    const [detailsModalOpen, setDetailsModalOpen] = useState(false);
-    const [selectedSession, setSelectedSession] = useState(null);
 
     useEffect(() => {
         loadHistoryData();
@@ -147,8 +144,10 @@ export default function HistoryPage({ onBack, onCreateNew, onEditItem }) {
     };
 
     const handleViewSessionDetails = (session) => {
-        setSelectedSession(session);
-        setDetailsModalOpen(true);
+        // 直接切换到指定的矩阵
+        setCurrentMatrix(session.matrixId);
+        // 关闭历史记录模态框，返回首页
+        onBack();
     };
 
     const handleSwitchToMatrix = (session) => {
@@ -158,14 +157,6 @@ export default function HistoryPage({ onBack, onCreateNew, onEditItem }) {
         onBack();
     };
 
-    const handleEditHistoryItem = (item) => {
-        // 关闭所有模态框，返回首页编辑
-        setDetailsModalOpen(false);
-        if (onEditItem) {
-            onEditItem(item);
-        }
-        onBack();
-    };
 
     return (
         <>
@@ -273,51 +264,6 @@ export default function HistoryPage({ onBack, onCreateNew, onEditItem }) {
                 </IonFab>
             </IonContent>
 
-            {/* 详情模态框 */}
-            <IonModal 
-                isOpen={detailsModalOpen} 
-                onDidDismiss={() => setDetailsModalOpen(false)}
-            >
-                <IonHeader>
-                    <IonToolbar>
-                        <IonTitle>
-                            {selectedSession && formatDate(selectedSession.timestamp)}
-                        </IonTitle>
-                        <IonButtons slot="end">
-                            <IonButton onClick={() => setDetailsModalOpen(false)}>
-                                <IonIcon icon={close} />
-                            </IonButton>
-                        </IonButtons>
-                    </IonToolbar>
-                </IonHeader>
-                <IonContent>
-                    <div className={styles.detailsContent}>
-                        {selectedSession && selectedSession.items.map((item) => (
-                            <IonCard key={item.id} className={styles.detailItem}>
-                                <IonCardHeader>
-                                    <IonCardTitle className={styles.detailItemTitle}>
-                                        {getQuadrantName(item.quadrantType)}
-                                    </IonCardTitle>
-                                </IonCardHeader>
-                                <IonCardContent>
-                                    <p className={styles.detailItemContent}>{item.content}</p>
-                                    <p className={styles.detailItemDate}>{formatDate(item.createdAt)}</p>
-                                    <div className={styles.detailItemActions}>
-                                        <IonButton 
-                                            fill="outline" 
-                                            size="small"
-                                            onClick={() => handleEditHistoryItem(item)}
-                                        >
-                                            <IonIcon icon={create} slot="start" />
-                                            编辑
-                                        </IonButton>
-                                    </div>
-                                </IonCardContent>
-                            </IonCard>
-                        ))}
-                    </div>
-                </IonContent>
-            </IonModal>
         </>
     );
 }
