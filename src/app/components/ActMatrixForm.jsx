@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
     IonContent,
     IonButton,
@@ -16,13 +16,17 @@ import {
     IonItemSliding,
     IonItemOptions,
     IonItemOption,
-    IonPage
+    IonPage,
+    IonFab,
+    IonFabButton
 } from '@ionic/react';
 import { PageHeader } from '@morphixai/components';
 import AppSdk from '@morphixai/app-sdk';
 import { reportError } from '@morphixai/lib';
-import { close, add, trash, create, arrowForward, arrowBack } from 'ionicons/icons';
+import { close, add, trash, create, arrowForward, arrowBack, time, grid } from 'ionicons/icons';
 import styles from '../styles/ActMatrixForm.module.css';
+import HistoryPage from './HistoryPage.jsx';
+import { useMatrix } from '../store/matrixStore';
 
 const COLLECTION_NAME = 'act_matrix_quadrants';
 
@@ -70,6 +74,9 @@ const QUADRANT_CONFIG = {
 };
 
 export default function ActMatrixForm() {
+    const pageRef = useRef(null);
+    const textareaRef = useRef(null);
+    const { currentMatrixId, setCurrentMatrix, createNewMatrix } = useMatrix();
     const [loading, setLoading] = useState(false);
     const [quadrants, setQuadrants] = useState({
         [QUADRANT_TYPES.INNER_EXPERIENCE]: [],
@@ -80,20 +87,34 @@ export default function ActMatrixForm() {
 
     // 模态框状态
     const [modalOpen, setModalOpen] = useState(false);
+    const [historyModalOpen, setHistoryModalOpen] = useState(false);
     const [activeQuadrant, setActiveQuadrant] = useState(null);
     const [newItemText, setNewItemText] = useState('');
     const [editingItem, setEditingItem] = useState(null);
 
     useEffect(() => {
-        loadQuadrantData();
-    }, []);
+        // 如果没有当前矩阵ID，创建一个新的
+        if (!currentMatrixId) {
+            createNewMatrix();
+        } else {
+            loadQuadrantData();
+        }
+    }, [currentMatrixId]);
 
     const loadQuadrantData = async () => {
+        if (!currentMatrixId) return;
+        
         setLoading(true);
         try {
             const result = await AppSdk.appData.queryData({
                 collection: COLLECTION_NAME,
-                query: []
+                query: [
+                    {
+                        field: 'matrixId',
+                        operator: '==',
+                        value: currentMatrixId
+                    }
+                ]
             });
             
             const newQuadrants = {
@@ -139,6 +160,7 @@ export default function ActMatrixForm() {
 
         try {
             const data = {
+                matrixId: currentMatrixId,
                 quadrantType: activeQuadrant,
                 content: newItemText.trim(),
                 createdAt: Date.now()
@@ -159,6 +181,44 @@ export default function ActMatrixForm() {
             await reportError(error, 'JavaScriptError', {
                 component: 'ActMatrixForm',
                 action: 'handleAddItem'
+            });
+        }
+    };
+
+    // 更好的方法：直接从输入框获取最新值
+    const handleAddItemWithLatestValue = async () => {
+        // 直接从textarea元素获取当前值，确保是最新的
+        const currentValue = textareaRef.current?.value || newItemText;
+        
+        if (!currentValue.trim() || !activeQuadrant) return;
+
+        try {
+            const data = {
+                matrixId: currentMatrixId,
+                quadrantType: activeQuadrant,
+                content: currentValue.trim(),
+                createdAt: Date.now()
+            };
+
+            const created = await AppSdk.appData.createData({
+                collection: COLLECTION_NAME,
+                data
+            });
+
+            setQuadrants(prev => ({
+                ...prev,
+                [activeQuadrant]: [created, ...prev[activeQuadrant]]
+            }));
+
+            setNewItemText('');
+            // 同时清空输入框
+            if (textareaRef.current) {
+                textareaRef.current.value = '';
+            }
+        } catch (error) {
+            await reportError(error, 'JavaScriptError', {
+                component: 'ActMatrixForm',
+                action: 'handleAddItemWithLatestValue'
             });
         }
     };
@@ -221,12 +281,51 @@ export default function ActMatrixForm() {
         setEditingItem(null);
     };
 
+    const handleShowHistory = () => {
+        setHistoryModalOpen(true);
+    };
+
+    const handleCloseHistory = () => {
+        setHistoryModalOpen(false);
+    };
+
+    const handleEditHistoryItem = (item) => {
+        // 设置要编辑的象限和内容
+        setActiveQuadrant(item.quadrantType);
+        setEditingItem(item);
+        setNewItemText(item.content);
+        setModalOpen(true);
+    };
+
+    const handleCreateNewMatrix = async () => {
+        try {
+            // 创建新的矩阵ID
+            const newMatrixId = createNewMatrix();
+            
+            // 清空当前象限数据
+            setQuadrants({
+                [QUADRANT_TYPES.INNER_EXPERIENCE]: [],
+                [QUADRANT_TYPES.AWAY_MOVES]: [],
+                [QUADRANT_TYPES.VALUES]: [],
+                [QUADRANT_TYPES.TOWARD_MOVES]: []
+            });
+            
+            // 关闭历史记录模态框
+            setHistoryModalOpen(false);
+        } catch (error) {
+            await reportError(error, 'JavaScriptError', {
+                component: 'ActMatrixForm',
+                action: 'handleCreateNewMatrix'
+            });
+        }
+    };
+
     const activeConfig = activeQuadrant ? QUADRANT_CONFIG[activeQuadrant] : null;
     const activeItems = activeQuadrant ? quadrants[activeQuadrant] : [];
 
     return (
         
-        <IonPage>
+        <IonPage ref={pageRef}>
             <PageHeader title="ACT 矩阵" />
             <IonContent className={styles.content}>
                 <div className={styles.container}>
@@ -382,10 +481,24 @@ export default function ActMatrixForm() {
                     </div>
                 </div>
 
+                {/* 浮动历史记录按钮 */}
+                <button 
+                    className={`${styles.floatingButton} ${styles.historyButton}`}
+                    onClick={handleShowHistory}
+                >
+                    <IonIcon icon={time} />
+                </button>
+
             </IonContent>
 
             {/* 象限内容管理模态框 */}
-            <IonModal isOpen={modalOpen} onDidDismiss={closeModal}>
+            <IonModal 
+                isOpen={modalOpen} 
+                onDidDismiss={closeModal}
+                presentingElement={pageRef.current}
+                canDismiss={true}
+                showBackdrop={true}
+            >
                 <IonHeader>
                     <IonToolbar>
                         <IonTitle>
@@ -406,20 +519,54 @@ export default function ActMatrixForm() {
                             </div>
                         )}
 
+                        {/* 已填写内容列表 - 放到上面 */}
+                        {activeItems.length > 0 && (
+                            <div className={styles.existingItemsSection}>
+                                <IonList>
+                                    {activeItems.map((item) => (
+                                        <IonItem key={item.id} className={styles.existingItem}>
+                                            <IonLabel>
+                                                <p className={styles.itemContent}>{item.content}</p>
+                                                <p className={styles.itemDate}>{formatDate(item.createdAt)}</p>
+                                            </IonLabel>
+                                            <IonButton 
+                                                fill="clear" 
+                                                size="small"
+                                                color="primary"
+                                                onClick={() => startEdit(item)}
+                                                slot="end"
+                                            >
+                                                <IonIcon icon={create} />
+                                            </IonButton>
+                                            <IonButton 
+                                                fill="clear" 
+                                                size="small"
+                                                color="danger"
+                                                onClick={() => handleDeleteItem(item)}
+                                                slot="end"
+                                            >
+                                                <IonIcon icon={trash} />
+                                            </IonButton>
+                                        </IonItem>
+                                    ))}
+                                </IonList>
+                            </div>
+                        )}
+
                         {/* 添加/编辑输入框 */}
                         <div className={styles.inputSection}>
-                            <IonItem>
-                                <IonTextarea
-                                    value={newItemText}
-                                    placeholder={activeConfig?.placeholder}
-                                    onIonInput={(e) => setNewItemText(e.detail.value || '')}
-                                    autoGrow
-                                    rows={2}
-                                />
-                            </IonItem>
-                            <div className={styles.inputActions}>
-                                {editingItem ? (
-                                    <>
+                            {editingItem ? (
+                                <>
+                                    <IonItem className={styles.inputWithButton}>
+                                        <IonTextarea
+                                            value={newItemText}
+                                            placeholder={activeConfig?.placeholder}
+                                            onIonInput={(e) => setNewItemText(e.detail.value || '')}
+                                            autoGrow
+                                            rows={2}
+                                        />
+                                    </IonItem>
+                                    <div className={styles.inputActions}>
                                         <IonButton 
                                             onClick={() => handleEditItem(editingItem)}
                                             disabled={!newItemText.trim()}
@@ -435,52 +582,47 @@ export default function ActMatrixForm() {
                                         >
                                             取消
                                         </IonButton>
-                                    </>
-                                ) : (
+                                    </div>
+                                </>
+                            ) : (
+                                <IonItem className={styles.inputWithButton}>
+                                    <IonTextarea
+                                        ref={textareaRef}
+                                        value={newItemText}
+                                        placeholder={activeConfig?.placeholder}
+                                        onIonInput={(e) => setNewItemText(e.detail.value || '')}
+                                        autoGrow
+                                        rows={1}
+                                    />
                                     <IonButton 
-                                        onClick={handleAddItem}
+                                        slot="end"
+                                        onClick={handleAddItemWithLatestValue}
                                         disabled={!newItemText.trim()}
+                                        fill="solid"
+                                        size="default"
                                     >
                                         添加
                                     </IonButton>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* 内容列表 */}
-                        <IonList>
-                            {activeItems.map((item) => (
-                                <IonItemSliding key={item.id}>
-                                    <IonItem>
-                                        <IonLabel>
-                                            <p className={styles.itemContent}>{item.content}</p>
-                                            <p className={styles.itemDate}>{formatDate(item.createdAt)}</p>
-                                        </IonLabel>
-                                    </IonItem>
-                                    <IonItemOptions side="end">
-                                        <IonItemOption 
-                                            color="primary" 
-                                            onClick={() => startEdit(item)}
-                                        >
-                                            <IonIcon icon={create} />
-                                        </IonItemOption>
-                                        <IonItemOption 
-                                            color="danger" 
-                                            onClick={() => handleDeleteItem(item)}
-                                        >
-                                            <IonIcon icon={trash} />
-                                        </IonItemOption>
-                                    </IonItemOptions>
-                                </IonItemSliding>
-                            ))}
-                            {activeItems.length === 0 && (
-                                <IonItem>
-                                    <IonLabel>暂无内容，点击上方添加</IonLabel>
                                 </IonItem>
                             )}
-                        </IonList>
+                        </div>
                     </div>
                 </IonContent>
+            </IonModal>
+
+            {/* 历史记录模态框 */}
+            <IonModal 
+                isOpen={historyModalOpen} 
+                onDidDismiss={handleCloseHistory}
+                presentingElement={pageRef.current}
+                canDismiss={true}
+                showBackdrop={true}
+            >
+                <HistoryPage 
+                    onBack={handleCloseHistory}
+                    onCreateNew={handleCreateNewMatrix}
+                    onEditItem={handleEditHistoryItem}
+                />
             </IonModal>
         </IonPage>
     );

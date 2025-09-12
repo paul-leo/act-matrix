@@ -107,7 +107,7 @@
 
 .leftAxisLabel {
   position: absolute;
-  left: -10;
+  left: 0;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
@@ -121,7 +121,7 @@
 
 .rightAxisLabel {
   position: absolute;
-  right: -10;
+  right: 0;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
@@ -241,10 +241,13 @@
 /* 模态框样式 */
 .modalContent {
   padding: 16px;
+  background: #ffffff;
 }
 
 .modalHeader {
   padding: 0 0 16px 0;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 16px;
 }
 
 .modalSubtitle {
@@ -255,7 +258,7 @@
 
 .modalQuestion {
   color: #374151;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.5;
   margin: 0;
   font-weight: 500;
@@ -265,10 +268,78 @@
   margin-bottom: 24px;
 }
 
+.inputSection ion-item {
+  --background: transparent;
+  --border-color: #e5e7eb;
+  --border-radius: 8px;
+  --padding-start: 0;
+  --padding-end: 0;
+}
+
+.inputSection ion-textarea {
+  --padding-start: 12px;
+  --padding-end: 12px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+}
+
 .inputActions {
   padding: 12px 16px 0 16px;
   display: flex;
   gap: 8px;
+  border-top: 1px solid #e5e7eb;
+  margin-top: 16px;
+}
+
+/* 已填写内容区域样式 */
+.existingItemsSection {
+  margin-bottom: 24px;
+}
+
+.existingItemsSection ion-list {
+  background: transparent;
+  padding: 0;
+}
+
+.existingItem {
+  --background: #f8fafc;
+  --border-radius: 8px;
+  --padding-start: 12px;
+  --padding-end: 12px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+}
+
+.existingItem:last-child {
+  margin-bottom: 0;
+}
+
+.existingItem ion-button {
+  --padding-start: 8px;
+  --padding-end: 8px;
+  margin-left: 4px;
+}
+
+/* 输入框和按钮的布局样式 */
+.inputWithButton {
+  --padding-end: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.inputWithButton ion-textarea {
+  flex: 1;
+}
+
+.inputWithButton ion-button {
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 8px;
+  --padding-bottom: 8px;
+  margin: 0;
+  flex-shrink: 0;
+  height: 40px;
 }
 
 .itemContent {
@@ -282,6 +353,43 @@
   font-size: 12px;
   color: #6b7280;
   margin: 0;
+}
+
+/* 浮动历史记录按钮 */
+.floatingButton {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  z-index: 1000;
+}
+
+.floatingButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.floatingButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.historyButton {
+  background: #3b82f6;
+  color: white;
+}
+
+.historyButton ion-icon {
+  font-size: 24px;
 }
 
 

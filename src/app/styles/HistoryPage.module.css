@@ -1,0 +1,209 @@
+.content {
+  background: #f8fafc;
+}
+
+.container {
+  padding: 16px;
+  min-height: 100%;
+}
+
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+}
+
+/* 空状态样式 */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 60px 20px;
+  height: 70vh;
+}
+
+.emptyIcon {
+  font-size: 64px;
+  color: #9ca3af;
+  margin-bottom: 16px;
+}
+
+.emptyState h2 {
+  color: #374151;
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.emptyState p {
+  color: #6b7280;
+  margin: 0 0 24px 0;
+  font-size: 16px;
+}
+
+/* 会话列表样式 */
+.sessionsList {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.header h2 {
+  color: #111827;
+  margin: 0 0 4px 0;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.header p {
+  color: #6b7280;
+  margin: 0;
+  font-size: 14px;
+}
+
+/* 会话卡片样式 */
+.sessionCard {
+  margin-bottom: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+}
+
+.sessionCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  transform: translateY(-1px);
+}
+
+.currentMatrix {
+  border: 2px solid #3b82f6;
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.sessionTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #111827;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  position: relative;
+}
+
+.currentLabel {
+  background: #3b82f6;
+  color: white;
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-left: auto;
+}
+
+.timeIcon {
+  color: #3b82f6;
+  font-size: 20px;
+}
+
+/* 会话摘要样式 */
+.sessionSummary {
+  margin-bottom: 16px;
+}
+
+.quadrantSummary {
+  background: #f1f5f9;
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.quadrantName {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.quadrantCount {
+  font-size: 16px;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+/* 会话操作按钮 */
+.sessionActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* 详情模态框样式 */
+.detailsContent {
+  padding: 16px;
+}
+
+.detailItem {
+  margin-bottom: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.detailItemTitle {
+  color: #111827;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.detailItemContent {
+  color: #374151;
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0 0 8px 0;
+}
+
+.detailItemDate {
+  color: #6b7280;
+  font-size: 12px;
+  margin: 0 0 12px 0;
+}
+
+.detailItemActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .container {
+    padding: 12px;
+  }
+  
+  .sessionCard {
+    margin-bottom: 12px;
+  }
+  
+  .sessionTitle {
+    font-size: 16px;
+  }
+  
+  .header h2 {
+    font-size: 20px;
+  }
+  
+  .detailsContent {
+    padding: 12px;
+  }
+}
