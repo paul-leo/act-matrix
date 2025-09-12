@@ -1,0 +1,384 @@
+.content {
+  --padding: 16px;
+  background: #f8fafc;
+  min-height: 100vh;
+}
+
+.container {
+  padding: 20px;
+  width: 100%;
+  height: calc(100vh - 56px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+}
+
+/* ACT 坐标系容器 - 白色圆角容器就是整个坐标系 */
+.coordinateSystem {
+  width: 100%;
+  max-width: 600px;
+  height: 100%;
+  max-height: 600px;
+  position: relative;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* 坐标轴线 - 穿过整个容器 */
+.axisLines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.horizontalAxis {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #9ca3af;
+  transform: translateY(-50%);
+}
+
+.verticalAxis {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #9ca3af;
+  transform: translateX(-50%);
+}
+
+/* 坐标轴标签容器 */
+.axisLabels {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* 轴标签 - 绝对定位在坐标轴上 */
+.topAxisLabel {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 4px 8px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.bottomAxisLabel {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 4px 8px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.leftAxisLabel {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 4px 8px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.rightAxisLabel {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 4px 8px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.axisLabelText {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.axisSubLabelText {
+  font-size: 9px;
+  color: #6b7280;
+  font-style: italic;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.axisArrow {
+  font-size: 14px;
+  color: #374151;
+}
+
+/* 四象限网格 - 铺满整个容器 */
+.quadrantGrid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  z-index: 1;
+}
+
+/* 象限区域 - 铺满对应的网格区域 */
+.quadrant {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.quadrant:hover {
+  background: rgba(248, 250, 252, 0.5);
+}
+
+.quadrantHeader {
+  margin-bottom: 12px;
+}
+
+.quadrantTitle {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  color: #111827;
+}
+
+.quadrantSubtitle {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.quadrantContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quadrantItem {
+  background: #f1f5f9;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 1.3;
+  color: #374151;
+  margin-bottom: 4px;
+}
+
+.moreItems {
+  font-size: 12px;
+  color: #6b7280;
+  text-align: center;
+  padding: 8px 4px;
+  font-style: italic;
+}
+
+.emptyHint {
+  color: #9ca3af;
+  text-align: center;
+  padding: 20px 10px;
+  font-size: 12px;
+  font-style: italic;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 模态框样式 */
+.modalContent {
+  padding: 16px;
+}
+
+.modalHeader {
+  padding: 0 0 16px 0;
+}
+
+.modalSubtitle {
+  color: #6b7280;
+  font-size: 14px;
+  margin: 0;
+}
+
+.modalQuestion {
+  color: #374151;
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0;
+  font-weight: 500;
+}
+
+.inputSection {
+  margin-bottom: 24px;
+}
+
+.inputActions {
+  padding: 12px 16px 0 16px;
+  display: flex;
+  gap: 8px;
+}
+
+.itemContent {
+  font-size: 14px;
+  color: #111827;
+  line-height: 1.5;
+  margin: 0 0 4px 0;
+}
+
+.itemDate {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .container {
+    padding: 15px;
+    height: calc(100vh - 50px);
+  }
+  
+  .coordinateSystem {
+    max-width: 500px;
+    max-height: 500px;
+  }
+  
+  .axisLabelText {
+    font-size: 11px;
+  }
+  
+  .axisSubLabelText {
+    font-size: 8px;
+  }
+  
+  .axisArrow {
+    font-size: 12px;
+  }
+  
+  .quadrant {
+    padding: 15px;
+  }
+  
+  .quadrantTitle {
+    font-size: 14px;
+  }
+  
+  .quadrantSubtitle {
+    font-size: 11px;
+  }
+  
+  .quadrantItem {
+    font-size: 11px;
+    padding: 5px 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 10px;
+  }
+  
+  .coordinateSystem {
+    max-width: 400px;
+    max-height: 400px;
+  }
+  
+  .topAxisLabel,
+  .bottomAxisLabel {
+    padding: 3px 6px;
+  }
+  
+  .leftAxisLabel,
+  .rightAxisLabel {
+    padding: 3px 6px;
+    gap: 2px;
+  }
+  
+  .axisLabelText {
+    font-size: 10px;
+  }
+  
+  .axisSubLabelText {
+    font-size: 7px;
+  }
+  
+  .axisArrow {
+    font-size: 10px;
+  }
+  
+  .quadrant {
+    padding: 12px;
+  }
+  
+  .quadrantTitle {
+    font-size: 13px;
+  }
+  
+  .quadrantSubtitle {
+    font-size: 10px;
+  }
+  
+  .quadrantItem {
+    font-size: 10px;
+    padding: 4px 6px;
+  }
+  
+  .emptyHint {
+    padding: 15px 8px;
+    font-size: 11px;
+  }
+}
+
+

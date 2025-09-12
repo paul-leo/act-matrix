@@ -1,6 +1,6 @@
 import React from 'react';
 import { IonPage, IonContent } from '@ionic/react';
-import Welcome from './components/Welcome';
+import ActMatrixForm from './components/ActMatrixForm';
 import styles from './styles/App.module.css';
 
 /**
@@ -13,7 +13,7 @@ export default function App() {
     return (
         <IonPage>
             <IonContent className={styles.content}>
-                <Welcome />
+                <ActMatrixForm />
             </IonContent>
         </IonPage>
     );

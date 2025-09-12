@@ -1,3 +1,5 @@
+# 开发请严格遵守以下原则
+1. 如果对用户的需求不明确，请先和用户确认需求，通过与用户多次交互，确认需求，再进行开发。
 # Cursor Rules for MorphixAI App Development
 
 这个目录包含了 MorphixAI 应用开发的 Cursor 规则集，基于官方文档制定，提供智能化的开发体验。
