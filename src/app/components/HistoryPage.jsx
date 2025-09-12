@@ -39,10 +39,12 @@ export default function HistoryPage({ onBack, onCreateNew }) {
     const [matrixIdToDelete, setMatrixIdToDelete] = useState(null);
 
     useEffect(() => {
+        console.log('[HistoryPage] mounted');
         loadHistoryData();
     }, []);
 
     const loadHistoryData = async () => {
+        console.log('[HistoryPage] loadHistoryData: start');
         setLoading(true);
         try {
             // 获取所有象限数据
@@ -50,6 +52,7 @@ export default function HistoryPage({ onBack, onCreateNew }) {
                 collection: COLLECTION_NAME,
                 query: []
             });
+            console.log('[HistoryPage] queryData result count:', Array.isArray(quadrantsResult) ? quadrantsResult.length : 'N/A');
 
             // 按矩阵ID分组数据，创建会话
             const sessionMap = new Map();
@@ -81,7 +84,7 @@ export default function HistoryPage({ onBack, onCreateNew }) {
             // 转换为数组并按时间排序
             const sessionsArray = Array.from(sessionMap.values())
                 .sort((a, b) => b.timestamp - a.timestamp);
-
+            console.log('[HistoryPage] sessionsArray (built):', sessionsArray);
             setSessions(sessionsArray);
         } catch (error) {
             await reportError(error, 'JavaScriptError', {
@@ -90,6 +93,7 @@ export default function HistoryPage({ onBack, onCreateNew }) {
             });
         } finally {
             setLoading(false);
+            console.log('[HistoryPage] loadHistoryData: end');
         }
     };
 
@@ -148,6 +152,7 @@ export default function HistoryPage({ onBack, onCreateNew }) {
 
     const handleViewSessionDetails = (session) => {
         // 直接切换到指定的矩阵
+        console.log('[HistoryPage] view details -> setCurrentMatrix:', session.matrixId);
         setCurrentMatrix(session.matrixId);
         // 关闭历史记录模态框，返回首页
         onBack();
@@ -155,6 +160,7 @@ export default function HistoryPage({ onBack, onCreateNew }) {
 
     const handleSwitchToMatrix = (session) => {
         // 切换到指定的矩阵
+        console.log('[HistoryPage] switch matrix -> setCurrentMatrix:', session.matrixId);
         setCurrentMatrix(session.matrixId);
         // 关闭历史记录模态框
         onBack();
@@ -162,6 +168,7 @@ export default function HistoryPage({ onBack, onCreateNew }) {
 
     const handleDeleteMatrix = async (matrixId) => {
         try {
+            console.log('[HistoryPage] delete start, matrixId:', matrixId);
             setLoading(true);
             // 查询该矩阵下的所有象限数据
             const items = await AppSdk.appData.queryData({
@@ -171,28 +178,39 @@ export default function HistoryPage({ onBack, onCreateNew }) {
                 ]
             });
 
+            console.log('[HistoryPage] items to delete (count):', Array.isArray(items) ? items.length : 'N/A', Array.isArray(items) ? items.map(i => i.id) : []);
+
+            let deleteResults = [];
             if (Array.isArray(items) && items.length > 0) {
-                // 并发删除并等待完成
-                await Promise.all(items.map((item) => {
-                    return AppSdk.appData.deleteData({
-                        collection: COLLECTION_NAME,
-                        id: item.id
-                    });
+                // 并发删除并等待完成，收集结果
+                deleteResults = await Promise.all(items.map(async (item) => {
+                    try {
+                        const res = await AppSdk.appData.deleteData({
+                            collection: COLLECTION_NAME,
+                            id: item.id
+                        });
+                        return { id: item.id, ok: true, res };
+                    } catch (e) {
+                        return { id: item.id, ok: false, error: String(e) };
+                    }
                 }));
             }
-
+            console.log('[HistoryPage] delete results:', deleteResults);
             // 如果删除的是当前矩阵，则清空当前选择
             if (currentMatrixId === matrixId) {
+                console.log('[HistoryPage] deleted current matrix, clearing selection');
                 setCurrentMatrix(null);
             }
 
             // 重新加载列表
             await loadHistoryData();
+            console.log('[HistoryPage] delete finished, matrixId:', matrixId);
         } catch (error) {
             await reportError(error, 'JavaScriptError', {
                 component: 'HistoryPage',
                 action: 'handleDeleteMatrix'
             });
+            console.error('[HistoryPage] delete error:', error);
         } finally {
             setLoading(false);
         }
@@ -296,6 +314,7 @@ export default function HistoryPage({ onBack, onCreateNew }) {
                                                 onClick={(e) => {
                                                     e.preventDefault();
                                                     e.stopPropagation();
+                                                    console.log('[HistoryPage] open delete confirm for matrixId:', session.matrixId);
                                                     setMatrixIdToDelete(session.matrixId);
                                                     setConfirmOpen(true);
                                                 }}
@@ -313,6 +332,7 @@ export default function HistoryPage({ onBack, onCreateNew }) {
                 {/* 浮动新建按钮 */}
                 <IonFab vertical="bottom" horizontal="end" slot="fixed">
                     <IonFabButton onClick={handleCreateNewMatrix}>
+                        {console.log('[HistoryPage] render, sessions length:', sessions.length, 'currentMatrixId:', currentMatrixId)}
                         <IonIcon icon={add} />
                     </IonFabButton>
                 </IonFab>
