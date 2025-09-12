@@ -15,7 +15,8 @@ import {
     IonIcon,
     IonItemSliding,
     IonItemOptions,
-    IonItemOption
+    IonItemOption,
+    IonPage
 } from '@ionic/react';
 import { PageHeader } from '@morphixai/components';
 import AppSdk from '@morphixai/app-sdk';
@@ -224,9 +225,10 @@ export default function ActMatrixForm() {
     const activeItems = activeQuadrant ? quadrants[activeQuadrant] : [];
 
     return (
-        <>
+        
+        <IonPage>
             <PageHeader title="ACT 矩阵" />
-            <IonContent className={styles.content} scrollY={false}>
+            <IonContent className={styles.content}>
                 <div className={styles.container}>
                     {loading && (
                         <div className={styles.loadingContainer}>
@@ -480,7 +482,7 @@ export default function ActMatrixForm() {
                     </div>
                 </IonContent>
             </IonModal>
-        </>
+        </IonPage>
     );
 }
 
