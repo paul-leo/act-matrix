@@ -4,7 +4,7 @@ import {
     IonButton,
     IonItem,
     IonLabel,
-    IonTextarea,
+    IonInput,
     IonList,
     IonSpinner,
     IonModal,
@@ -18,7 +18,8 @@ import {
     IonItemOption,
     IonPage,
     IonFab,
-    IonFabButton
+    IonFabButton,
+    useIonViewDidEnter
 } from '@ionic/react';
 import { PageHeader } from '@morphixai/components';
 import AppSdk from '@morphixai/app-sdk';
@@ -75,7 +76,7 @@ const QUADRANT_CONFIG = {
 
 export default function ActMatrixForm() {
     const pageRef = useRef(null);
-    const textareaRef = useRef(null);
+    const inputRef = useRef(null);
     const { currentMatrixId, setCurrentMatrix, createNewMatrix } = useMatrix();
     const [loading, setLoading] = useState(false);
     const [quadrants, setQuadrants] = useState({
@@ -93,11 +94,11 @@ export default function ActMatrixForm() {
     const [editingItem, setEditingItem] = useState(null);
 
     useEffect(() => {
-        // 不再在首页自动创建矩阵；当有选中的矩阵时再加载
+        console.log('[ActMatrixForm] currentMatrixId changed:', currentMatrixId);
+        // 当有选中的矩阵时加载；否则清空
         if (currentMatrixId) {
             loadQuadrantData();
         } else {
-            // 清空本地展示的数据
             setQuadrants({
                 [QUADRANT_TYPES.INNER_EXPERIENCE]: [],
                 [QUADRANT_TYPES.AWAY_MOVES]: [],
@@ -107,21 +108,36 @@ export default function ActMatrixForm() {
         }
     }, [currentMatrixId]);
 
+    // 页面进入时，如已选择矩阵则主动刷新一次
+    useIonViewDidEnter(() => {
+        console.log('[ActMatrixForm] view did enter, currentMatrixId:', currentMatrixId);
+        if (currentMatrixId) {
+            loadQuadrantData();
+        }
+    });
+
     const loadQuadrantData = async () => {
         if (!currentMatrixId) return;
         
+        console.log('[ActMatrixForm] loadQuadrantData start, matrixId:', currentMatrixId);
         setLoading(true);
+        const alldata = await AppSdk.appData.queryData({
+            collection: COLLECTION_NAME,
+            query: []
+        });
+        console.log('[ActMatrixForm] alldata count:', alldata);
         try {
             const result = await AppSdk.appData.queryData({
                 collection: COLLECTION_NAME,
                 query: [
                     {
-                        key: 'matrixId',
+                        key: 'data->>matrixId',
                         operator: 'eq',
                         value: currentMatrixId
                     }
                 ]
             });
+            console.log('[ActMatrixForm] query result count:', result);
             
             const newQuadrants = {
                 [QUADRANT_TYPES.INNER_EXPERIENCE]: [],
@@ -144,13 +160,16 @@ export default function ActMatrixForm() {
             }
 
             setQuadrants(newQuadrants);
+            console.log('[ActMatrixForm] quadrants updated');
         } catch (error) {
             await reportError(error, 'JavaScriptError', {
                 component: 'ActMatrixForm',
                 action: 'loadQuadrantData'
             });
+            console.error('[ActMatrixForm] loadQuadrantData error:', error);
         } finally {
             setLoading(false);
+            console.log('[ActMatrixForm] loadQuadrantData end');
         }
     };
 
@@ -193,8 +212,8 @@ export default function ActMatrixForm() {
 
     // 更好的方法：直接从输入框获取最新值
     const handleAddItemWithLatestValue = async () => {
-        // 直接从textarea元素获取当前值，确保是最新的
-        const currentValue = textareaRef.current?.value || newItemText;
+        // 直接从输入元素获取当前值，确保是最新的
+        const currentValue = inputRef.current?.value || newItemText;
         
         if (!currentValue.trim() || !activeQuadrant || !currentMatrixId) return;
 
@@ -218,8 +237,8 @@ export default function ActMatrixForm() {
 
             setNewItemText('');
             // 同时清空输入框
-            if (textareaRef.current) {
-                textareaRef.current.value = '';
+            if (inputRef.current) {
+                inputRef.current.value = '';
             }
         } catch (error) {
             await reportError(error, 'JavaScriptError', {
@@ -557,13 +576,12 @@ export default function ActMatrixForm() {
                             {editingItem ? (
                                 <>
                                     <IonItem className={styles.inputWithButton}>
-                                        <IonTextarea
+                                        <IonInput
                                             value={newItemText}
                                             placeholder={activeConfig?.placeholder}
                                             onIonInput={(e) => setNewItemText(e.detail.value || '')}
-                                            autoGrow
-                                            rows={2}
-                                        />
+                                            type="text"
+                                        ></IonInput>
                                     </IonItem>
                                     <div className={styles.inputActions}>
                                         <IonButton 
@@ -585,20 +603,19 @@ export default function ActMatrixForm() {
                                 </>
                             ) : (
                                 <IonItem className={styles.inputWithButton}>
-                                    <IonTextarea
-                                        ref={textareaRef}
+                                    <IonInput
+                                        ref={inputRef}
                                         value={newItemText}
                                         placeholder={activeConfig?.placeholder}
                                         onIonInput={(e) => setNewItemText(e.detail.value || '')}
-                                        autoGrow
-                                        rows={1}
-                                    />
+                                        type="text"
+                                    ></IonInput>
                                     <IonButton 
                                         slot="end"
                                         onClick={handleAddItemWithLatestValue}
                                         disabled={!newItemText.trim() || !currentMatrixId}
                                         fill="solid"
-                                        size="default"
+                                        size="small"
                                     >
                                         添加
                                     </IonButton>
