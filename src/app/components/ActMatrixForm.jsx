@@ -116,8 +116,8 @@ export default function ActMatrixForm() {
                 collection: COLLECTION_NAME,
                 query: [
                     {
-                        field: 'matrixId',
-                        operator: '==',
+                        key: 'matrixId',
+                        operator: 'eq',
                         value: currentMatrixId
                     }
                 ]

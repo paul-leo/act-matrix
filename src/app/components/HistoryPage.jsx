@@ -174,7 +174,7 @@ export default function HistoryPage({ onBack, onCreateNew }) {
             const items = await AppSdk.appData.queryData({
                 collection: COLLECTION_NAME,
                 query: [
-                    { field: 'matrixId', operator: '==', value: matrixId }
+                    { key: 'matrixId', operator: 'eq', value: matrixId }
                 ]
             });
 
