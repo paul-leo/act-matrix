@@ -93,11 +93,17 @@ export default function ActMatrixForm() {
     const [editingItem, setEditingItem] = useState(null);
 
     useEffect(() => {
-        // 如果没有当前矩阵ID，创建一个新的
-        if (!currentMatrixId) {
-            createNewMatrix();
-        } else {
+        // 不再在首页自动创建矩阵；当有选中的矩阵时再加载
+        if (currentMatrixId) {
             loadQuadrantData();
+        } else {
+            // 清空本地展示的数据
+            setQuadrants({
+                [QUADRANT_TYPES.INNER_EXPERIENCE]: [],
+                [QUADRANT_TYPES.AWAY_MOVES]: [],
+                [QUADRANT_TYPES.VALUES]: [],
+                [QUADRANT_TYPES.TOWARD_MOVES]: []
+            });
         }
     }, [currentMatrixId]);
 
@@ -156,7 +162,7 @@ export default function ActMatrixForm() {
     };
 
     const handleAddItem = async () => {
-        if (!newItemText.trim() || !activeQuadrant) return;
+        if (!newItemText.trim() || !activeQuadrant || !currentMatrixId) return;
 
         try {
             const data = {
@@ -190,7 +196,7 @@ export default function ActMatrixForm() {
         // 直接从textarea元素获取当前值，确保是最新的
         const currentValue = textareaRef.current?.value || newItemText;
         
-        if (!currentValue.trim() || !activeQuadrant) return;
+        if (!currentValue.trim() || !activeQuadrant || !currentMatrixId) return;
 
         try {
             const data = {
@@ -590,7 +596,7 @@ export default function ActMatrixForm() {
                                     <IonButton 
                                         slot="end"
                                         onClick={handleAddItemWithLatestValue}
-                                        disabled={!newItemText.trim()}
+                                        disabled={!newItemText.trim() || !currentMatrixId}
                                         fill="solid"
                                         size="default"
                                     >

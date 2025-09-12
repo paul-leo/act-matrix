@@ -23,7 +23,7 @@ import {
 } from '@ionic/react';
 import AppSdk from '@morphixai/app-sdk';
 import { reportError } from '@morphixai/lib';
-import { chevronBack, add, time, grid } from 'ionicons/icons';
+import { chevronBack, add, time, grid, trash } from 'ionicons/icons';
 import styles from '../styles/HistoryPage.module.css';
 import { useMatrix } from '../store/matrixStore';
 
@@ -157,6 +157,40 @@ export default function HistoryPage({ onBack, onCreateNew }) {
         onBack();
     };
 
+    const handleDeleteMatrix = async (matrixId) => {
+        try {
+            // 删除该矩阵下的所有象限数据
+            const items = await AppSdk.appData.queryData({
+                collection: COLLECTION_NAME,
+                query: [
+                    { field: 'matrixId', operator: '==', value: matrixId }
+                ]
+            });
+
+            if (Array.isArray(items)) {
+                for (const item of items) {
+                    await AppSdk.appData.deleteData({
+                        collection: COLLECTION_NAME,
+                        id: item.id
+                    });
+                }
+            }
+
+            // 如果删除的是当前矩阵，则清空当前选择
+            if (currentMatrixId === matrixId) {
+                setCurrentMatrix(null);
+            }
+
+            // 重新加载列表
+            await loadHistoryData();
+        } catch (error) {
+            await reportError(error, 'JavaScriptError', {
+                component: 'HistoryPage',
+                action: 'handleDeleteMatrix'
+            });
+        }
+    };
+
 
     return (
         <>
@@ -249,6 +283,29 @@ export default function HistoryPage({ onBack, onCreateNew }) {
                                                 </IonButton>
                                             </div>
                                         </IonCardContent>
+                                        <div className={styles.sessionActions}>
+                                            <IonButton 
+                                                fill="outline" 
+                                                size="small"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleViewSessionDetails(session);
+                                                }}
+                                            >
+                                                查看详情
+                                            </IonButton>
+                                            <IonButton 
+                                                fill="outline" 
+                                                color="danger"
+                                                size="small"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDeleteMatrix(session.matrixId);
+                                                }}
+                                            >
+                                                <IonIcon icon={trash} slot="start" /> 删除
+                                            </IonButton>
+                                        </div>
                                     </IonCard>
                                 );
                             })}
