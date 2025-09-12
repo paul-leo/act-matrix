@@ -15,14 +15,12 @@ import {
     IonIcon,
     IonItemSliding,
     IonItemOptions,
-    IonItemOption,
-    IonFab,
-    IonFabButton
+    IonItemOption
 } from '@ionic/react';
 import { PageHeader } from '@morphixai/components';
 import AppSdk from '@morphixai/app-sdk';
 import { reportError } from '@morphixai/lib';
-import { close, add, trash, create, refresh, arrowForward, arrowBack } from 'ionicons/icons';
+import { close, add, trash, create, arrowForward, arrowBack } from 'ionicons/icons';
 import styles from '../styles/ActMatrixForm.module.css';
 
 const COLLECTION_NAME = 'act_matrix_quadrants';
@@ -228,7 +226,7 @@ export default function ActMatrixForm() {
     return (
         <>
             <PageHeader title="ACT 矩阵" />
-            <IonContent className={styles.content}>
+            <IonContent className={styles.content} scrollY={false}>
                 <div className={styles.container}>
                     {loading && (
                         <div className={styles.loadingContainer}>
@@ -382,13 +380,6 @@ export default function ActMatrixForm() {
                     </div>
                 </div>
 
-                {/* 浮动刷新按钮 */}
-                <IonFab vertical="bottom" horizontal="end" slot="fixed">
-                    <IonFabButton onClick={loadQuadrantData} disabled={loading}>
-                        <IonIcon icon={loading ? undefined : refresh} />
-                        {loading && <IonSpinner name="crescent" />}
-                    </IonFabButton>
-                </IonFab>
             </IonContent>
 
             {/* 象限内容管理模态框 */}

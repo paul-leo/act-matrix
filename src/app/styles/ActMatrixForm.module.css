@@ -1,16 +1,18 @@
 .content {
   --padding: 16px;
   background: #f8fafc;
-  min-height: 100vh;
+  height: 100%;
+  overflow: hidden;
 }
 
 .container {
   padding: 20px;
   width: 100%;
-  height: calc(100vh - 56px);
+  height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
+  box-sizing: border-box;
 }
 
 .loadingContainer {
@@ -287,7 +289,7 @@
 @media (max-width: 768px) {
   .container {
     padding: 15px;
-    height: calc(100vh - 50px);
+    height: 100%;
   }
   
   .coordinateSystem {
