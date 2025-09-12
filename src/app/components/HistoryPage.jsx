@@ -19,7 +19,8 @@ import {
     IonRow,
     IonCol,
     IonFab,
-    IonFabButton
+    IonFabButton,
+    IonAlert
 } from '@ionic/react';
 import AppSdk from '@morphixai/app-sdk';
 import { reportError } from '@morphixai/lib';
@@ -34,6 +35,8 @@ export default function HistoryPage({ onBack, onCreateNew }) {
     const { currentMatrixId, setCurrentMatrix } = useMatrix();
     const [loading, setLoading] = useState(false);
     const [sessions, setSessions] = useState([]);
+    const [confirmOpen, setConfirmOpen] = useState(false);
+    const [matrixIdToDelete, setMatrixIdToDelete] = useState(null);
 
     useEffect(() => {
         loadHistoryData();
@@ -159,7 +162,8 @@ export default function HistoryPage({ onBack, onCreateNew }) {
 
     const handleDeleteMatrix = async (matrixId) => {
         try {
-            // 删除该矩阵下的所有象限数据
+            setLoading(true);
+            // 查询该矩阵下的所有象限数据
             const items = await AppSdk.appData.queryData({
                 collection: COLLECTION_NAME,
                 query: [
@@ -167,13 +171,14 @@ export default function HistoryPage({ onBack, onCreateNew }) {
                 ]
             });
 
-            if (Array.isArray(items)) {
-                for (const item of items) {
-                    await AppSdk.appData.deleteData({
+            if (Array.isArray(items) && items.length > 0) {
+                // 并发删除并等待完成
+                await Promise.all(items.map((item) => {
+                    return AppSdk.appData.deleteData({
                         collection: COLLECTION_NAME,
                         id: item.id
                     });
-                }
+                }));
             }
 
             // 如果删除的是当前矩阵，则清空当前选择
@@ -188,6 +193,8 @@ export default function HistoryPage({ onBack, onCreateNew }) {
                 component: 'HistoryPage',
                 action: 'handleDeleteMatrix'
             });
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -239,8 +246,6 @@ export default function HistoryPage({ onBack, onCreateNew }) {
                                     <IonCard 
                                         key={session.id} 
                                         className={`${styles.sessionCard} ${session.isCurrentMatrix ? styles.currentMatrix : ''}`}
-                                        button={true}
-                                        onClick={() => handleSwitchToMatrix(session)}
                                     >
                                         <IonCardHeader>
                                             <IonCardTitle className={styles.sessionTitle}>
@@ -270,24 +275,14 @@ export default function HistoryPage({ onBack, onCreateNew }) {
                                                     </IonRow>
                                                 </IonGrid>
                                             </div>
-                                            <div className={styles.sessionActions}>
-                                                <IonButton 
-                                                    fill="outline" 
-                                                    size="small"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleViewSessionDetails(session);
-                                                    }}
-                                                >
-                                                    查看详情
-                                                </IonButton>
-                                            </div>
+                                            {/* 保留下方与删除在一起的“查看详情”，这里移除重复按钮 */}
                                         </IonCardContent>
                                         <div className={styles.sessionActions}>
                                             <IonButton 
                                                 fill="outline" 
                                                 size="small"
                                                 onClick={(e) => {
+                                                    e.preventDefault();
                                                     e.stopPropagation();
                                                     handleViewSessionDetails(session);
                                                 }}
@@ -299,8 +294,10 @@ export default function HistoryPage({ onBack, onCreateNew }) {
                                                 color="danger"
                                                 size="small"
                                                 onClick={(e) => {
+                                                    e.preventDefault();
                                                     e.stopPropagation();
-                                                    handleDeleteMatrix(session.matrixId);
+                                                    setMatrixIdToDelete(session.matrixId);
+                                                    setConfirmOpen(true);
                                                 }}
                                             >
                                                 <IonIcon icon={trash} slot="start" /> 删除
@@ -319,6 +316,38 @@ export default function HistoryPage({ onBack, onCreateNew }) {
                         <IonIcon icon={add} />
                     </IonFabButton>
                 </IonFab>
+
+                {/* 删除确认弹窗 */}
+                <IonAlert
+                    isOpen={confirmOpen}
+                    onDidDismiss={() => {
+                        setConfirmOpen(false);
+                        setMatrixIdToDelete(null);
+                    }}
+                    header="确认删除"
+                    message="删除该矩阵将移除其下所有内容，且不可恢复。是否继续？"
+                    buttons={[
+                        {
+                            text: '取消',
+                            role: 'cancel',
+                            handler: () => {
+                                setConfirmOpen(false);
+                                setMatrixIdToDelete(null);
+                            }
+                        },
+                        {
+                            text: '删除',
+                            role: 'destructive',
+                            handler: async () => {
+                                if (matrixIdToDelete) {
+                                    await handleDeleteMatrix(matrixIdToDelete);
+                                }
+                                setConfirmOpen(false);
+                                setMatrixIdToDelete(null);
+                            }
+                        }
+                    ]}
+                />
             </IonContent>
 
         </>
