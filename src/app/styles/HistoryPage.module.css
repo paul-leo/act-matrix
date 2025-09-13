@@ -1,5 +1,14 @@
 .content {
   background: #4A4947;
+  /* Page theme vars */
+  --paper-bg: #F9F7F0;
+  --ink: #1f2937;
+  --muted-ink: #6b7280;
+  --line-color: #e5e2da;
+  --accent: #7A6C5D;
+  --accent-contrast: #ffffff;
+  --accent-weak: #CBBBA5;
+  --ion-color-primary: var(--accent);
 }
 
 .container {
@@ -86,8 +95,8 @@
 }
 
 .currentMatrix {
-  border: 2px solid #3b82f6;
-  background: rgba(59, 130, 246, 0.05);
+  border: 2px solid var(--accent);
+  background: rgba(122, 108, 93, 0.06);
 }
 
 .sessionTitle {
@@ -102,8 +111,8 @@
 }
 
 .currentLabel {
-  background: #3b82f6;
-  color: white;
+  background: var(--accent);
+  color: var(--accent-contrast);
   font-size: 10px;
   font-weight: 500;
   padding: 2px 6px;
@@ -112,7 +121,7 @@
 }
 
 .timeIcon {
-  color: #3b82f6;
+  color: var(--accent);
   font-size: 20px;
 }
 

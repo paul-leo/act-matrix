@@ -4,4 +4,17 @@
   --padding: 0;
   background: #4A4947;
   color: #1f2937;
+  /* Theme variables */
+  --paper-bg: #F9F7F0;
+  --ink: #1f2937;
+  --muted-ink: #6b7280;
+  --line-color: #e5e2da;
+  --accent: #7A6C5D;
+  --accent-contrast: #ffffff;
+  --accent-weak: #CBBBA5;
+  --shadow-color: rgba(0, 0, 0, 0.08);
+
+  /* Ionic primary color override to remove default blue */
+  --ion-color-primary: var(--accent);
+  --ion-color-primary-contrast: var(--accent-contrast);
 }

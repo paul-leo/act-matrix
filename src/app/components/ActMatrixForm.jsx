@@ -70,7 +70,7 @@ const QUADRANT_CONFIG = {
         question: '你可以做什么趋向行为（如拥抱）？',
         placeholder: '例如：主动沟通、练习技能、关心他人',
         position: 'right-top',
-        color: '#3b82f6'
+        color: '#7A6C5D'
     }
 };
 
