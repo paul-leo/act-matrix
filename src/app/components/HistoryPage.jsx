@@ -269,7 +269,6 @@ export default function HistoryPage({ onBack, onCreateNew }) {
                     {!loading && sessions.length > 0 && (
                         <div className={styles.sessionsList}>
                             <div className={styles.header}>
-                                <h2>您的ACT矩阵历史</h2>
                                 <p>共 {sessions.length} 个记录</p>
                             </div>
 

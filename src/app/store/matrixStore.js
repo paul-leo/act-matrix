@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, useEffect } from 'react';
+import { createContext, useContext, useReducer, useEffect, useRef } from 'react';
 
 // 矩阵状态管理
 const STORAGE_KEY = 'act_matrix_current_id';
@@ -59,6 +59,7 @@ const MatrixContext = createContext();
 // Provider 组件
 export function MatrixProvider({ children }) {
     const [state, dispatch] = useReducer(matrixReducer, initialState);
+    const loadedFromStorageRef = useRef(false);
 
     // 从本地存储加载当前矩阵ID
     useEffect(() => {
@@ -70,10 +71,25 @@ export function MatrixProvider({ children }) {
                     payload: savedMatrixId,
                 });
             }
+            // 标记已尝试从本地存储加载
+            loadedFromStorageRef.current = true;
         } catch (error) {
             console.warn('Failed to load matrix ID from storage:', error);
         }
     }, []);
+
+    // 在未有当前矩阵ID时自动生成一个
+    useEffect(() => {
+        if (!loadedFromStorageRef.current) return; // 等待加载完成
+        if (!state.currentMatrixId) {
+            const newId = `matrix_${Date.now()}_${Math.random()
+                .toString(36)
+                .substr(2, 9)}`;
+            dispatch({ type: ACTIONS.SET_CURRENT_MATRIX, payload: newId });
+        }
+        // 仅依赖于 currentMatrixId 的变化
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [state.currentMatrixId]);
 
     // 保存当前矩阵ID到本地存储
     useEffect(() => {
