@@ -12,11 +12,11 @@
   --paper-white: #FEFCF8;
   --paper-black: #1f2937;
   --paper-aged: #F5F1E8;
-  --ink-black: #1f2937;
+  --ink-black: #111827;
   --ink-blue: #1e3a8a;
   --ink-brown: #451a03;
-  --muted-ink: #6b7280;
-  --pencil-gray: #9ca3af;
+  --muted-ink: #374151;
+  --pencil-gray: #6b7280;
   --line-color: #e5e2da;
   --accent-brown: #7A6C5D;
   --accent-weak: #CBBBA5;
@@ -25,9 +25,9 @@
   
   /* ===== RGB 格式（用于透明度） ===== */
   --paper-cream-rgb: 249, 247, 240;
-  --ink-black-rgb: 31, 41, 55;
+  --ink-black-rgb: 17, 24, 39;
   --accent-brown-rgb: 122, 108, 93;
-  --muted-ink-rgb: 107, 114, 128;
+  --muted-ink-rgb: 55, 65, 81;
   
   /* ===== Ionic 主题色覆盖 ===== */
   --ion-color-primary: var(--accent-brown);
@@ -341,6 +341,7 @@ html, body {
   color-scheme: light !important;
   background-color: var(--paper-cream) !important;
   color: var(--ink-black) !important;
+  font-weight: 400;
 }
 
 /* 强制 Ionic 应用容器使用亮色 */
@@ -351,6 +352,31 @@ ion-content {
   --color: var(--ink-black) !important;
   background: var(--paper-cream) !important;
   color: var(--ink-black) !important;
+}
+
+/* 增强文字对比度 */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--ink-black) !important;
+  font-weight: 600 !important;
+}
+
+p, span, div {
+  color: var(--ink-black) !important;
+}
+
+/* 确保所有 Ionic 组件文字颜色 */
+ion-label, 
+ion-title, 
+ion-button, 
+ion-item {
+  --color: var(--ink-black) !important;
+  color: var(--ink-black) !important;
+}
+
+/* 确保次要文字也有足够对比度 */
+.muted, 
+.secondary {
+  color: var(--muted-ink) !important;
 }
 
 /* ===== 响应式纸质感调整 ===== */
