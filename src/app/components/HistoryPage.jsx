@@ -20,7 +20,7 @@ import {
     IonCol,
     IonFab,
     IonFabButton,
-    IonAlert
+    IonAlert,
 } from '@ionic/react';
 import AppSdk from '@morphixai/app-sdk';
 import { reportError } from '@morphixai/lib';
@@ -50,28 +50,31 @@ export default function HistoryPage({ onBack, onCreateNew }) {
             // 获取所有象限数据
             const quadrantsResult = await AppSdk.appData.queryData({
                 collection: COLLECTION_NAME,
-                query: []
+                query: [],
             });
-            console.log('[HistoryPage] queryData result count:', Array.isArray(quadrantsResult) ? quadrantsResult.length : 'N/A');
+            console.log(
+                '[HistoryPage] queryData result count:',
+                Array.isArray(quadrantsResult) ? quadrantsResult.length : 'N/A'
+            );
 
             // 按矩阵ID分组数据，创建会话
             const sessionMap = new Map();
-            
+
             if (Array.isArray(quadrantsResult)) {
-                quadrantsResult.forEach(item => {
+                quadrantsResult.forEach((item) => {
                     const matrixId = item.matrixId || 'default';
                     const createdAt = item.createdAt || Date.now();
-                    
+
                     if (!sessionMap.has(matrixId)) {
                         sessionMap.set(matrixId, {
                             id: matrixId,
                             matrixId: matrixId,
                             timestamp: createdAt,
                             items: [],
-                            isCurrentMatrix: matrixId === currentMatrixId
+                            isCurrentMatrix: matrixId === currentMatrixId,
                         });
                     }
-                    
+
                     const session = sessionMap.get(matrixId);
                     session.items.push(item);
                     // 更新时间戳为最新的项目时间
@@ -82,14 +85,15 @@ export default function HistoryPage({ onBack, onCreateNew }) {
             }
 
             // 转换为数组并按时间排序
-            const sessionsArray = Array.from(sessionMap.values())
-                .sort((a, b) => b.timestamp - a.timestamp);
+            const sessionsArray = Array.from(sessionMap.values()).sort(
+                (a, b) => b.timestamp - a.timestamp
+            );
             console.log('[HistoryPage] sessionsArray (built):', sessionsArray);
             setSessions(sessionsArray);
         } catch (error) {
             await reportError(error, 'JavaScriptError', {
                 component: 'HistoryPage',
-                action: 'loadHistoryData'
+                action: 'loadHistoryData',
             });
         } finally {
             setLoading(false);
@@ -103,7 +107,7 @@ export default function HistoryPage({ onBack, onCreateNew }) {
             const newSession = {
                 id: Date.now().toString(),
                 createdAt: Date.now(),
-                name: `ACT矩阵 - ${formatDate(Date.now())}`
+                name: `ACT矩阵 - ${formatDate(Date.now())}`,
             };
 
             // 可以在这里保存会话信息到数据库
@@ -118,7 +122,7 @@ export default function HistoryPage({ onBack, onCreateNew }) {
         } catch (error) {
             await reportError(error, 'JavaScriptError', {
                 component: 'HistoryPage',
-                action: 'handleCreateNewMatrix'
+                action: 'handleCreateNewMatrix',
             });
         }
     };
@@ -128,10 +132,10 @@ export default function HistoryPage({ onBack, onCreateNew }) {
             inner_experience: 0,
             away_moves: 0,
             values: 0,
-            toward_moves: 0
+            toward_moves: 0,
         };
 
-        items.forEach(item => {
+        items.forEach((item) => {
             if (quadrantCounts.hasOwnProperty(item.quadrantType)) {
                 quadrantCounts[item.quadrantType]++;
             }
@@ -145,14 +149,17 @@ export default function HistoryPage({ onBack, onCreateNew }) {
             inner_experience: '内在体验',
             away_moves: '远离行为',
             values: '重要之事',
-            toward_moves: '趋向行为'
+            toward_moves: '趋向行为',
         };
         return names[type] || type;
     };
 
     const handleViewSessionDetails = (session) => {
         // 直接切换到指定的矩阵
-        console.log('[HistoryPage] view details -> setCurrentMatrix:', session.matrixId);
+        console.log(
+            '[HistoryPage] view details -> setCurrentMatrix:',
+            session.matrixId
+        );
         setCurrentMatrix(session.matrixId);
         // 关闭历史记录模态框，返回首页
         onBack();
@@ -160,7 +167,10 @@ export default function HistoryPage({ onBack, onCreateNew }) {
 
     const handleSwitchToMatrix = (session) => {
         // 切换到指定的矩阵
-        console.log('[HistoryPage] switch matrix -> setCurrentMatrix:', session.matrixId);
+        console.log(
+            '[HistoryPage] switch matrix -> setCurrentMatrix:',
+            session.matrixId
+        );
         setCurrentMatrix(session.matrixId);
         // 关闭历史记录模态框
         onBack();
@@ -173,32 +183,38 @@ export default function HistoryPage({ onBack, onCreateNew }) {
             // 查询该矩阵下的所有象限数据
             const items = await AppSdk.appData.queryData({
                 collection: COLLECTION_NAME,
-                query: [
-                    { key: 'matrixId', operator: 'eq', value: matrixId }
-                ]
+                query: [{ key: 'matrixId', operator: 'eq', value: matrixId }],
             });
 
-            console.log('[HistoryPage] items to delete (count):', Array.isArray(items) ? items.length : 'N/A', Array.isArray(items) ? items.map(i => i.id) : []);
+            console.log(
+                '[HistoryPage] items to delete (count):',
+                Array.isArray(items) ? items.length : 'N/A',
+                Array.isArray(items) ? items.map((i) => i.id) : []
+            );
 
             let deleteResults = [];
             if (Array.isArray(items) && items.length > 0) {
                 // 并发删除并等待完成，收集结果
-                deleteResults = await Promise.all(items.map(async (item) => {
-                    try {
-                        const res = await AppSdk.appData.deleteData({
-                            collection: COLLECTION_NAME,
-                            id: item.id
-                        });
-                        return { id: item.id, ok: true, res };
-                    } catch (e) {
-                        return { id: item.id, ok: false, error: String(e) };
-                    }
-                }));
+                deleteResults = await Promise.all(
+                    items.map(async (item) => {
+                        try {
+                            const res = await AppSdk.appData.deleteData({
+                                collection: COLLECTION_NAME,
+                                id: item.id,
+                            });
+                            return { id: item.id, ok: true, res };
+                        } catch (e) {
+                            return { id: item.id, ok: false, error: String(e) };
+                        }
+                    })
+                );
             }
             console.log('[HistoryPage] delete results:', deleteResults);
             // 如果删除的是当前矩阵，则清空当前选择
             if (currentMatrixId === matrixId) {
-                console.log('[HistoryPage] deleted current matrix, clearing selection');
+                console.log(
+                    '[HistoryPage] deleted current matrix, clearing selection'
+                );
                 setCurrentMatrix(null);
             }
 
@@ -208,14 +224,13 @@ export default function HistoryPage({ onBack, onCreateNew }) {
         } catch (error) {
             await reportError(error, 'JavaScriptError', {
                 component: 'HistoryPage',
-                action: 'handleDeleteMatrix'
+                action: 'handleDeleteMatrix',
             });
             console.error('[HistoryPage] delete error:', error);
         } finally {
             setLoading(false);
         }
     };
-
 
     return (
         <>
@@ -230,7 +245,7 @@ export default function HistoryPage({ onBack, onCreateNew }) {
                     <IonTitle>历史记录</IonTitle>
                 </IonToolbar>
             </IonHeader>
-            
+
             <IonContent className={styles.content}>
                 <div className={styles.container}>
                     {loading && (
@@ -259,69 +274,129 @@ export default function HistoryPage({ onBack, onCreateNew }) {
                             </div>
 
                             {sessions.map((session) => {
-                                const summary = getQuadrantSummary(session.items);
+                                const summary = getQuadrantSummary(
+                                    session.items
+                                );
                                 return (
-                                    <IonCard 
-                                        key={session.id} 
-                                        className={`${styles.sessionCard} ${session.isCurrentMatrix ? styles.currentMatrix : ''}`}
+                                    <IonCard
+                                        key={session.id}
+                                        className={`${styles.sessionCard} ${
+                                            session.isCurrentMatrix
+                                                ? styles.currentMatrix
+                                                : ''
+                                        }`}
                                     >
                                         <IonCardHeader>
-                                            <IonCardTitle className={styles.sessionTitle}>
-                                                <IonIcon icon={time} className={styles.timeIcon} />
+                                            <IonCardTitle
+                                                className={styles.sessionTitle}
+                                            >
+                                                <IonIcon
+                                                    icon={time}
+                                                    className={styles.timeIcon}
+                                                />
                                                 {formatDate(session.timestamp)}
                                                 {session.isCurrentMatrix && (
-                                                    <span className={styles.currentLabel}>当前</span>
+                                                    <span
+                                                        className={
+                                                            styles.currentLabel
+                                                        }
+                                                    >
+                                                        当前
+                                                    </span>
                                                 )}
                                             </IonCardTitle>
                                         </IonCardHeader>
                                         <IonCardContent>
-                                            <div className={styles.sessionSummary}>
+                                            <div
+                                                className={
+                                                    styles.sessionSummary
+                                                }
+                                            >
                                                 <IonGrid>
                                                     <IonRow>
-                                                        {Object.entries(summary).map(([type, count]) => (
-                                                            <IonCol size="6" key={type}>
-                                                                <div className={styles.quadrantSummary}>
-                                                                    <div className={styles.quadrantName}>
-                                                                        {getQuadrantName(type)}
+                                                        {Object.entries(
+                                                            summary
+                                                        ).map(
+                                                            ([type, count]) => (
+                                                                <IonCol
+                                                                    size="6"
+                                                                    key={type}
+                                                                >
+                                                                    <div
+                                                                        className={
+                                                                            styles.quadrantSummary
+                                                                        }
+                                                                    >
+                                                                        <div
+                                                                            className={
+                                                                                styles.quadrantName
+                                                                            }
+                                                                        >
+                                                                            {getQuadrantName(
+                                                                                type
+                                                                            )}
+                                                                        </div>
+                                                                        <div
+                                                                            className={
+                                                                                styles.quadrantCount
+                                                                            }
+                                                                        >
+                                                                            {
+                                                                                count
+                                                                            }{' '}
+                                                                            项
+                                                                        </div>
                                                                     </div>
-                                                                    <div className={styles.quadrantCount}>
-                                                                        {count} 项
-                                                                    </div>
-                                                                </div>
-                                                            </IonCol>
-                                                        ))}
+                                                                </IonCol>
+                                                            )
+                                                        )}
                                                     </IonRow>
                                                 </IonGrid>
                                             </div>
                                             {/* 保留下方与删除在一起的“查看详情”，这里移除重复按钮 */}
+                                            <div
+                                                className={
+                                                    styles.sessionActions
+                                                }
+                                            >
+                                                <IonButton
+                                                    fill="outline"
+                                                    size="small"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        handleViewSessionDetails(
+                                                            session
+                                                        );
+                                                    }}
+                                                >
+                                                    查看详情
+                                                </IonButton>
+                                                <IonButton
+                                                    fill="outline"
+                                                    color="danger"
+                                                    size="small"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        console.log(
+                                                            '[HistoryPage] open delete confirm for matrixId:',
+                                                            session.matrixId
+                                                        );
+                                                        setMatrixIdToDelete(
+                                                            session.matrixId
+                                                        );
+                                                        setConfirmOpen(true);
+                                                    }}
+                                                >
+                                                    <IonIcon
+                                                        icon={trash}
+                                                        slot="start"
+                                                    />{' '}
+                                                    删除
+                                                </IonButton>
+                                            </div>
                                         </IonCardContent>
-                                        <div className={styles.sessionActions}>
-                                            <IonButton 
-                                                fill="outline" 
-                                                size="small"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    e.stopPropagation();
-                                                    handleViewSessionDetails(session);
-                                                }}
-                                            >
-                                                查看详情
-                                            </IonButton>
-                                            <IonButton 
-                                                fill="outline" 
-                                                color="danger"
-                                                size="small"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    e.stopPropagation();
-                                                    console.log('[HistoryPage] open delete confirm for matrixId:', session.matrixId);
-                                                    setMatrixIdToDelete(session.matrixId);
-                                                    setConfirmOpen(true);
-                                                }}
-                                            >
-                                                <IonIcon icon={trash} slot="start" /> 删除
-                                            </IonButton>
-                                        </div>
                                     </IonCard>
                                 );
                             })}
@@ -332,7 +407,12 @@ export default function HistoryPage({ onBack, onCreateNew }) {
                 {/* 浮动新建按钮 */}
                 <IonFab vertical="bottom" horizontal="end" slot="fixed">
                     <IonFabButton onClick={handleCreateNewMatrix}>
-                        {console.log('[HistoryPage] render, sessions length:', sessions.length, 'currentMatrixId:', currentMatrixId)}
+                        {console.log(
+                            '[HistoryPage] render, sessions length:',
+                            sessions.length,
+                            'currentMatrixId:',
+                            currentMatrixId
+                        )}
                         <IonIcon icon={add} />
                     </IonFabButton>
                 </IonFab>
@@ -353,7 +433,7 @@ export default function HistoryPage({ onBack, onCreateNew }) {
                             handler: () => {
                                 setConfirmOpen(false);
                                 setMatrixIdToDelete(null);
-                            }
+                            },
                         },
                         {
                             text: '删除',
@@ -364,12 +444,11 @@ export default function HistoryPage({ onBack, onCreateNew }) {
                                 }
                                 setConfirmOpen(false);
                                 setMatrixIdToDelete(null);
-                            }
-                        }
+                            },
+                        },
                     ]}
                 />
             </IonContent>
-
         </>
     );
 }

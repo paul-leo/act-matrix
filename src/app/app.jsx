@@ -3,6 +3,7 @@ import { IonPage, IonContent } from '@ionic/react';
 import ActMatrixForm from './components/ActMatrixForm';
 import { MatrixProvider } from './store/matrixStore';
 import styles from './styles/App.module.css';
+import './styles/PaperTheme.css';
 
 /**
  * 主应用组件
