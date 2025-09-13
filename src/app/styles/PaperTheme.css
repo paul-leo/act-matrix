@@ -7,6 +7,7 @@
   /* ===== 纸质感色彩系统 ===== */
   --paper-cream: #F9F7F0;
   --paper-white: #FEFCF8;
+  --paper-black: #1f2937;
   --paper-aged: #F5F1E8;
   --ink-black: #1f2937;
   --ink-blue: #1e3a8a;
@@ -90,7 +91,7 @@
   --ion-color-light-tint: #faf9f6;
   
   /* ===== 全局应用变量 ===== */
-  --ion-background-color: var(--paper-cream);
+  --ion-background-color: var(--paper-white);
   --ion-background-color-rgb: var(--paper-cream-rgb);
   
   --ion-text-color: var(--ink-black);
