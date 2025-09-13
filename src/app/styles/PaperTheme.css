@@ -1,9 +1,12 @@
 /* 
  * 纸质书写主题 - 全局主题变量
  * 基于 Ionic 高级主题系统
+ * 强制使用亮色模式，忽略系统深色模式设置
  */
 
 :root {
+  /* 强制覆盖深色模式，确保始终使用亮色主题 */
+  color-scheme: light !important;
   /* ===== 纸质感色彩系统 ===== */
   --paper-cream: #F9F7F0;
   --paper-white: #FEFCF8;
@@ -289,6 +292,65 @@ ion-fab-button {
     inset 0 1px 0 rgba(255, 255, 255, 0.3),
     inset 0 -1px 0 rgba(0, 0, 0, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* ===== 强制覆盖深色模式 ===== */
+/* 确保在任何情况下都使用亮色纸质主题 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* 强制覆盖所有深色模式变量为亮色值 */
+    color-scheme: light !important;
+    
+    /* 重新声明所有主要颜色变量，确保深色模式下也使用亮色 */
+    --ion-background-color: var(--paper-cream) !important;
+    --ion-background-color-rgb: var(--paper-cream-rgb) !important;
+    --ion-text-color: var(--ink-black) !important;
+    --ion-text-color-rgb: var(--ink-black-rgb) !important;
+    --ion-border-color: var(--line-color) !important;
+    
+    /* 确保所有 Ionic 组件在深色模式下也使用亮色主题 */
+    --ion-color-step-50: #fafafa !important;
+    --ion-color-step-100: #f5f5f5 !important;
+    --ion-color-step-150: #f0f0f0 !important;
+    --ion-color-step-200: #ebebeb !important;
+    --ion-color-step-250: #e6e6e6 !important;
+    --ion-color-step-300: #e1e1e1 !important;
+    --ion-color-step-350: #dcdcdc !important;
+    --ion-color-step-400: #d7d7d7 !important;
+    --ion-color-step-450: #d2d2d2 !important;
+    --ion-color-step-500: #cdcdcd !important;
+    --ion-color-step-550: #c8c8c8 !important;
+    --ion-color-step-600: #c3c3c3 !important;
+    --ion-color-step-650: #bebebe !important;
+    --ion-color-step-700: #b9b9b9 !important;
+    --ion-color-step-750: #b4b4b4 !important;
+    --ion-color-step-800: #afafaf !important;
+    --ion-color-step-850: #aaaaaa !important;
+    --ion-color-step-900: #a5a5a5 !important;
+    --ion-color-step-950: #a0a0a0 !important;
+  }
+}
+
+/* 强制所有元素使用亮色模式 */
+* {
+  color-scheme: light !important;
+}
+
+/* 确保 body 和 html 也强制使用亮色 */
+html, body {
+  color-scheme: light !important;
+  background-color: var(--paper-cream) !important;
+  color: var(--ink-black) !important;
+}
+
+/* 强制 Ionic 应用容器使用亮色 */
+ion-app, 
+.ion-page, 
+ion-content {
+  --background: var(--paper-cream) !important;
+  --color: var(--ink-black) !important;
+  background: var(--paper-cream) !important;
+  color: var(--ink-black) !important;
 }
 
 /* ===== 响应式纸质感调整 ===== */
