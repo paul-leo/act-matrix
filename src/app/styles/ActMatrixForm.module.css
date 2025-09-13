@@ -46,6 +46,11 @@
   /* 添加轻微的纸张弯曲效果 */
   transform: perspective(1000px) rotateX(1deg);
 }
+@media (min-width: 768px) {
+  .coordinateSystem {
+    max-width: 768px;
+  }
+}
 
 .coordinateSystem::before {
   content: "";
