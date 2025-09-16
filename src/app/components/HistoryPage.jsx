@@ -47,7 +47,7 @@ export default function HistoryPage({ onBack, onCreateNew }) {
         console.log('[HistoryPage] loadHistoryData: start');
         setLoading(true);
         try {
-            // 获取所有象限数据
+            // 获取所有象限数据（如有后端支持，建议分页+只取必要字段）
             const quadrantsResult = await AppSdk.appData.queryData({
                 collection: COLLECTION_NAME,
                 query: [],
@@ -183,7 +183,7 @@ export default function HistoryPage({ onBack, onCreateNew }) {
             // 查询该矩阵下的所有象限数据
             const items = await AppSdk.appData.queryData({
                 collection: COLLECTION_NAME,
-                query: [{ key: 'matrixId', operator: 'eq', value: matrixId }],
+                query: [{ key: 'data->>matrixId', operator: 'eq', value: matrixId }],
             });
 
             console.log(
@@ -212,10 +212,19 @@ export default function HistoryPage({ onBack, onCreateNew }) {
             console.log('[HistoryPage] delete results:', deleteResults);
             // 如果删除的是当前矩阵，则清空当前选择
             if (currentMatrixId === matrixId) {
-                console.log(
-                    '[HistoryPage] deleted current matrix, clearing selection'
-                );
-                setCurrentMatrix(null);
+                console.log('[HistoryPage] deleted current matrix, switching to fallback');
+                // 回退：切换到最新的一个会话（若有），否则创建新矩阵
+                const remainingSessions = sessions.filter(s => s.matrixId !== matrixId);
+                if (remainingSessions.length > 0) {
+                    setCurrentMatrix(remainingSessions[0].matrixId);
+                } else {
+                    // 交给外部创建逻辑
+                    if (typeof onCreateNew === 'function') {
+                        onCreateNew();
+                    } else {
+                        setCurrentMatrix(`matrix_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+                    }
+                }
             }
 
             // 重新加载列表

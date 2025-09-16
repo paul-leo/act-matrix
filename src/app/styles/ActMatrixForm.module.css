@@ -16,6 +16,19 @@
   z-index: 1;
 }
 
+.currentIdBar {
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  font-size: 12px;
+  color: var(--muted-ink);
+  background: rgba(255,255,255,0.8);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--line-color);
+  z-index: 4;
+}
+
 .loadingContainer {
   display: flex;
   justify-content: center;
@@ -32,7 +45,7 @@
   width: 100%;
   max-width: 98%;
   max-height: 80%;
-  aspect-ratio: 0.8;
+  aspect-ratio: 0.618;
   position: relative;
   background: var(--paper-cream);
   border-radius: var(--paper-border-radius-large);

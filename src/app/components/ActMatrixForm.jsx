@@ -41,17 +41,17 @@ const QUADRANT_TYPES = {
 
 const QUADRANT_CONFIG = {
     [QUADRANT_TYPES.INNER_EXPERIENCE]: {
-        title: '内在体验',
-        subtitle: '不想要的内在感受',
-        question: '什么不想要的内在感受（如恐惧）在你身上出现？',
+        title: '负面内在体验',
+        subtitle: '朝向重要的事(人)的时候，阻碍你的负面内心感受是什么?',
+        question: '朝向重要的事(人)的时候，阻碍你的负面内心感受是什么?',
         placeholder: '例如：恐惧、焦虑、"我不够好"的想法',
         position: 'left-bottom',
         color: '#ef4444'
     },
     [QUADRANT_TYPES.AWAY_MOVES]: {
         title: '远离行为',
-        subtitle: '你会做的远离行为',
-        question: '你会做什么远离行为（如逃跑）？',
+        subtitle: '为了解决你的负面内心体验，你一会做什么?',
+        question: '为了解决你的负面内心体验，你一会做什么?',
         placeholder: '例如：逃避、拖延、刷手机、找借口',
         position: 'left-top',
         color: '#f97316'
@@ -66,8 +66,8 @@ const QUADRANT_CONFIG = {
     },
     [QUADRANT_TYPES.TOWARD_MOVES]: {
         title: '趋向行为',
-        subtitle: '你可以做的趋向行为',
-        question: '你可以做什么趋向行为（如拥抱）？',
+        subtitle: '朝向对你重要的事的时候，你会做什么?',
+        question: '朝向对你重要的事的时候，你会做什么?',
         placeholder: '例如：主动沟通、练习技能、关心他人',
         position: 'right-top',
         color: '#7A6C5D'
@@ -92,6 +92,21 @@ export default function ActMatrixForm() {
     const [activeQuadrant, setActiveQuadrant] = useState(null);
     const [newItemText, setNewItemText] = useState('');
     const [editingItem, setEditingItem] = useState(null);
+    // 根据是否存在 order 字段决定排序方式
+    const sortItems = (items) => {
+        const hasAnyOrder = Array.isArray(items) && items.some(i => typeof i.order === 'number');
+        if (hasAnyOrder) {
+            return items
+                .slice()
+                .sort((a, b) => {
+                    const ao = (typeof a.order === 'number') ? a.order : Number.POSITIVE_INFINITY;
+                    const bo = (typeof b.order === 'number') ? b.order : Number.POSITIVE_INFINITY;
+                    return ao - bo;
+                });
+        }
+        return items.slice().sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    };
+
 
     useEffect(() => {
         console.log('[ActMatrixForm] currentMatrixId changed:', currentMatrixId);
@@ -121,20 +136,12 @@ export default function ActMatrixForm() {
         
         console.log('[ActMatrixForm] loadQuadrantData start, matrixId:', currentMatrixId);
         setLoading(true);
-        const alldata = await AppSdk.appData.queryData({
-            collection: COLLECTION_NAME,
-            query: []
-        });
-        console.log('[ActMatrixForm] alldata count:', alldata);
+        // 仅按当前矩阵ID查询，避免全量扫描
         try {
             const result = await AppSdk.appData.queryData({
                 collection: COLLECTION_NAME,
                 query: [
-                    {
-                        key: 'data->>matrixId',
-                        operator: 'eq',
-                        value: currentMatrixId
-                    }
+                    { key: 'data->>matrixId', operator: 'eq', value: currentMatrixId }
                 ]
             });
             console.log('[ActMatrixForm] query result count:', result);
@@ -153,9 +160,9 @@ export default function ActMatrixForm() {
                     }
                 });
 
-                // 对每个象限按创建时间排序
+                // 对每个象限排序：若有 order 则按 order，否则按创建时间倒序
                 Object.keys(newQuadrants).forEach(key => {
-                    newQuadrants[key].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                    newQuadrants[key] = sortItems(newQuadrants[key]);
                 });
             }
 
@@ -218,11 +225,22 @@ export default function ActMatrixForm() {
         if (!currentValue.trim() || !activeQuadrant || !currentMatrixId) return;
 
         try {
+            // 计算新条目的顺序：若已有 order，则插入到顶部（最小值 - 1）
+            const currentItems = quadrants[activeQuadrant] || [];
+            const itemsWithOrder = currentItems.filter(i => typeof i.order === 'number');
+            const hasAnyOrder = itemsWithOrder.length > 0;
+            let nextOrder;
+            if (hasAnyOrder) {
+                const minOrder = Math.min(...itemsWithOrder.map(i => i.order));
+                nextOrder = (isFinite(minOrder) ? minOrder : 0) - 1;
+            }
+
             const data = {
                 matrixId: currentMatrixId,
                 quadrantType: activeQuadrant,
                 content: currentValue.trim(),
-                createdAt: Date.now()
+                createdAt: Date.now(),
+                ...(typeof nextOrder === 'number' ? { order: nextOrder } : {})
             };
 
             const created = await AppSdk.appData.createData({
@@ -232,7 +250,7 @@ export default function ActMatrixForm() {
 
             setQuadrants(prev => ({
                 ...prev,
-                [activeQuadrant]: [created, ...prev[activeQuadrant]]
+                [activeQuadrant]: sortItems([created, ...(prev[activeQuadrant] || [])])
             }));
 
             setNewItemText('');
@@ -240,12 +258,60 @@ export default function ActMatrixForm() {
             if (inputRef.current) {
                 inputRef.current.value = '';
             }
+            // currentId 已在 store 内持久化，无需额外标记
         } catch (error) {
             await reportError(error, 'JavaScriptError', {
                 component: 'ActMatrixForm',
                 action: 'handleAddItemWithLatestValue'
             });
         }
+    };
+
+    // 拖拽排序并持久化顺序
+    const persistOrder = async (quadrantType, items) => {
+        try {
+            await Promise.all(
+                items.map((it, idx) => AppSdk.appData.updateData({
+                    collection: COLLECTION_NAME,
+                    id: it.id,
+                    data: { order: idx }
+                }))
+            );
+        } catch (error) {
+            await reportError(error, 'JavaScriptError', {
+                component: 'ActMatrixForm',
+                action: 'persistOrder'
+            });
+            console.error('[ActMatrixForm] persistOrder error:', error);
+        }
+    };
+
+    const handleDragStart = (e, index) => {
+        try {
+            e.dataTransfer.setData('text/plain', String(index));
+            e.dataTransfer.effectAllowed = 'move';
+        } catch (_) {}
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        try { e.dataTransfer.dropEffect = 'move'; } catch (_) {}
+    };
+
+    const handleDrop = (e, targetIndex) => {
+        e.preventDefault();
+        const sourceIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
+        if (!Number.isFinite(sourceIndex) || sourceIndex === targetIndex || !activeQuadrant) return;
+        setQuadrants(prev => {
+            const list = [...(prev[activeQuadrant] || [])];
+            const [moved] = list.splice(sourceIndex, 1);
+            list.splice(targetIndex, 0, moved);
+            const updated = { ...prev, [activeQuadrant]: list };
+            // 异步持久化顺序
+            persistOrder(activeQuadrant, list);
+            // currentId 已在 store 内持久化
+            return updated;
+        });
     };
 
     const handleEditItem = async (item) => {
@@ -267,6 +333,7 @@ export default function ActMatrixForm() {
 
             setNewItemText('');
             setEditingItem(null);
+            // currentId 已在 store 内持久化
         } catch (error) {
             await reportError(error, 'JavaScriptError', {
                 component: 'ActMatrixForm',
@@ -286,6 +353,7 @@ export default function ActMatrixForm() {
                 ...prev,
                 [activeQuadrant]: prev[activeQuadrant].filter(i => i.id !== item.id)
             }));
+            // currentId 已在 store 内持久化
         } catch (error) {
             await reportError(error, 'JavaScriptError', {
                 component: 'ActMatrixForm',
@@ -353,6 +421,11 @@ export default function ActMatrixForm() {
                         </div>
                     )}
 
+                    {/* 当前矩阵ID显示 */}
+                    {/* <div className={styles.currentIdBar}>
+                        当前矩阵ID：{currentMatrixId || '未选择'}
+                    </div> */}
+
                     {/* ACT 坐标系容器 */}
                     <div className={styles.coordinateSystem}>
                         {/* 坐标轴线 */}
@@ -398,8 +471,8 @@ export default function ActMatrixForm() {
                                 onClick={() => handleQuadrantClick(QUADRANT_TYPES.AWAY_MOVES)}
                             >
                                 <div className={styles.quadrantHeader}>
-                                    <h3 className={styles.quadrantTitle}>远离行为</h3>
-                                    <p className={styles.quadrantSubtitle}>你会做的远离行为</p>
+                                    <h3 className={styles.quadrantTitle}>{QUADRANT_CONFIG[QUADRANT_TYPES.AWAY_MOVES].title}</h3>
+                                    <p className={styles.quadrantSubtitle}>{QUADRANT_CONFIG[QUADRANT_TYPES.AWAY_MOVES].subtitle}</p>
                                 </div>
                                 <div className={styles.quadrantContent}>
                                     {quadrants[QUADRANT_TYPES.AWAY_MOVES].map((item) => (
@@ -419,8 +492,8 @@ export default function ActMatrixForm() {
                                 onClick={() => handleQuadrantClick(QUADRANT_TYPES.TOWARD_MOVES)}
                             >
                                 <div className={styles.quadrantHeader}>
-                                    <h3 className={styles.quadrantTitle}>趋向行为</h3>
-                                    <p className={styles.quadrantSubtitle}>你可以做的趋向行为</p>
+                                    <h3 className={styles.quadrantTitle}>{QUADRANT_CONFIG[QUADRANT_TYPES.TOWARD_MOVES].title}</h3>
+                                    <p className={styles.quadrantSubtitle}>{QUADRANT_CONFIG[QUADRANT_TYPES.TOWARD_MOVES].subtitle}</p>
                                 </div>
                                 <div className={styles.quadrantContent}>
                                     {quadrants[QUADRANT_TYPES.TOWARD_MOVES].map((item) => (
@@ -440,8 +513,8 @@ export default function ActMatrixForm() {
                                 onClick={() => handleQuadrantClick(QUADRANT_TYPES.INNER_EXPERIENCE)}
                             >
                                 <div className={styles.quadrantHeader}>
-                                    <h3 className={styles.quadrantTitle}>内在体验</h3>
-                                    <p className={styles.quadrantSubtitle}>不想要的内在感受</p>
+                                    <h3 className={styles.quadrantTitle}>{QUADRANT_CONFIG[QUADRANT_TYPES.INNER_EXPERIENCE].title}</h3>
+                                    <p className={styles.quadrantSubtitle}>{QUADRANT_CONFIG[QUADRANT_TYPES.INNER_EXPERIENCE].subtitle}</p>
                                 </div>
                                 <div className={styles.quadrantContent}>
                                     {quadrants[QUADRANT_TYPES.INNER_EXPERIENCE].map((item) => (
@@ -461,8 +534,8 @@ export default function ActMatrixForm() {
                                 onClick={() => handleQuadrantClick(QUADRANT_TYPES.VALUES)}
                             >
                                 <div className={styles.quadrantHeader}>
-                                    <h3 className={styles.quadrantTitle}>重要之事</h3>
-                                    <p className={styles.quadrantSubtitle}>谁和什么是重要的</p>
+                                    <h3 className={styles.quadrantTitle}>{QUADRANT_CONFIG[QUADRANT_TYPES.VALUES].title}</h3>
+                                    <p className={styles.quadrantSubtitle}>{QUADRANT_CONFIG[QUADRANT_TYPES.VALUES].subtitle}</p>
                                 </div>
                                 <div className={styles.quadrantContent}>
                                     {quadrants[QUADRANT_TYPES.VALUES].map((item) => (
@@ -521,8 +594,15 @@ export default function ActMatrixForm() {
                         {activeItems.length > 0 && (
                             <div className={styles.existingItemsSection}>
                                 <IonList>
-                                    {activeItems.map((item) => (
-                                        <IonItem key={item.id} className={styles.existingItem}>
+                                    {activeItems.map((item, index) => (
+                                        <IonItem 
+                                            key={item.id} 
+                                            className={styles.existingItem}
+                                            draggable
+                                            onDragStart={(e) => handleDragStart(e, index)}
+                                            onDragOver={handleDragOver}
+                                            onDrop={(e) => handleDrop(e, index)}
+                                        >
                                             <IonLabel>
                                                 <p className={styles.itemContent}>{item.content}</p>
                                                 <p className={styles.itemDate}>{formatDate(item.createdAt)}</p>
@@ -589,6 +669,13 @@ export default function ActMatrixForm() {
                                         placeholder={activeConfig?.placeholder}
                                         onIonInput={(e) => setNewItemText(e.detail.value || '')}
                                         type="text"
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                handleAddItemWithLatestValue();
+                                            }
+                                        }}
                                     ></IonInput>
                                     <IonButton 
                                         slot="end"
