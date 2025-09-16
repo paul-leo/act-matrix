@@ -19,7 +19,8 @@ import {
     IonPage,
     IonFab,
     IonFabButton,
-    useIonViewDidEnter
+    useIonViewDidEnter,
+    IonAlert
 } from '@ionic/react';
 import { PageHeader } from '@morphixai/components';
 import AppSdk from '@morphixai/app-sdk';
@@ -92,6 +93,8 @@ export default function ActMatrixForm() {
     const [activeQuadrant, setActiveQuadrant] = useState(null);
     const [newItemText, setNewItemText] = useState('');
     const [editingItem, setEditingItem] = useState(null);
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState(null);
     // 根据是否存在 order 字段决定排序方式
     const sortItems = (items) => {
         const hasAnyOrder = Array.isArray(items) && items.some(i => typeof i.order === 'number');
@@ -362,6 +365,19 @@ export default function ActMatrixForm() {
         }
     };
 
+    const requestDeleteItem = (item) => {
+        setItemToDelete(item);
+        setDeleteConfirmOpen(true);
+    };
+
+    const confirmDeleteItem = async () => {
+        if (itemToDelete) {
+            await handleDeleteItem(itemToDelete);
+        }
+        setItemToDelete(null);
+        setDeleteConfirmOpen(false);
+    };
+
     const startEdit = (item) => {
         setEditingItem(item);
         setNewItemText(item.content);
@@ -620,7 +636,7 @@ export default function ActMatrixForm() {
                                                 fill="clear" 
                                                 size="small"
                                                 color="danger"
-                                                onClick={() => handleDeleteItem(item)}
+                                                onClick={() => requestDeleteItem(item)}
                                                 slot="end"
                                             >
                                                 <IonIcon icon={trash} />
@@ -692,6 +708,32 @@ export default function ActMatrixForm() {
                     </div>
                 </IonContent>
             </IonModal>
+
+            {/* 删除条目确认弹窗 */}
+            <IonAlert
+                isOpen={deleteConfirmOpen}
+                onDidDismiss={() => {
+                    setDeleteConfirmOpen(false);
+                    setItemToDelete(null);
+                }}
+                header="确认删除"
+                message="确定要删除该条目吗？此操作不可撤销。"
+                buttons={[
+                    {
+                        text: '取消',
+                        role: 'cancel',
+                        handler: () => {
+                            setDeleteConfirmOpen(false);
+                            setItemToDelete(null);
+                        },
+                    },
+                    {
+                        text: '删除',
+                        role: 'destructive',
+                        handler: confirmDeleteItem,
+                    },
+                ]}
+            />
 
             {/* 历史记录模态框 */}
             <IonModal 
