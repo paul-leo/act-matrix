@@ -402,16 +402,11 @@ export default function ActMatrixForm() {
                                     <p className={styles.quadrantSubtitle}>你会做的远离行为</p>
                                 </div>
                                 <div className={styles.quadrantContent}>
-                                    {quadrants[QUADRANT_TYPES.AWAY_MOVES].slice(0, 3).map((item) => (
+                                    {quadrants[QUADRANT_TYPES.AWAY_MOVES].map((item) => (
                                         <div key={item.id} className={styles.quadrantItem}>
                                             {truncate(item.content, 30)}
                                         </div>
                                     ))}
-                                    {quadrants[QUADRANT_TYPES.AWAY_MOVES].length > 3 && (
-                                        <div className={styles.moreItems}>
-                                            +{quadrants[QUADRANT_TYPES.AWAY_MOVES].length - 3} 更多
-                                        </div>
-                                    )}
                                     {quadrants[QUADRANT_TYPES.AWAY_MOVES].length === 0 && (
                                         <div className={styles.emptyHint}>点击添加内容</div>
                                     )}
@@ -428,16 +423,11 @@ export default function ActMatrixForm() {
                                     <p className={styles.quadrantSubtitle}>你可以做的趋向行为</p>
                                 </div>
                                 <div className={styles.quadrantContent}>
-                                    {quadrants[QUADRANT_TYPES.TOWARD_MOVES].slice(0, 3).map((item) => (
+                                    {quadrants[QUADRANT_TYPES.TOWARD_MOVES].map((item) => (
                                         <div key={item.id} className={styles.quadrantItem}>
                                             {truncate(item.content, 30)}
                                         </div>
                                     ))}
-                                    {quadrants[QUADRANT_TYPES.TOWARD_MOVES].length > 3 && (
-                                        <div className={styles.moreItems}>
-                                            +{quadrants[QUADRANT_TYPES.TOWARD_MOVES].length - 3} 更多
-                                        </div>
-                                    )}
                                     {quadrants[QUADRANT_TYPES.TOWARD_MOVES].length === 0 && (
                                         <div className={styles.emptyHint}>点击添加内容</div>
                                     )}
@@ -454,16 +444,11 @@ export default function ActMatrixForm() {
                                     <p className={styles.quadrantSubtitle}>不想要的内在感受</p>
                                 </div>
                                 <div className={styles.quadrantContent}>
-                                    {quadrants[QUADRANT_TYPES.INNER_EXPERIENCE].slice(0, 3).map((item) => (
+                                    {quadrants[QUADRANT_TYPES.INNER_EXPERIENCE].map((item) => (
                                         <div key={item.id} className={styles.quadrantItem}>
                                             {truncate(item.content, 30)}
                                         </div>
                                     ))}
-                                    {quadrants[QUADRANT_TYPES.INNER_EXPERIENCE].length > 3 && (
-                                        <div className={styles.moreItems}>
-                                            +{quadrants[QUADRANT_TYPES.INNER_EXPERIENCE].length - 3} 更多
-                                        </div>
-                                    )}
                                     {quadrants[QUADRANT_TYPES.INNER_EXPERIENCE].length === 0 && (
                                         <div className={styles.emptyHint}>点击添加内容</div>
                                     )}
@@ -480,16 +465,11 @@ export default function ActMatrixForm() {
                                     <p className={styles.quadrantSubtitle}>谁和什么是重要的</p>
                                 </div>
                                 <div className={styles.quadrantContent}>
-                                    {quadrants[QUADRANT_TYPES.VALUES].slice(0, 3).map((item) => (
+                                    {quadrants[QUADRANT_TYPES.VALUES].map((item) => (
                                         <div key={item.id} className={styles.quadrantItem}>
                                             {truncate(item.content, 30)}
                                         </div>
                                     ))}
-                                    {quadrants[QUADRANT_TYPES.VALUES].length > 3 && (
-                                        <div className={styles.moreItems}>
-                                            +{quadrants[QUADRANT_TYPES.VALUES].length - 3} 更多
-                                        </div>
-                                    )}
                                     {quadrants[QUADRANT_TYPES.VALUES].length === 0 && (
                                         <div className={styles.emptyHint}>点击添加内容</div>
                                     )}
