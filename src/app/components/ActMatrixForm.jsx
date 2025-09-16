@@ -455,26 +455,22 @@ export default function ActMatrixForm() {
                             {/* 顶部标签 */}
                             <div className={styles.topAxisLabel}>
                                 <div className={styles.axisLabelText}>五感体验</div>
-                                <div className={styles.axisSubLabelText}>5-Senses Experiencing</div>
                             </div>
                             
                             {/* 底部标签 */}
                             <div className={styles.bottomAxisLabel}>
                                 <div className={styles.axisLabelText}>心理体验</div>
-                                <div className={styles.axisSubLabelText}>Mental Experiencing</div>
                             </div>
                             
                             {/* 左侧标签 */}
                             <div className={styles.leftAxisLabel}>
                                 <IonIcon icon={arrowBack} className={styles.axisArrow} />
-                                <div className={styles.axisLabelText}>远离</div>
-                                <div className={styles.axisSubLabelText}>Away</div>
+                                <div className={styles.axisLabelText}>远离away</div>
                             </div>
                             
                             {/* 右侧标签 */}
                             <div className={styles.rightAxisLabel}>
-                                <div className={styles.axisLabelText}>趋向</div>
-                                <div className={styles.axisSubLabelText}>Toward</div>
+                                <div className={styles.axisLabelText}>趋向toward</div>
                                 <IonIcon icon={arrowForward} className={styles.axisArrow} />
                             </div>
                         </div>

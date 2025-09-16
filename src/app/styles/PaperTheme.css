@@ -135,6 +135,17 @@
   --paper-border-radius-large: 12px;
 }
 
+/* ===== Base typography scaling ===== */
+html {
+  font-size: 16px;
+}
+
+@media (min-width: 1024px) {
+  html {
+    font-size: 24px; /* ~1.5x for desktop */
+  }
+}
+
 /* ===== 全局纸质感背景 ===== */
 body {
   background: 

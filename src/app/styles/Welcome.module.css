@@ -277,6 +277,18 @@
   animation-delay: 0.1s;
 }
 
+/* ===== Desktop typography scaling (~1.5x) ===== */
+@media (min-width: 1024px) {
+  .title { font-size: 2.9rem; }
+  .subtitle { font-size: 1.25rem; }
+
+  .stepContent h3 { font-size: 1.4rem; }
+  .stepContent p { font-size: 1.175rem; }
+
+  .primaryBtn, .secondaryBtn { font-size: 1.175rem; }
+  .footer { font-size: 1.025rem; }
+}
+
 .subtitle {
   animation-delay: 0.2s;
 }

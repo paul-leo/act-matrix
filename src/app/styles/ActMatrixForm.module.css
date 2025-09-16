@@ -526,3 +526,28 @@
 }
 
 
+/* ===== Desktop typography scaling (~1.5x) ===== */
+@media (min-width: 1024px) {
+  .currentIdBar { font-size: 14px; }
+
+  .axisLabelText { font-size: 14px; }
+  .axisSubLabelText { font-size: 10px; }
+  .axisArrow { font-size: 11px; }
+
+  .quadrantTitle { font-size: 18px; }
+  .quadrantSubtitle { font-size: 14px; }
+  .quadrantItem { font-size: 14px; }
+  .moreItems { font-size: 14px; }
+  .emptyHint { font-size: 16px; }
+
+  .modalSubtitle { font-size: 17px; }
+  .modalQuestion { font-size: 20px; }
+
+  .inputSection ion-input { font-size: 16px; }
+  .inputSection ion-textarea { font-size: 16px; }
+
+  .itemContent { font-size: 17px; }
+  .itemDate { font-size: 14px; }
+
+  .historyButton ion-icon { font-size: 32px; }
+}
