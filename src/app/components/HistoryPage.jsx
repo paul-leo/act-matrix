@@ -57,11 +57,19 @@ export default function HistoryPage({ onBack, onCreateNew }) {
                 Array.isArray(quadrantsResult) ? quadrantsResult.length : 'N/A'
             );
 
-            // 按矩阵ID分组数据，创建会话
+            // 过滤掉内容为空的条目（仅在历史记录中隐藏空内容）
+            const usableItems = Array.isArray(quadrantsResult)
+                ? quadrantsResult.filter((item) => {
+                      const text = String(item?.content ?? '').trim();
+                      return text.length > 0;
+                  })
+                : [];
+
+            // 按矩阵ID分组数据，创建会话（仅基于非空内容）
             const sessionMap = new Map();
 
-            if (Array.isArray(quadrantsResult)) {
-                quadrantsResult.forEach((item) => {
+            if (Array.isArray(usableItems)) {
+                usableItems.forEach((item) => {
                     const matrixId = item.matrixId || 'default';
                     const createdAt = item.createdAt || Date.now();
 
