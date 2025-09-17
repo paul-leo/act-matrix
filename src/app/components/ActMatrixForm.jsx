@@ -104,10 +104,11 @@ export default function ActMatrixForm() {
                 .sort((a, b) => {
                     const ao = (typeof a.order === 'number') ? a.order : Number.POSITIVE_INFINITY;
                     const bo = (typeof b.order === 'number') ? b.order : Number.POSITIVE_INFINITY;
-                    return ao - bo;
+                    return ao - bo; // 数值越小排越前
                 });
         }
-        return items.slice().sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        // 无 order 时按创建时间正序：先添加的在前，后添加的在后
+        return items.slice().sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
     };
 
 
@@ -228,14 +229,14 @@ export default function ActMatrixForm() {
         if (!currentValue.trim() || !activeQuadrant || !currentMatrixId) return;
 
         try {
-            // 计算新条目的顺序：若已有 order，则插入到顶部（最小值 - 1）
+            // 计算新条目的顺序：若已有 order，则插入到末尾（最大值 + 1）
             const currentItems = quadrants[activeQuadrant] || [];
             const itemsWithOrder = currentItems.filter(i => typeof i.order === 'number');
             const hasAnyOrder = itemsWithOrder.length > 0;
             let nextOrder;
             if (hasAnyOrder) {
-                const minOrder = Math.min(...itemsWithOrder.map(i => i.order));
-                nextOrder = (isFinite(minOrder) ? minOrder : 0) - 1;
+                const maxOrder = Math.max(...itemsWithOrder.map(i => i.order));
+                nextOrder = (isFinite(maxOrder) ? maxOrder : -1) + 1;
             }
 
             const data = {
@@ -352,10 +353,14 @@ export default function ActMatrixForm() {
                 id: item.id
             });
 
-            setQuadrants(prev => ({
-                ...prev,
-                [activeQuadrant]: prev[activeQuadrant].filter(i => i.id !== item.id)
-            }));
+            // 防御式更新：跨所有象限移除该条目，避免依赖 activeQuadrant 状态
+            setQuadrants(prev => {
+                const updated = { ...prev };
+                Object.keys(updated).forEach(key => {
+                    updated[key] = (updated[key] || []).filter(i => i.id !== item.id);
+                });
+                return updated;
+            });
             // currentId 已在 store 内持久化
         } catch (error) {
             await reportError(error, 'JavaScriptError', {
