@@ -29,7 +29,7 @@ import { close, add, trash, create, arrowForward, arrowBack, time, grid } from '
 import styles from '../styles/ActMatrixForm.module.css';
 import HistoryPage from './HistoryPage.jsx';
 import { useMatrix } from '../store/matrixStore';
-
+import { STORAGE_KEY } from '../store/matrixStore';
 const COLLECTION_NAME = 'act_matrix_quadrants';
 
 // 象限类型定义
@@ -51,8 +51,8 @@ const QUADRANT_CONFIG = {
     },
     [QUADRANT_TYPES.AWAY_MOVES]: {
         title: '远离行为',
-        subtitle: '为了解决你的负面内心体验，你一会做什么?',
-        question: '为了解决你的负面内心体验，你一会做什么?',
+        subtitle: '为了解决你的负面内心体验，你会做什么?',
+        question: '为了解决你的负面内心体验，你会做什么?',
         placeholder: '例如：逃避、拖延、刷手机、找借口',
         position: 'left-top',
         color: '#f97316'
@@ -115,7 +115,9 @@ export default function ActMatrixForm() {
     useEffect(() => {
         console.log('[ActMatrixForm] currentMatrixId changed:', currentMatrixId);
         // 当有选中的矩阵时加载；否则清空
+        
         if (currentMatrixId) {
+          localStorage.setItem(STORAGE_KEY, currentMatrixId);
             loadQuadrantData();
         } else {
             setQuadrants({
@@ -124,6 +126,7 @@ export default function ActMatrixForm() {
                 [QUADRANT_TYPES.VALUES]: [],
                 [QUADRANT_TYPES.TOWARD_MOVES]: []
             });
+            localStorage.removeItem(STORAGE_KEY);
         }
     }, [currentMatrixId]);
 
@@ -145,7 +148,7 @@ export default function ActMatrixForm() {
             const result = await AppSdk.appData.queryData({
                 collection: COLLECTION_NAME,
                 query: [
-                    { key: 'data->>matrixId', operator: 'eq', value: currentMatrixId }
+                    { key: 'matrixId', operator: 'eq', value: currentMatrixId }
                 ]
             });
             console.log('[ActMatrixForm] query result count:', result);

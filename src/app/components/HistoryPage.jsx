@@ -139,8 +139,9 @@ export default function HistoryPage({ onBack, onCreateNew }) {
         const quadrantCounts = {
             inner_experience: 0,
             away_moves: 0,
-            values: 0,
+            
             toward_moves: 0,
+            values: 0,
         };
 
         items.forEach((item) => {
@@ -156,8 +157,8 @@ export default function HistoryPage({ onBack, onCreateNew }) {
         const names = {
             inner_experience: '内在体验',
             away_moves: '远离行为',
-            values: '重要之事',
             toward_moves: '趋向行为',
+            values: '重要之事',
         };
         return names[type] || type;
     };
@@ -191,7 +192,7 @@ export default function HistoryPage({ onBack, onCreateNew }) {
             // 查询该矩阵下的所有象限数据
             const items = await AppSdk.appData.queryData({
                 collection: COLLECTION_NAME,
-                query: [{ key: 'data->>matrixId', operator: 'eq', value: matrixId }],
+                query: [{ key: 'matrixId', operator: 'eq', value: matrixId }],
             });
 
             console.log(
