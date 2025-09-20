@@ -290,7 +290,7 @@ export default function HistoryPage({ onBack, onCreateNew }) {
                                 <p>共 {sessions.length} 个记录</p>
                             </div>
 
-                            {sessions.map((session) => {
+                            {sessions.reverse().map((session) => {
                                 const summary = getQuadrantSummary(
                                     session.items
                                 );

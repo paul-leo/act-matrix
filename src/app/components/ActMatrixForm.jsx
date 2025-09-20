@@ -117,7 +117,7 @@ export default function ActMatrixForm() {
         // 当有选中的矩阵时加载；否则清空
         
         if (currentMatrixId) {
-          localStorage.setItem(STORAGE_KEY, currentMatrixId);
+          localStorage.setItem('act_matrix_current_id', currentMatrixId);
             loadQuadrantData();
         } else {
             setQuadrants({
@@ -126,7 +126,7 @@ export default function ActMatrixForm() {
                 [QUADRANT_TYPES.VALUES]: [],
                 [QUADRANT_TYPES.TOWARD_MOVES]: []
             });
-            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem('act_matrix_current_id');
         }
     }, [currentMatrixId]);
 
@@ -228,7 +228,15 @@ export default function ActMatrixForm() {
     const handleAddItemWithLatestValue = async () => {
         // 直接从输入元素获取当前值，确保是最新的
         const currentValue = inputRef.current?.value || newItemText;
-        
+        if(!currentMatrixId) {
+          alert('请先创建矩阵');
+        }
+        if(!activeQuadrant) {
+          alert('请先选择象限');
+        }
+        if(!currentValue.trim()) {
+          alert('请先输入内容');
+        }
         if (!currentValue.trim() || !activeQuadrant || !currentMatrixId) return;
 
         try {
@@ -267,6 +275,7 @@ export default function ActMatrixForm() {
             }
             // currentId 已在 store 内持久化，无需额外标记
         } catch (error) {
+            alert('添加失败'+(error?.message));
             await reportError(error, 'JavaScriptError', {
                 component: 'ActMatrixForm',
                 action: 'handleAddItemWithLatestValue'

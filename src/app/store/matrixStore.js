@@ -10,7 +10,7 @@ const MatrixContext = createContext();
 
 // Provider 组件
 export function MatrixProvider({ children }) {
-  const [currentMatrixId, setCurrentMatrixId] = useState(() => {
+  const [currentMatrixId, _setCurrentMatrixId] = useState(() => {
     return localStorage.getItem(STORAGE_KEY);
   });
   const [matrices, setMatrices] = useState(() => new Map());
@@ -24,17 +24,21 @@ export function MatrixProvider({ children }) {
 
   // Actions
   const setCurrentMatrix = (matrixId) => {
-    setCurrentMatrixId(matrixId);
+    _setCurrentMatrixId(matrixId);
+
+  };
+  useEffect(() => {
     try {
-      if (matrixId) {
-        localStorage.setItem(STORAGE_KEY, matrixId);
+      if (currentMatrixId) {
+        localStorage.setItem(STORAGE_KEY, currentMatrixId);
       } else {
         localStorage.removeItem(STORAGE_KEY);
       }
     } catch (error) {
       console.warn('Failed to persist current matrix ID:', error);
     }
-  };
+    console.log('[MatrixProvider] currentMatrixId:', currentMatrixId);
+  }, [currentMatrixId]);
 
   useEffect(() => {
     // 获取所有矩阵，如果当前矩阵为空
