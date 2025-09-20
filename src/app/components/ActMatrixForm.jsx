@@ -36,7 +36,7 @@ const COLLECTION_NAME = 'act_matrix_quadrants';
 const QUADRANT_TYPES = {
     INNER_EXPERIENCE: 'inner_experience', // 左下：内在体验
     AWAY_MOVES: 'away_moves',             // 左上：远离行为  
-    VALUES: 'values',                     // 右下：价值/重要之事
+    VALUES: 'values',                     // 右下：价值/对你重要的事(人)
     TOWARD_MOVES: 'toward_moves'          // 右上：价值行动
 };
 
@@ -58,8 +58,8 @@ const QUADRANT_CONFIG = {
         color: '#f97316'
     },
     [QUADRANT_TYPES.VALUES]: {
-        title: '重要之事',
-        subtitle: '谁和什么是重要的',
+        title: '对你重要的事(人)',
+        subtitle: '对你重要的事(人)是什么?',
         question: '谁和什么对你是重要的？',
         placeholder: '例如：家人、成长、诚实、创造价值',
         position: 'right-bottom',
@@ -557,7 +557,7 @@ export default function ActMatrixForm() {
                                 </div>
                             </div>
 
-                            {/* 右下象限：重要之事 */}
+                            {/* 右下象限：对你重要的事(人) */}
                             <div 
                                 className={`${styles.quadrant} ${styles.bottomRight}`}
                                 onClick={() => handleQuadrantClick(QUADRANT_TYPES.VALUES)}

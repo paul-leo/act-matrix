@@ -158,7 +158,7 @@ export default function HistoryPage({ onBack, onCreateNew }) {
             inner_experience: '内在体验',
             away_moves: '远离行为',
             toward_moves: '趋向行为',
-            values: '重要之事',
+            values: '对你重要的事(人)',
         };
         return names[type] || type;
     };
