@@ -137,10 +137,10 @@ export default function HistoryPage({ onBack, onCreateNew }) {
 
     const getQuadrantSummary = (items) => {
         const quadrantCounts = {
-            inner_experience: 0,
             away_moves: 0,
-            
             toward_moves: 0,
+            inner_experience: 0,
+            
             values: 0,
         };
 
@@ -155,8 +155,9 @@ export default function HistoryPage({ onBack, onCreateNew }) {
 
     const getQuadrantName = (type) => {
         const names = {
-            inner_experience: '内在体验',
             away_moves: '远离行为',
+            inner_experience: '内在体验',
+            
             toward_moves: '趋向行为',
             values: '对你重要的事(人)',
         };

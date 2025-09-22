@@ -11,7 +11,11 @@ const MatrixContext = createContext();
 // Provider 组件
 export function MatrixProvider({ children }) {
   const [currentMatrixId, _setCurrentMatrixId] = useState(() => {
-    return localStorage.getItem(STORAGE_KEY);
+    const id = localStorage.getItem(STORAGE_KEY);
+    if (!id) {
+      initFirstMatrix();
+    }
+    return id;
   });
   const [matrices, setMatrices] = useState(() => new Map());
 
@@ -40,22 +44,17 @@ export function MatrixProvider({ children }) {
     console.log('[MatrixProvider] currentMatrixId:', currentMatrixId);
   }, [currentMatrixId]);
 
-  useEffect(() => {
-    // 获取所有矩阵，如果当前矩阵为空
-    const loadAllMatrices = async () => {
-      const allMatrices = await AppSdk.appData.queryData({
-        collection: 'act_matrix_quadrants',
-        query: [],
-      });
-      if (allMatrices) {
-        const lastMatrix = allMatrices[allMatrices.length - 1];
-        setCurrentMatrix(lastMatrix.matrixId);
-      }
-    };
-    if (!currentMatrixId) {
-      loadAllMatrices();
+
+  const initFirstMatrix = async () => {
+    const allMatrices = await AppSdk.appData.queryData({
+      collection: 'act_matrix_quadrants',
+      query: [],
+    });
+    if (allMatrices) {
+      const lastMatrix = allMatrices[allMatrices.length - 1];
+      setCurrentMatrix(lastMatrix.matrixId);
     }
-  }, []);
+  };
 
   const setMatrixData = (matrixId, data) => {
     setMatrices((prev) => {

@@ -18,7 +18,7 @@ import {
 import { chevronBack, add } from 'ionicons/icons';
 import AppSdk from '@morphixai/app-sdk';
 import { reportError } from '@morphixai/lib';
-import { useHistory, useParams } from 'react-router-dom';
+import { useHistory, useParams, useResume } from 'react-router-dom';
 
 const COLLECTION_NAME = 'act_matrix_quadrants';
 
@@ -34,7 +34,7 @@ function useQueryParams() {
 
 export default function AwayMovesDetail() {
     const { matrixId: midFromPath } = useParams();
-    const matrixId = midFromPath || localStorage.getItem('act_matrix_current_id') || '';
+    const matrixId = midFromPath || '';
     const [loading, setLoading] = useState(false);
     const [items, setItems] = useState([]);
     const history = useHistory();
@@ -78,12 +78,19 @@ export default function AwayMovesDetail() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [matrixId]);
 
+    // 页面重新进入前台时刷新数据
+    useResume(() => {
+        loadItems();
+    });
+
+    // 不使用全局矩阵状态，这里只依赖路由参数 matrixId
+
     const goBack = () => {
         history.goBack();
     };
 
-    const openScoreModal = (itemId, dimension, current) => {
-        setActiveScoreTarget({ itemId, dimension, current });
+    const openScoreModal = (itemId, dimension, currentPrimary, currentSecondary) => {
+        setActiveScoreTarget({ itemId, dimension, currentPrimary, currentSecondary });
         setScoreModalOpen(true);
     };
 
@@ -107,8 +114,13 @@ export default function AwayMovesDetail() {
                 )}
 
                 {!loading && items.length === 0 && (
-                    <div style={{ padding: 24, color: '#8a837a' }}>
-                        暂无远离行为。请返回在首页的左上象限添加条目。
+                    <div style={{ padding: 24 }}>
+                        <div style={{ color: '#8a837a', textAlign: 'center', marginBottom: 12 }}>暂无远离行为</div>
+                        <div style={{ display: 'flex', justifyContent: 'center' }}>
+                            <IonButton onClick={() => setAddModalOpen(true)}>
+                                <IonIcon icon={add} slot="start" /> 添加
+                            </IonButton>
+                        </div>
                     </div>
                 )}
 
@@ -324,8 +336,8 @@ function ScoreCell({ primary, secondary, onClick }) {
     const hasPrimary = Number.isFinite(primary);
     const hasSecondary = Number.isFinite(secondary);
     const displayValue = hasPrimary && hasSecondary
-        ? `${primary} | ${secondary}`
-        : (hasPrimary ? String(primary) : '-');
+        ? `${formatScoreSymbol(primary)} | ${formatScoreSymbol(secondary)}`
+        : (hasPrimary ? String(formatScoreSymbol(primary)) : '');
     return (
         <button
             onClick={onClick}
@@ -352,6 +364,7 @@ function ScoreEditor({ target, onClose, onSave }) {
     const [secondaryEnabled, setSecondaryEnabled] = useState(() => Number.isFinite(target?.currentSecondary));
     const [secondary, setSecondary] = useState(() => Number.isFinite(target?.currentSecondary) ? target.currentSecondary : 0);
     useEffect(() => {
+        console.log('target', target);
         setPrimary(Number.isFinite(target?.currentPrimary) ? target.currentPrimary : 0);
         setSecondaryEnabled(Number.isFinite(target?.currentSecondary));
         setSecondary(Number.isFinite(target?.currentSecondary) ? target.currentSecondary : 0);
@@ -360,7 +373,7 @@ function ScoreEditor({ target, onClose, onSave }) {
         <IonPage>
             <IonHeader>
                 <IonToolbar>
-                    <IonTitle>设置分数（-3 ~ +3）</IonTitle>
+                    <IonTitle>设置分数</IonTitle>
                     <IonButtons slot="end">
                         <IonButton onClick={onClose}>关闭</IonButton>
                     </IonButtons>
@@ -378,9 +391,30 @@ function ScoreEditor({ target, onClose, onSave }) {
                         snaps={true}
                         ticks={true}
                         pin={true}
+                        pinFormatter={(v) => formatScoreSymbol(Number(v))}
                         value={primary}
+                        style={{
+                            '--bar-background': '#bde0fe',
+                            '--bar-background-active': '#bde0fe',
+                        }}
                         onIonChange={(e) => setPrimary(Number(e.detail.value))}
                     />
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(7, 1fr)',
+                        textAlign: 'center',
+                        color: '#8a837a',
+                        fontSize: 12,
+                        marginTop: 6
+                    }}>
+                        <div>---</div>
+                        <div>--</div>
+                        <div>-</div>
+                        <div>0</div>
+                        <div>+</div>
+                        <div>++</div>
+                        <div>+++</div>
+                    </div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
                         <div style={{ color: '#6b5d52', fontSize: 14 }}>添加第二个分数</div>
                         <IonToggle checked={secondaryEnabled} onIonChange={(e) => setSecondaryEnabled(Boolean(e.detail.checked))} />
@@ -394,9 +428,30 @@ function ScoreEditor({ target, onClose, onSave }) {
                                 snaps={true}
                                 ticks={true}
                                 pin={true}
+                                pinFormatter={(v) => formatScoreSymbol(Number(v))}
                                 value={secondary}
+                                style={{
+                                    '--bar-background': '#bde0fe',
+                                    '--bar-background-active': '#bde0fe',
+                                }}
                                 onIonChange={(e) => setSecondary(Number(e.detail.value))}
                             />
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(7, 1fr)',
+                                textAlign: 'center',
+                                color: '#8a837a',
+                                fontSize: 12,
+                                marginTop: 6
+                            }}>
+                                <div>---</div>
+                                <div>--</div>
+                                <div>-</div>
+                                <div>0</div>
+                                <div>+</div>
+                                <div>++</div>
+                                <div>+++</div>
+                            </div>
                         </div>
                     )}
                     <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
@@ -419,6 +474,15 @@ function labelOfDimension(dim) {
 function openScoreModalFor(setActiveScoreTarget, setScoreModalOpen, itemId, dimension, currentPrimary, currentSecondary) {
     setActiveScoreTarget({ itemId, dimension, currentPrimary, currentSecondary });
     setScoreModalOpen(true);
+}
+
+function formatScoreSymbol(value) {
+    if (!Number.isFinite(value)) return '-';
+    const n = Math.max(-3, Math.min(3, Number(value)));
+    if (n === 0) return '0';
+    if (n > 0) return '+'.repeat(n);
+    if (n < 0) return '-'.repeat(Math.abs(n));
+    return '0';
 }
 
 

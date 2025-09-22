@@ -324,6 +324,33 @@
   font-size: 16px;
 }
 
+/* 右下角“编辑”小按钮（打开象限编辑弹窗） */
+.quadrantCornerEdit {
+  position: absolute;
+  right: 40px;
+  bottom: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--line-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b5d52;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quadrantCornerEdit:hover {
+  background: rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.quadrantCornerEdit ion-icon {
+  font-size: 16px;
+}
+
 .quadrantItem {
   background: var(--paper-aged);
   padding: 4px 6px;

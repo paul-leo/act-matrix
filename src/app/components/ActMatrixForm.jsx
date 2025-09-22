@@ -20,13 +20,23 @@ import {
     IonFab,
     IonFabButton,
     useIonViewDidEnter,
-    IonAlert
+    IonAlert,
 } from '@ionic/react';
-import { useHistory } from 'react-router-dom';
+import { useHistory, useResume } from 'react-router-dom';
 import { PageHeader } from '@morphixai/components';
 import AppSdk from '@morphixai/app-sdk';
 import { reportError } from '@morphixai/lib';
-import { close, add, trash, create, arrowForward, arrowBack, time, grid, eye } from 'ionicons/icons';
+import {
+    close,
+    add,
+    trash,
+    create,
+    arrowForward,
+    arrowBack,
+    time,
+    grid,
+    eye,
+} from 'ionicons/icons';
 import styles from '../styles/ActMatrixForm.module.css';
 import HistoryPage from './HistoryPage.jsx';
 import { useMatrix } from '../store/matrixStore';
@@ -36,9 +46,9 @@ const COLLECTION_NAME = 'act_matrix_quadrants';
 // 象限类型定义
 const QUADRANT_TYPES = {
     INNER_EXPERIENCE: 'inner_experience', // 左下：内在体验
-    AWAY_MOVES: 'away_moves',             // 左上：远离行为  
-    VALUES: 'values',                     // 右下：价值/对你重要的事(人)
-    TOWARD_MOVES: 'toward_moves'          // 右上：价值行动
+    AWAY_MOVES: 'away_moves', // 左上：远离行为
+    VALUES: 'values', // 右下：价值/对你重要的事(人)
+    TOWARD_MOVES: 'toward_moves', // 右上：价值行动
 };
 
 const QUADRANT_CONFIG = {
@@ -48,7 +58,7 @@ const QUADRANT_CONFIG = {
         question: '朝向重要的事(人)的时候，阻碍你的负面内心感受是什么?',
         placeholder: '例如：恐惧、焦虑、"我不够好"的想法',
         position: 'left-bottom',
-        color: '#ef4444'
+        color: '#ef4444',
     },
     [QUADRANT_TYPES.AWAY_MOVES]: {
         title: '远离行为',
@@ -56,7 +66,7 @@ const QUADRANT_CONFIG = {
         question: '为了解决你的负面内心体验，你会做什么?',
         placeholder: '例如：逃避、拖延、刷手机、找借口',
         position: 'left-top',
-        color: '#f97316'
+        color: '#f97316',
     },
     [QUADRANT_TYPES.VALUES]: {
         title: '对你重要的事(人)',
@@ -64,7 +74,7 @@ const QUADRANT_CONFIG = {
         question: '谁和什么对你是重要的？',
         placeholder: '例如：家人、成长、诚实、创造价值',
         position: 'right-bottom',
-        color: '#10b981'
+        color: '#10b981',
     },
     [QUADRANT_TYPES.TOWARD_MOVES]: {
         title: '趋向行为',
@@ -72,8 +82,8 @@ const QUADRANT_CONFIG = {
         question: '朝向对你重要的事的时候，你会做什么?',
         placeholder: '例如：主动沟通、练习技能、关心他人',
         position: 'right-top',
-        color: '#7A6C5D'
-    }
+        color: '#7A6C5D',
+    },
 };
 
 export default function ActMatrixForm() {
@@ -86,7 +96,7 @@ export default function ActMatrixForm() {
         [QUADRANT_TYPES.INNER_EXPERIENCE]: [],
         [QUADRANT_TYPES.AWAY_MOVES]: [],
         [QUADRANT_TYPES.VALUES]: [],
-        [QUADRANT_TYPES.TOWARD_MOVES]: []
+        [QUADRANT_TYPES.TOWARD_MOVES]: [],
     });
 
     // 模态框状态
@@ -99,78 +109,111 @@ export default function ActMatrixForm() {
     const [itemToDelete, setItemToDelete] = useState(null);
     // 根据是否存在 order 字段决定排序方式
     const sortItems = (items) => {
-        const hasAnyOrder = Array.isArray(items) && items.some(i => typeof i.order === 'number');
+        const hasAnyOrder =
+            Array.isArray(items) &&
+            items.some((i) => typeof i.order === 'number');
         if (hasAnyOrder) {
-            return items
-                .slice()
-                .sort((a, b) => {
-                    const ao = (typeof a.order === 'number') ? a.order : Number.POSITIVE_INFINITY;
-                    const bo = (typeof b.order === 'number') ? b.order : Number.POSITIVE_INFINITY;
-                    return ao - bo; // 数值越小排越前
-                });
+            return items.slice().sort((a, b) => {
+                const ao =
+                    typeof a.order === 'number'
+                        ? a.order
+                        : Number.POSITIVE_INFINITY;
+                const bo =
+                    typeof b.order === 'number'
+                        ? b.order
+                        : Number.POSITIVE_INFINITY;
+                return ao - bo; // 数值越小排越前
+            });
         }
         // 无 order 时按创建时间正序：先添加的在前，后添加的在后
-        return items.slice().sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+        return items
+            .slice()
+            .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
     };
 
-
     useEffect(() => {
-        console.log('[ActMatrixForm] currentMatrixId changed:', currentMatrixId);
+        console.log(
+            '[ActMatrixForm] currentMatrixId changed:',
+            currentMatrixId
+        );
         // 当有选中的矩阵时加载；否则清空
-        
+
         if (currentMatrixId) {
-          localStorage.setItem('act_matrix_current_id', currentMatrixId);
             loadQuadrantData();
         } else {
             setQuadrants({
                 [QUADRANT_TYPES.INNER_EXPERIENCE]: [],
                 [QUADRANT_TYPES.AWAY_MOVES]: [],
                 [QUADRANT_TYPES.VALUES]: [],
-                [QUADRANT_TYPES.TOWARD_MOVES]: []
+                [QUADRANT_TYPES.TOWARD_MOVES]: [],
             });
-            localStorage.removeItem('act_matrix_current_id');
         }
     }, [currentMatrixId]);
 
     // 页面进入时，如已选择矩阵则主动刷新一次
-    useIonViewDidEnter(() => {
-        console.log('[ActMatrixForm] view did enter, currentMatrixId:', currentMatrixId);
-        if (currentMatrixId) {
-            loadQuadrantData();
-        }
+    // useIonViewDidEnter(() => {
+    //     console.log(
+    //         '[ActMatrixForm] view did enter, currentMatrixId:',
+    //         currentMatrixId
+    //     );
+    //     if (currentMatrixId) {
+    //         loadQuadrantData();
+    //     }
+    // });
+
+    // 避免在组件尚未完成挂载前触发 setState 的告警
+    const isMountedRef = useRef(false);
+    useEffect(() => {
+        isMountedRef.current = true;
+        return () => {
+            isMountedRef.current = false;
+        };
+    }, []);
+
+    // 页面重新进入前台时刷新数据
+    useResume(() => {
+        // 将执行延迟到下一事件循环，确保组件已完成挂载
+        setTimeout(() => {
+            if (isMountedRef.current && currentMatrixId) {
+                loadQuadrantData();
+            }
+        }, 0);
     });
 
     const loadQuadrantData = async () => {
         if (!currentMatrixId) return;
-        
-        console.log('[ActMatrixForm] loadQuadrantData start, matrixId:', currentMatrixId);
+
+        console.log(
+            '[ActMatrixForm] loadQuadrantData start, matrixId:',
+            currentMatrixId
+        );
         setLoading(true);
         // 仅按当前矩阵ID查询，避免全量扫描
         try {
             const result = await AppSdk.appData.queryData({
                 collection: COLLECTION_NAME,
                 query: [
-                    { key: 'matrixId', operator: 'eq', value: currentMatrixId }
-                ]
+                    { key: 'matrixId', operator: 'eq', value: currentMatrixId },
+                ],
             });
             console.log('[ActMatrixForm] query result count:', result);
-            
+
             const newQuadrants = {
                 [QUADRANT_TYPES.INNER_EXPERIENCE]: [],
                 [QUADRANT_TYPES.AWAY_MOVES]: [],
                 [QUADRANT_TYPES.VALUES]: [],
-                [QUADRANT_TYPES.TOWARD_MOVES]: []
+                [QUADRANT_TYPES.TOWARD_MOVES]: [],
             };
 
             if (Array.isArray(result)) {
-                result.forEach(item => {
+                result.forEach((item) => {
                     if (item.quadrantType && newQuadrants[item.quadrantType]) {
                         newQuadrants[item.quadrantType].push(item);
                     }
                 });
 
                 // 对每个象限排序：若有 order 则按 order，否则按创建时间倒序
-                Object.keys(newQuadrants).forEach(key => {
+                Object.keys(newQuadrants).forEach((key) => {
                     newQuadrants[key] = sortItems(newQuadrants[key]);
                 });
             }
@@ -180,7 +223,7 @@ export default function ActMatrixForm() {
         } catch (error) {
             await reportError(error, 'JavaScriptError', {
                 component: 'ActMatrixForm',
-                action: 'loadQuadrantData'
+                action: 'loadQuadrantData',
             });
             console.error('[ActMatrixForm] loadQuadrantData error:', error);
         } finally {
@@ -196,59 +239,33 @@ export default function ActMatrixForm() {
         setEditingItem(null);
     };
 
-    const handleAddItem = async () => {
-        if (!newItemText.trim() || !activeQuadrant || !currentMatrixId) return;
-
-        try {
-            const data = {
-                matrixId: currentMatrixId,
-                quadrantType: activeQuadrant,
-                content: newItemText.trim(),
-                createdAt: Date.now()
-            };
-
-            const created = await AppSdk.appData.createData({
-                collection: COLLECTION_NAME,
-                data
-            });
-
-            setQuadrants(prev => ({
-                ...prev,
-                [activeQuadrant]: [created, ...prev[activeQuadrant]]
-            }));
-
-            setNewItemText('');
-        } catch (error) {
-            await reportError(error, 'JavaScriptError', {
-                component: 'ActMatrixForm',
-                action: 'handleAddItem'
-            });
-        }
-    };
-
     // 更好的方法：直接从输入框获取最新值
     const handleAddItemWithLatestValue = async () => {
         // 直接从输入元素获取当前值，确保是最新的
         const currentValue = inputRef.current?.value || newItemText;
-        if(!currentMatrixId) {
-          alert('请先创建矩阵');
+        if (!currentMatrixId) {
+            alert('请先创建矩阵');
         }
-        if(!activeQuadrant) {
-          alert('请先选择象限');
+        if (!activeQuadrant) {
+            alert('请先选择象限');
         }
-        if(!currentValue.trim()) {
-          alert('请先输入内容');
+        if (!currentValue.trim()) {
+            alert('请先输入内容');
         }
         if (!currentValue.trim() || !activeQuadrant || !currentMatrixId) return;
 
         try {
             // 计算新条目的顺序：若已有 order，则插入到末尾（最大值 + 1）
             const currentItems = quadrants[activeQuadrant] || [];
-            const itemsWithOrder = currentItems.filter(i => typeof i.order === 'number');
+            const itemsWithOrder = currentItems.filter(
+                (i) => typeof i.order === 'number'
+            );
             const hasAnyOrder = itemsWithOrder.length > 0;
             let nextOrder;
             if (hasAnyOrder) {
-                const maxOrder = Math.max(...itemsWithOrder.map(i => i.order));
+                const maxOrder = Math.max(
+                    ...itemsWithOrder.map((i) => i.order)
+                );
                 nextOrder = (isFinite(maxOrder) ? maxOrder : -1) + 1;
             }
 
@@ -257,17 +274,20 @@ export default function ActMatrixForm() {
                 quadrantType: activeQuadrant,
                 content: currentValue.trim(),
                 createdAt: Date.now(),
-                ...(typeof nextOrder === 'number' ? { order: nextOrder } : {})
+                ...(typeof nextOrder === 'number' ? { order: nextOrder } : {}),
             };
 
             const created = await AppSdk.appData.createData({
                 collection: COLLECTION_NAME,
-                data
+                data,
             });
 
-            setQuadrants(prev => ({
+            setQuadrants((prev) => ({
                 ...prev,
-                [activeQuadrant]: sortItems([created, ...(prev[activeQuadrant] || [])])
+                [activeQuadrant]: sortItems([
+                    created,
+                    ...(prev[activeQuadrant] || []),
+                ]),
             }));
 
             setNewItemText('');
@@ -277,12 +297,11 @@ export default function ActMatrixForm() {
             }
             // currentId 已在 store 内持久化，无需额外标记
         } catch (error) {
-            
             await reportError(error, 'JavaScriptError', {
                 component: 'ActMatrixForm',
-                action: 'handleAddItemWithLatestValue'
+                action: 'handleAddItemWithLatestValue',
             });
-            alert('添加失败'+(error?.message));
+            alert('添加失败' + error?.message);
         }
     };
 
@@ -290,16 +309,18 @@ export default function ActMatrixForm() {
     const persistOrder = async (quadrantType, items) => {
         try {
             await Promise.all(
-                items.map((it, idx) => AppSdk.appData.updateData({
-                    collection: COLLECTION_NAME,
-                    id: it.id,
-                    data: { order: idx }
-                }))
+                items.map((it, idx) =>
+                    AppSdk.appData.updateData({
+                        collection: COLLECTION_NAME,
+                        id: it.id,
+                        data: { order: idx },
+                    })
+                )
             );
         } catch (error) {
             await reportError(error, 'JavaScriptError', {
                 component: 'ActMatrixForm',
-                action: 'persistOrder'
+                action: 'persistOrder',
             });
             console.error('[ActMatrixForm] persistOrder error:', error);
         }
@@ -314,14 +335,21 @@ export default function ActMatrixForm() {
 
     const handleDragOver = (e) => {
         e.preventDefault();
-        try { e.dataTransfer.dropEffect = 'move'; } catch (_) {}
+        try {
+            e.dataTransfer.dropEffect = 'move';
+        } catch (_) {}
     };
 
     const handleDrop = (e, targetIndex) => {
         e.preventDefault();
         const sourceIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
-        if (!Number.isFinite(sourceIndex) || sourceIndex === targetIndex || !activeQuadrant) return;
-        setQuadrants(prev => {
+        if (
+            !Number.isFinite(sourceIndex) ||
+            sourceIndex === targetIndex ||
+            !activeQuadrant
+        )
+            return;
+        setQuadrants((prev) => {
             const list = [...(prev[activeQuadrant] || [])];
             const [moved] = list.splice(sourceIndex, 1);
             list.splice(targetIndex, 0, moved);
@@ -340,14 +368,14 @@ export default function ActMatrixForm() {
             const updated = await AppSdk.appData.updateData({
                 collection: COLLECTION_NAME,
                 id: item.id,
-                data: { content: newItemText.trim() }
+                data: { content: newItemText.trim() },
             });
 
-            setQuadrants(prev => ({
+            setQuadrants((prev) => ({
                 ...prev,
-                [activeQuadrant]: prev[activeQuadrant].map(i => 
+                [activeQuadrant]: prev[activeQuadrant].map((i) =>
                     i.id === item.id ? updated : i
-                )
+                ),
             }));
 
             setNewItemText('');
@@ -356,7 +384,7 @@ export default function ActMatrixForm() {
         } catch (error) {
             await reportError(error, 'JavaScriptError', {
                 component: 'ActMatrixForm',
-                action: 'handleEditItem'
+                action: 'handleEditItem',
             });
         }
     };
@@ -365,14 +393,16 @@ export default function ActMatrixForm() {
         try {
             await AppSdk.appData.deleteData({
                 collection: COLLECTION_NAME,
-                id: item.id
+                id: item.id,
             });
 
             // 防御式更新：跨所有象限移除该条目，避免依赖 activeQuadrant 状态
-            setQuadrants(prev => {
+            setQuadrants((prev) => {
                 const updated = { ...prev };
-                Object.keys(updated).forEach(key => {
-                    updated[key] = (updated[key] || []).filter(i => i.id !== item.id);
+                Object.keys(updated).forEach((key) => {
+                    updated[key] = (updated[key] || []).filter(
+                        (i) => i.id !== item.id
+                    );
                 });
                 return updated;
             });
@@ -380,7 +410,7 @@ export default function ActMatrixForm() {
         } catch (error) {
             await reportError(error, 'JavaScriptError', {
                 component: 'ActMatrixForm',
-                action: 'handleDeleteItem'
+                action: 'handleDeleteItem',
             });
         }
     };
@@ -418,35 +448,35 @@ export default function ActMatrixForm() {
         setHistoryModalOpen(false);
     };
 
-
     const handleCreateNewMatrix = async () => {
         try {
             // 创建新的矩阵ID
             const newMatrixId = createNewMatrix();
-            
+
             // 清空当前象限数据
             setQuadrants({
                 [QUADRANT_TYPES.INNER_EXPERIENCE]: [],
                 [QUADRANT_TYPES.AWAY_MOVES]: [],
                 [QUADRANT_TYPES.VALUES]: [],
-                [QUADRANT_TYPES.TOWARD_MOVES]: []
+                [QUADRANT_TYPES.TOWARD_MOVES]: [],
             });
-            
+
             // 关闭历史记录模态框
             setHistoryModalOpen(false);
         } catch (error) {
             await reportError(error, 'JavaScriptError', {
                 component: 'ActMatrixForm',
-                action: 'handleCreateNewMatrix'
+                action: 'handleCreateNewMatrix',
             });
         }
     };
 
-    const activeConfig = activeQuadrant ? QUADRANT_CONFIG[activeQuadrant] : null;
+    const activeConfig = activeQuadrant
+        ? QUADRANT_CONFIG[activeQuadrant]
+        : null;
     const activeItems = activeQuadrant ? quadrants[activeQuadrant] : [];
 
     return (
-        
         <IonPage ref={pageRef}>
             <PageHeader title="ACT 矩阵" />
             <IonContent className={styles.content}>
@@ -474,53 +504,112 @@ export default function ActMatrixForm() {
                         <div className={styles.axisLabels}>
                             {/* 顶部标签 */}
                             <div className={styles.topAxisLabel}>
-                                <div className={styles.axisLabelText}>五感体验</div>
+                                <div className={styles.axisLabelText}>
+                                    五感体验
+                                </div>
                             </div>
-                            
+
                             {/* 底部标签 */}
                             <div className={styles.bottomAxisLabel}>
-                                <div className={styles.axisLabelText}>心理体验</div>
+                                <div className={styles.axisLabelText}>
+                                    心理体验
+                                </div>
                             </div>
-                            
+
                             {/* 左侧标签 */}
                             <div className={styles.leftAxisLabel}>
-                                <IonIcon icon={arrowBack} className={styles.axisArrow} />
-                                <div className={styles.axisLabelText}>远离away</div>
+                                <IonIcon
+                                    icon={arrowBack}
+                                    className={styles.axisArrow}
+                                />
+                                <div className={styles.axisLabelText}>
+                                    远离away
+                                </div>
                             </div>
-                            
+
                             {/* 右侧标签 */}
                             <div className={styles.rightAxisLabel}>
-                                <div className={styles.axisLabelText}>趋向toward</div>
-                                <IonIcon icon={arrowForward} className={styles.axisArrow} />
+                                <div className={styles.axisLabelText}>
+                                    趋向toward
+                                </div>
+                                <IonIcon
+                                    icon={arrowForward}
+                                    className={styles.axisArrow}
+                                />
                             </div>
                         </div>
 
                         {/* 四象限网格 - 铺满整个容器 */}
                         <div className={styles.quadrantGrid}>
                             {/* 左上象限：远离行为 */}
-                            <div 
+                            <div
                                 className={`${styles.quadrant} ${styles.topLeft}`}
-                                onClick={() => handleQuadrantClick(QUADRANT_TYPES.AWAY_MOVES)}
+                                onClick={() =>
+                                    handleQuadrantClick(
+                                        QUADRANT_TYPES.AWAY_MOVES
+                                    )
+                                }
                             >
                                 <div className={styles.quadrantHeader}>
-                                    <h3 className={styles.quadrantTitle}>{QUADRANT_CONFIG[QUADRANT_TYPES.AWAY_MOVES].title}</h3>
-                                    <p className={styles.quadrantSubtitle}>{QUADRANT_CONFIG[QUADRANT_TYPES.AWAY_MOVES].subtitle}</p>
+                                    <h3 className={styles.quadrantTitle}>
+                                        {
+                                            QUADRANT_CONFIG[
+                                                QUADRANT_TYPES.AWAY_MOVES
+                                            ].title
+                                        }
+                                    </h3>
+                                    <p className={styles.quadrantSubtitle}>
+                                        {
+                                            QUADRANT_CONFIG[
+                                                QUADRANT_TYPES.AWAY_MOVES
+                                            ].subtitle
+                                        }
+                                    </p>
                                 </div>
                                 <div className={styles.quadrantContent}>
-                                    {quadrants[QUADRANT_TYPES.AWAY_MOVES].map((item) => (
-                                        <div key={item.id} className={styles.quadrantItem}>
-                                            {truncate(item.content, 30)}
-                                        </div>
-                                    ))}
-                                    {quadrants[QUADRANT_TYPES.AWAY_MOVES].length === 0 && (
-                                        <div className={styles.emptyHint}>点击添加内容</div>
+                                    {quadrants[QUADRANT_TYPES.AWAY_MOVES].map(
+                                        (item) => (
+                                            <div
+                                                key={item.id}
+                                                className={styles.quadrantItem}
+                                            >
+                                                {truncate(item.content, 30)}
+                                            </div>
+                                        )
                                     )}
+                                    {quadrants[QUADRANT_TYPES.AWAY_MOVES]
+                                        .length === 0 && (
+                                        <div className={styles.emptyHint}>
+                                            点击添加内容
+                                        </div>
+                                    )}
+                                    {/* 右下角编辑与查看入口 */}
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleQuadrantClick(
+                                                QUADRANT_TYPES.AWAY_MOVES
+                                            );
+                                        }}
+                                        className={styles.quadrantCornerEdit}
+                                        aria-label="编辑远离行为"
+                                    >
+                                        <IonIcon icon={create} />
+                                    </button>
                                     {/* 右下角小眼睛图标作为详情入口 */}
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            const id = currentMatrixId || localStorage.getItem(STORAGE_KEY) || '';
-                                            history.push(`/away/${encodeURIComponent(id)}`);
+                                            const id = currentMatrixId;
+                                            if (!id) {
+                                                alert('请先创建矩阵');
+                                                return;
+                                            }
+                                            history.push(
+                                                `/away/${encodeURIComponent(
+                                                    id
+                                                )}`
+                                            );
                                         }}
                                         className={styles.quadrantCornerEye}
                                         aria-label="查看远离行为详情"
@@ -531,64 +620,134 @@ export default function ActMatrixForm() {
                             </div>
 
                             {/* 右上象限：趋向行为 */}
-                            <div 
+                            <div
                                 className={`${styles.quadrant} ${styles.topRight}`}
-                                onClick={() => handleQuadrantClick(QUADRANT_TYPES.TOWARD_MOVES)}
+                                onClick={() =>
+                                    handleQuadrantClick(
+                                        QUADRANT_TYPES.TOWARD_MOVES
+                                    )
+                                }
                             >
                                 <div className={styles.quadrantHeader}>
-                                    <h3 className={styles.quadrantTitle}>{QUADRANT_CONFIG[QUADRANT_TYPES.TOWARD_MOVES].title}</h3>
-                                    <p className={styles.quadrantSubtitle}>{QUADRANT_CONFIG[QUADRANT_TYPES.TOWARD_MOVES].subtitle}</p>
+                                    <h3 className={styles.quadrantTitle}>
+                                        {
+                                            QUADRANT_CONFIG[
+                                                QUADRANT_TYPES.TOWARD_MOVES
+                                            ].title
+                                        }
+                                    </h3>
+                                    <p className={styles.quadrantSubtitle}>
+                                        {
+                                            QUADRANT_CONFIG[
+                                                QUADRANT_TYPES.TOWARD_MOVES
+                                            ].subtitle
+                                        }
+                                    </p>
                                 </div>
                                 <div className={styles.quadrantContent}>
-                                    {quadrants[QUADRANT_TYPES.TOWARD_MOVES].map((item) => (
-                                        <div key={item.id} className={styles.quadrantItem}>
-                                            {truncate(item.content, 30)}
+                                    {quadrants[QUADRANT_TYPES.TOWARD_MOVES].map(
+                                        (item) => (
+                                            <div
+                                                key={item.id}
+                                                className={styles.quadrantItem}
+                                            >
+                                                {truncate(item.content, 30)}
+                                            </div>
+                                        )
+                                    )}
+                                    {quadrants[QUADRANT_TYPES.TOWARD_MOVES]
+                                        .length === 0 && (
+                                        <div className={styles.emptyHint}>
+                                            点击添加内容
                                         </div>
-                                    ))}
-                                    {quadrants[QUADRANT_TYPES.TOWARD_MOVES].length === 0 && (
-                                        <div className={styles.emptyHint}>点击添加内容</div>
                                     )}
                                 </div>
                             </div>
 
                             {/* 左下象限：内在体验 */}
-                            <div 
+                            <div
                                 className={`${styles.quadrant} ${styles.bottomLeft}`}
-                                onClick={() => handleQuadrantClick(QUADRANT_TYPES.INNER_EXPERIENCE)}
+                                onClick={() =>
+                                    handleQuadrantClick(
+                                        QUADRANT_TYPES.INNER_EXPERIENCE
+                                    )
+                                }
                             >
                                 <div className={styles.quadrantHeader}>
-                                    <h3 className={styles.quadrantTitle}>{QUADRANT_CONFIG[QUADRANT_TYPES.INNER_EXPERIENCE].title}</h3>
-                                    <p className={styles.quadrantSubtitle}>{QUADRANT_CONFIG[QUADRANT_TYPES.INNER_EXPERIENCE].subtitle}</p>
+                                    <h3 className={styles.quadrantTitle}>
+                                        {
+                                            QUADRANT_CONFIG[
+                                                QUADRANT_TYPES.INNER_EXPERIENCE
+                                            ].title
+                                        }
+                                    </h3>
+                                    <p className={styles.quadrantSubtitle}>
+                                        {
+                                            QUADRANT_CONFIG[
+                                                QUADRANT_TYPES.INNER_EXPERIENCE
+                                            ].subtitle
+                                        }
+                                    </p>
                                 </div>
                                 <div className={styles.quadrantContent}>
-                                    {quadrants[QUADRANT_TYPES.INNER_EXPERIENCE].map((item) => (
-                                        <div key={item.id} className={styles.quadrantItem}>
+                                    {quadrants[
+                                        QUADRANT_TYPES.INNER_EXPERIENCE
+                                    ].map((item) => (
+                                        <div
+                                            key={item.id}
+                                            className={styles.quadrantItem}
+                                        >
                                             {truncate(item.content, 30)}
                                         </div>
                                     ))}
-                                    {quadrants[QUADRANT_TYPES.INNER_EXPERIENCE].length === 0 && (
-                                        <div className={styles.emptyHint}>点击添加内容</div>
+                                    {quadrants[QUADRANT_TYPES.INNER_EXPERIENCE]
+                                        .length === 0 && (
+                                        <div className={styles.emptyHint}>
+                                            点击添加内容
+                                        </div>
                                     )}
                                 </div>
                             </div>
 
                             {/* 右下象限：对你重要的事(人) */}
-                            <div 
+                            <div
                                 className={`${styles.quadrant} ${styles.bottomRight}`}
-                                onClick={() => handleQuadrantClick(QUADRANT_TYPES.VALUES)}
+                                onClick={() =>
+                                    handleQuadrantClick(QUADRANT_TYPES.VALUES)
+                                }
                             >
                                 <div className={styles.quadrantHeader}>
-                                    <h3 className={styles.quadrantTitle}>{QUADRANT_CONFIG[QUADRANT_TYPES.VALUES].title}</h3>
-                                    <p className={styles.quadrantSubtitle}>{QUADRANT_CONFIG[QUADRANT_TYPES.VALUES].subtitle}</p>
+                                    <h3 className={styles.quadrantTitle}>
+                                        {
+                                            QUADRANT_CONFIG[
+                                                QUADRANT_TYPES.VALUES
+                                            ].title
+                                        }
+                                    </h3>
+                                    <p className={styles.quadrantSubtitle}>
+                                        {
+                                            QUADRANT_CONFIG[
+                                                QUADRANT_TYPES.VALUES
+                                            ].subtitle
+                                        }
+                                    </p>
                                 </div>
                                 <div className={styles.quadrantContent}>
-                                    {quadrants[QUADRANT_TYPES.VALUES].map((item) => (
-                                        <div key={item.id} className={styles.quadrantItem}>
-                                            {truncate(item.content, 30)}
+                                    {quadrants[QUADRANT_TYPES.VALUES].map(
+                                        (item) => (
+                                            <div
+                                                key={item.id}
+                                                className={styles.quadrantItem}
+                                            >
+                                                {truncate(item.content, 30)}
+                                            </div>
+                                        )
+                                    )}
+                                    {quadrants[QUADRANT_TYPES.VALUES].length ===
+                                        0 && (
+                                        <div className={styles.emptyHint}>
+                                            点击添加内容
                                         </div>
-                                    ))}
-                                    {quadrants[QUADRANT_TYPES.VALUES].length === 0 && (
-                                        <div className={styles.emptyHint}>点击添加内容</div>
                                     )}
                                 </div>
                             </div>
@@ -597,18 +756,17 @@ export default function ActMatrixForm() {
                 </div>
 
                 {/* 浮动历史记录按钮 */}
-                <button 
+                <button
                     className={`${styles.floatingButton} ${styles.historyButton}`}
                     onClick={handleShowHistory}
                 >
                     <IonIcon icon={time} />
                 </button>
-
             </IonContent>
 
             {/* 象限内容管理模态框 */}
-            <IonModal 
-                isOpen={modalOpen} 
+            <IonModal
+                isOpen={modalOpen}
                 onDidDismiss={closeModal}
                 presentingElement={pageRef.current}
                 canDismiss={true}
@@ -616,9 +774,7 @@ export default function ActMatrixForm() {
             >
                 <IonHeader>
                     <IonToolbar>
-                        <IonTitle>
-                            {activeConfig?.title}
-                        </IonTitle>
+                        <IonTitle>{activeConfig?.title}</IonTitle>
                         <IonButtons slot="end">
                             <IonButton onClick={closeModal}>
                                 <IonIcon icon={close} />
@@ -630,7 +786,9 @@ export default function ActMatrixForm() {
                     <div className={styles.modalContent}>
                         {activeConfig && (
                             <div className={styles.modalHeader}>
-                                <p className={styles.modalQuestion}>{activeConfig.question}</p>
+                                <p className={styles.modalQuestion}>
+                                    {activeConfig.question}
+                                </p>
                             </div>
                         )}
 
@@ -639,20 +797,30 @@ export default function ActMatrixForm() {
                             <div className={styles.existingItemsSection}>
                                 <IonList>
                                     {activeItems.map((item, index) => (
-                                        <IonItem 
-                                            key={item.id} 
+                                        <IonItem
+                                            key={item.id}
                                             className={styles.existingItem}
                                             draggable
-                                            onDragStart={(e) => handleDragStart(e, index)}
+                                            onDragStart={(e) =>
+                                                handleDragStart(e, index)
+                                            }
                                             onDragOver={handleDragOver}
                                             onDrop={(e) => handleDrop(e, index)}
                                         >
                                             <IonLabel>
-                                                <p className={styles.itemContent}>{item.content}</p>
-                                                <p className={styles.itemDate}>{formatDate(item.createdAt)}</p>
+                                                <p
+                                                    className={
+                                                        styles.itemContent
+                                                    }
+                                                >
+                                                    {item.content}
+                                                </p>
+                                                <p className={styles.itemDate}>
+                                                    {formatDate(item.createdAt)}
+                                                </p>
                                             </IonLabel>
-                                            <IonButton 
-                                                fill="clear" 
+                                            <IonButton
+                                                fill="clear"
                                                 size="small"
                                                 color="primary"
                                                 onClick={() => startEdit(item)}
@@ -660,11 +828,13 @@ export default function ActMatrixForm() {
                                             >
                                                 <IonIcon icon={create} />
                                             </IonButton>
-                                            <IonButton 
-                                                fill="clear" 
+                                            <IonButton
+                                                fill="clear"
                                                 size="small"
                                                 color="danger"
-                                                onClick={() => requestDeleteItem(item)}
+                                                onClick={() =>
+                                                    requestDeleteItem(item)
+                                                }
                                                 slot="end"
                                             >
                                                 <IonIcon icon={trash} />
@@ -682,20 +852,28 @@ export default function ActMatrixForm() {
                                     <IonItem className={styles.inputWithButton}>
                                         <IonInput
                                             value={newItemText}
-                                            placeholder={activeConfig?.placeholder}
-                                            onIonInput={(e) => setNewItemText(e.detail.value || '')}
+                                            placeholder={
+                                                activeConfig?.placeholder
+                                            }
+                                            onIonInput={(e) =>
+                                                setNewItemText(
+                                                    e.detail.value || ''
+                                                )
+                                            }
                                             type="text"
                                         ></IonInput>
                                     </IonItem>
                                     <div className={styles.inputActions}>
-                                        <IonButton 
-                                            onClick={() => handleEditItem(editingItem)}
+                                        <IonButton
+                                            onClick={() =>
+                                                handleEditItem(editingItem)
+                                            }
                                             disabled={!newItemText.trim()}
                                         >
                                             保存修改
                                         </IonButton>
-                                        <IonButton 
-                                            fill="outline" 
+                                        <IonButton
+                                            fill="outline"
                                             onClick={() => {
                                                 setEditingItem(null);
                                                 setNewItemText('');
@@ -711,7 +889,9 @@ export default function ActMatrixForm() {
                                         ref={inputRef}
                                         value={newItemText}
                                         placeholder={activeConfig?.placeholder}
-                                        onIonInput={(e) => setNewItemText(e.detail.value || '')}
+                                        onIonInput={(e) =>
+                                            setNewItemText(e.detail.value || '')
+                                        }
                                         type="text"
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter') {
@@ -721,10 +901,13 @@ export default function ActMatrixForm() {
                                             }
                                         }}
                                     ></IonInput>
-                                    <IonButton 
+                                    <IonButton
                                         slot="end"
                                         onClick={handleAddItemWithLatestValue}
-                                        disabled={!newItemText.trim() || !currentMatrixId}
+                                        disabled={
+                                            !newItemText.trim() ||
+                                            !currentMatrixId
+                                        }
                                         fill="solid"
                                         size="small"
                                     >
@@ -764,14 +947,14 @@ export default function ActMatrixForm() {
             />
 
             {/* 历史记录模态框 */}
-            <IonModal 
-                isOpen={historyModalOpen} 
+            <IonModal
+                isOpen={historyModalOpen}
                 onDidDismiss={handleCloseHistory}
                 presentingElement={pageRef.current}
                 canDismiss={true}
                 showBackdrop={true}
             >
-                <HistoryPage 
+                <HistoryPage
                     onBack={handleCloseHistory}
                     onCreateNew={handleCreateNewMatrix}
                 />
@@ -799,5 +982,3 @@ function formatDate(timestamp) {
         return '';
     }
 }
-
-
