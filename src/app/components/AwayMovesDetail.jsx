@@ -342,7 +342,7 @@ function ScoreCell({ primary, secondary, onClick }) {
         <button
             onClick={onClick}
             style={{
-                height: 36,
+                height: 44,
                 border: '1px solid var(--line-color)',
                 borderRadius: 8,
                 background: '#f6f2ea',
@@ -350,7 +350,8 @@ function ScoreCell({ primary, secondary, onClick }) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: 14
+                fontSize: 18,
+                fontWeight: 600
             }}
             aria-label="评分"
         >
@@ -404,7 +405,7 @@ function ScoreEditor({ target, onClose, onSave }) {
                         gridTemplateColumns: 'repeat(7, 1fr)',
                         textAlign: 'center',
                         color: '#8a837a',
-                        fontSize: 12,
+                        fontSize: 18,
                         marginTop: 6
                     }}>
                         <div>---</div>
@@ -441,7 +442,7 @@ function ScoreEditor({ target, onClose, onSave }) {
                                 gridTemplateColumns: 'repeat(7, 1fr)',
                                 textAlign: 'center',
                                 color: '#8a837a',
-                                fontSize: 12,
+                                fontSize: 18,
                                 marginTop: 6
                             }}>
                                 <div>---</div>
