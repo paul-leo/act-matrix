@@ -8,58 +8,58 @@
   /* 强制覆盖深色模式，确保始终使用亮色主题 */
   color-scheme: light !important;
   /* ===== 纸质感色彩系统 ===== */
-  --paper-cream: #F9F7F0;
-  --paper-white: #FEFCF8;
-  --paper-black: #1f2937;
-  --paper-aged: #F5F1E8;
-  --ink-black: #111827;
-  --ink-blue: #1e3a8a;
-  --ink-brown: #451a03;
-  --muted-ink: #374151;
-  --pencil-gray: #6b7280;
-  --line-color: #e5e2da;
-  --accent-brown: #7A6C5D;
-  --accent-weak: #CBBBA5;
-  --shadow-paper: rgba(0, 0, 0, 0.08);
-  --shadow-deep: rgba(0, 0, 0, 0.12);
+  --paper-cream: #FDFCF9;
+  --paper-white: #FFFFFF;
+  --paper-black: #1a1a1a;
+  --paper-aged: #F8F6F2;
+  --ink-black: #2c2c2c;
+  --ink-blue: #2563eb;
+  --ink-brown: #8b4513;
+  --muted-ink: #6b7280;
+  --pencil-gray: #9ca3af;
+  --line-color: #e5e7eb;
+  --accent-brown: #7c5d3f;
+  --accent-weak: #d1c7b8;
+  --shadow-paper: rgba(0, 0, 0, 0.12);
+  --shadow-deep: rgba(0, 0, 0, 0.18);
   
   /* ===== RGB 格式（用于透明度） ===== */
-  --paper-cream-rgb: 249, 247, 240;
-  --ink-black-rgb: 17, 24, 39;
-  --accent-brown-rgb: 122, 108, 93;
-  --muted-ink-rgb: 55, 65, 81;
+  --paper-cream-rgb: 253, 252, 249;
+  --ink-black-rgb: 44, 44, 44;
+  --accent-brown-rgb: 124, 93, 63;
+  --muted-ink-rgb: 107, 114, 128;
   
   /* ===== Ionic 主题色覆盖 ===== */
   --ion-color-primary: var(--accent-brown);
   --ion-color-primary-rgb: var(--accent-brown-rgb);
   --ion-color-primary-contrast: #ffffff;
   --ion-color-primary-contrast-rgb: 255, 255, 255;
-  --ion-color-primary-shade: #6b5d52;
-  --ion-color-primary-tint: #8a7a6e;
+  --ion-color-primary-shade: #654a36;
+  --ion-color-primary-tint: #8a6b4f;
   
   /* 次要颜色 - 温暖的纸质感 */
-  --ion-color-secondary: #CBBBA5;
-  --ion-color-secondary-rgb: 203, 187, 165;
-  --ion-color-secondary-contrast: #1f2937;
-  --ion-color-secondary-contrast-rgb: 31, 41, 55;
-  --ion-color-secondary-shade: #b3a391;
-  --ion-color-secondary-tint: #d1c3ae;
+  --ion-color-secondary: #d1c7b8;
+  --ion-color-secondary-rgb: 209, 199, 184;
+  --ion-color-secondary-contrast: #2c2c2c;
+  --ion-color-secondary-contrast-rgb: 44, 44, 44;
+  --ion-color-secondary-shade: #b8aea2;
+  --ion-color-secondary-tint: #d6ccbf;
   
   /* 成功色 - 自然绿 */
-  --ion-color-success: #059669;
-  --ion-color-success-rgb: 5, 150, 105;
+  --ion-color-success: #16a34a;
+  --ion-color-success-rgb: 22, 163, 74;
   --ion-color-success-contrast: #ffffff;
   --ion-color-success-contrast-rgb: 255, 255, 255;
-  --ion-color-success-shade: #047857;
-  --ion-color-success-tint: #10b981;
+  --ion-color-success-shade: #15803d;
+  --ion-color-success-tint: #22c55e;
   
   /* 警告色 - 温暖橙 */
-  --ion-color-warning: #d97706;
-  --ion-color-warning-rgb: 217, 119, 6;
+  --ion-color-warning: #ea580c;
+  --ion-color-warning-rgb: 234, 88, 12;
   --ion-color-warning-contrast: #ffffff;
   --ion-color-warning-contrast-rgb: 255, 255, 255;
-  --ion-color-warning-shade: #b45309;
-  --ion-color-warning-tint: #f59e0b;
+  --ion-color-warning-shade: #c2410c;
+  --ion-color-warning-tint: #f97316;
   
   /* 危险色 - 温和红 */
   --ion-color-danger: #dc2626;

@@ -117,7 +117,11 @@ export default function AwayMovesDetail() {
                     <div style={{ padding: 24 }}>
                         <div style={{ color: '#8a837a', textAlign: 'center', marginBottom: 12 }}>暂无远离行为</div>
                         <div style={{ display: 'flex', justifyContent: 'center' }}>
-                            <IonButton onClick={() => setAddModalOpen(true)}>
+                            <IonButton 
+                                onClick={() => setAddModalOpen(true)}
+                                color="primary"
+                                fill="solid"
+                            >
                                 <IonIcon icon={add} slot="start" /> 添加
                             </IonButton>
                         </div>
@@ -172,7 +176,11 @@ export default function AwayMovesDetail() {
                         })}
 
                         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 12 }}>
-                            <IonButton onClick={() => setAddModalOpen(true)}>
+                            <IonButton 
+                                onClick={() => setAddModalOpen(true)}
+                                color="primary"
+                                fill="solid"
+                            >
                                 <IonIcon icon={add} slot="start" /> 添加
                             </IonButton>
                         </div>
@@ -311,6 +319,8 @@ export default function AwayMovesDetail() {
                                         }}
                                         expand="block"
                                         disabled={!newItemText.trim()}
+                                        color="primary"
+                                        fill="solid"
                                     >
                                         保存
                                     </IonButton>
@@ -464,7 +474,14 @@ function ScoreEditor({ target, onClose, onSave }) {
                         </div>
                     )}
                     <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                        <IonButton onClick={() => onSave?.({ primary, secondaryEnabled, secondary })} expand="block">保存</IonButton>
+                        <IonButton 
+                            onClick={() => onSave?.({ primary, secondaryEnabled, secondary })} 
+                            expand="block"
+                            color="primary"
+                            fill="solid"
+                        >
+                            保存
+                        </IonButton>
                         <IonButton fill="outline" onClick={onClose} expand="block">取消</IonButton>
                     </div>
                 </div>

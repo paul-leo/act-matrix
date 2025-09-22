@@ -869,6 +869,8 @@ export default function ActMatrixForm() {
                                                 handleEditItem(editingItem)
                                             }
                                             disabled={!newItemText.trim()}
+                                            color="primary"
+                                            fill="solid"
                                         >
                                             保存修改
                                         </IonButton>
@@ -910,6 +912,7 @@ export default function ActMatrixForm() {
                                         }
                                         fill="solid"
                                         size="small"
+                                        color="primary"
                                     >
                                         添加
                                     </IonButton>
