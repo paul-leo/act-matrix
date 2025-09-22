@@ -297,6 +297,33 @@
   gap: 8px;
 }
 
+/* 右下角“眼睛”小按钮（进入详情） */
+.quadrantCornerEye {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--line-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b5d52;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quadrantCornerEye:hover {
+  background: rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.quadrantCornerEye ion-icon {
+  font-size: 16px;
+}
+
 .quadrantItem {
   background: var(--paper-aged);
   padding: 4px 6px;

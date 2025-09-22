@@ -22,10 +22,11 @@ import {
     useIonViewDidEnter,
     IonAlert
 } from '@ionic/react';
+import { useHistory } from 'react-router-dom';
 import { PageHeader } from '@morphixai/components';
 import AppSdk from '@morphixai/app-sdk';
 import { reportError } from '@morphixai/lib';
-import { close, add, trash, create, arrowForward, arrowBack, time, grid } from 'ionicons/icons';
+import { close, add, trash, create, arrowForward, arrowBack, time, grid, eye } from 'ionicons/icons';
 import styles from '../styles/ActMatrixForm.module.css';
 import HistoryPage from './HistoryPage.jsx';
 import { useMatrix } from '../store/matrixStore';
@@ -79,6 +80,7 @@ export default function ActMatrixForm() {
     const pageRef = useRef(null);
     const inputRef = useRef(null);
     const { currentMatrixId, setCurrentMatrix, createNewMatrix } = useMatrix();
+    const history = useHistory();
     const [loading, setLoading] = useState(false);
     const [quadrants, setQuadrants] = useState({
         [QUADRANT_TYPES.INNER_EXPERIENCE]: [],
@@ -513,6 +515,18 @@ export default function ActMatrixForm() {
                                     {quadrants[QUADRANT_TYPES.AWAY_MOVES].length === 0 && (
                                         <div className={styles.emptyHint}>点击添加内容</div>
                                     )}
+                                    {/* 右下角小眼睛图标作为详情入口 */}
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            const id = currentMatrixId || localStorage.getItem(STORAGE_KEY) || '';
+                                            history.push(`/away/${encodeURIComponent(id)}`);
+                                        }}
+                                        className={styles.quadrantCornerEye}
+                                        aria-label="查看远离行为详情"
+                                    >
+                                        <IonIcon icon={eye} />
+                                    </button>
                                 </div>
                             </div>
 

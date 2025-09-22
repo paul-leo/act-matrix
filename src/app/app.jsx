@@ -1,6 +1,9 @@
 import React from 'react';
-import { IonPage, IonContent } from '@ionic/react';
+import { IonApp, IonRouterOutlet } from '@ionic/react';
+import { IonReactHashRouter } from '@ionic/react-router';
+import { Switch, Route } from 'react-router-dom';
 import ActMatrixForm from './components/ActMatrixForm';
+import AwayMovesDetail from './components/AwayMovesDetail.jsx';
 import { MatrixProvider } from './store/matrixStore';
 import styles from './styles/App.module.css';
 import './styles/PaperTheme.css';
@@ -14,11 +17,20 @@ import './styles/PaperTheme.css';
 export default function App() {
     return (
         <MatrixProvider>
-            <IonPage>
-                <IonContent className={styles.content}>
-                    <ActMatrixForm />
-                </IonContent>
-            </IonPage>
+            <IonApp>
+                <IonReactHashRouter>
+                    <IonRouterOutlet>
+                        <Switch>
+                            <Route exact path="/">
+                                <ActMatrixForm />
+                            </Route>
+                            <Route path="/away/:matrixId?">
+                                <AwayMovesDetail />
+                            </Route>
+                        </Switch>
+                    </IonRouterOutlet>
+                </IonReactHashRouter>
+            </IonApp>
         </MatrixProvider>
     );
 }
