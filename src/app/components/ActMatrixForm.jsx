@@ -275,11 +275,12 @@ export default function ActMatrixForm() {
             }
             // currentId 已在 store 内持久化，无需额外标记
         } catch (error) {
-            alert('添加失败'+(error?.message));
+            
             await reportError(error, 'JavaScriptError', {
                 component: 'ActMatrixForm',
                 action: 'handleAddItemWithLatestValue'
             });
+            alert('添加失败'+(error?.message));
         }
     };
 
