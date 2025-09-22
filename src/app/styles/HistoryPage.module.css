@@ -201,13 +201,14 @@
 }
 
 .currentLabel {
-  background: var(--accent-brown);
+  background: var(--ion-color-primary-shade);
   color: #ffffff;
   font-size: 10px;
-  font-weight: 500;
-  padding: 2px 6px;
-  border-radius: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 12px;
   margin-left: auto;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .timeIcon {
