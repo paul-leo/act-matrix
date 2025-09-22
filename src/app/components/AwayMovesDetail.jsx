@@ -138,9 +138,9 @@ export default function AwayMovesDetail() {
                             fontWeight: 600
                         }}>
                             <div>远离行为</div>
-                            <div style={{ textAlign: 'center' }}>短期</div>
-                            <div style={{ textAlign: 'center' }}>长期</div>
-                            <div style={{ textAlign: 'center' }}>重要</div>
+                            <div style={{ textAlign: 'center', borderLeft: '1px dashed var(--line-color)', paddingLeft: 8 }}>短期</div>
+                            <div style={{ textAlign: 'center', borderLeft: '1px dashed var(--line-color)', paddingLeft: 8 }}>长期</div>
+                            <div style={{ textAlign: 'center', borderLeft: '1px dashed var(--line-color)', paddingLeft: 8 }}>重要</div>
                         </div>
 
                         {items.map((it) => {
@@ -158,9 +158,15 @@ export default function AwayMovesDetail() {
                                     borderBottom: '1px dashed var(--line-color)'
                                 }}>
                                     <div style={{ fontSize: 14, color: '#2b2b2b', overflowWrap: 'anywhere', wordWrap: 'break-word', whiteSpace: 'normal' }}>{it.content}</div>
-                                    <ScoreCell primary={st.primary} secondary={st.secondary} onClick={() => openScoreModal(it.id, 'shortTerm', st.primary, st.secondary)} />
-                                    <ScoreCell primary={lt.primary} secondary={lt.secondary} onClick={() => openScoreModal(it.id, 'longTerm', lt.primary, lt.secondary)} />
-                                    <ScoreCell primary={im.primary} secondary={im.secondary} onClick={() => openScoreModal(it.id, 'importance', im.primary, im.secondary)} />
+                                    <div style={{ borderLeft: '1px dashed var(--line-color)', paddingLeft: 8, display: 'flex', justifyContent: 'center' }}>
+                                        <ScoreCell primary={st.primary} secondary={st.secondary} onClick={() => openScoreModal(it.id, 'shortTerm', st.primary, st.secondary)} />
+                                    </div>
+                                    <div style={{ borderLeft: '1px dashed var(--line-color)', paddingLeft: 8, display: 'flex', justifyContent: 'center' }}>
+                                        <ScoreCell primary={lt.primary} secondary={lt.secondary} onClick={() => openScoreModal(it.id, 'longTerm', lt.primary, lt.secondary)} />
+                                    </div>
+                                    <div style={{ borderLeft: '1px dashed var(--line-color)', paddingLeft: 8, display: 'flex', justifyContent: 'center' }}>
+                                        <ScoreCell primary={im.primary} secondary={im.secondary} onClick={() => openScoreModal(it.id, 'importance', im.primary, im.secondary)} />
+                                    </div>
                                 </div>
                             );
                         })}
@@ -342,6 +348,8 @@ function ScoreCell({ primary, secondary, onClick }) {
         <button
             onClick={onClick}
             style={{
+                width: '100%',
+                boxSizing: 'border-box',
                 height: 44,
                 border: '1px solid var(--line-color)',
                 borderRadius: 8,
