@@ -12,9 +12,6 @@ const MatrixContext = createContext();
 export function MatrixProvider({ children }) {
   const [currentMatrixId, _setCurrentMatrixId] = useState(() => {
     const id = localStorage.getItem(STORAGE_KEY);
-    if (!id) {
-      initFirstMatrix();
-    }
     return id;
   });
   const [matrices, setMatrices] = useState(() => new Map());
@@ -31,6 +28,13 @@ export function MatrixProvider({ children }) {
     _setCurrentMatrixId(matrixId);
 
   };
+
+  // 初始化：如果没有当前矩阵ID，则尝试从存储中选择最新的一个
+  useEffect(() => {
+    if (!currentMatrixId) {
+      initFirstMatrix();
+    }
+  }, [currentMatrixId]);
   useEffect(() => {
     try {
       if (currentMatrixId) {
@@ -45,16 +49,28 @@ export function MatrixProvider({ children }) {
   }, [currentMatrixId]);
 
 
-  const initFirstMatrix = async () => {
-    const allMatrices = await AppSdk.appData.queryData({
-      collection: 'act_matrix_quadrants',
-      query: [],
-    });
-    if (allMatrices) {
-      const lastMatrix = allMatrices[allMatrices.length - 1];
-      setCurrentMatrix(lastMatrix.matrixId);
+  async function initFirstMatrix() {
+    try {
+      const allMatrices = await AppSdk.appData.queryData({
+        collection: 'act_matrix_quadrants',
+        query: [],
+      });
+      if (Array.isArray(allMatrices) && allMatrices.length > 0) {
+        const lastMatrix = allMatrices[allMatrices.length - 1];
+        if (lastMatrix && lastMatrix.matrixId) {
+          setCurrentMatrix(lastMatrix.matrixId);
+          return;
+        }
+      }
+      // 未查询到数据或没有有效的 matrixId，则生成默认矩阵ID
+      const newId = generateNewMatrixId();
+      setCurrentMatrix(newId);
+    } catch (_) {
+      // 查询失败时也生成一个默认矩阵ID，确保可用
+      const fallbackId = generateNewMatrixId();
+      setCurrentMatrix(fallbackId);
     }
-  };
+  }
 
   const setMatrixData = (matrixId, data) => {
     setMatrices((prev) => {
